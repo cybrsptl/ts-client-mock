@@ -464,7 +464,7 @@ select.edit-control {
   flex: 1 1 auto;
   min-width: 0;
   color: var(--text-primary);
-  font-weight: 600;
+  font-weight: 400;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
