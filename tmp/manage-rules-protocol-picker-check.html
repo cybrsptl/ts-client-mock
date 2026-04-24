@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+  <body>
+    <pre id="status">Loading...</pre>
+    <iframe id="viewer" src="../viewer/viewer.html?manageRulesProtocolPickerCheck=1" style="width:1440px;height:1400px;border:0"></iframe>
+    <script>
+      const statusEl = document.getElementById("status");
+      const frame = document.getElementById("viewer");
+      let reported = false;
+      const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+      function setStatus(data) { statusEl.textContent = JSON.stringify(data, null, 2); }
+      function reportStatus(data) {
+        if (reported) return;
+        reported = true;
+        const params = new URLSearchParams();
+        Object.entries(data).forEach(([key, value]) => params.set(key, String(value)));
+        new Image().src = `/__codex_protocol_picker_status__?${params.toString()}`;
+      }
+      function click(el) {
+        if (!el) return false;
+        el.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, composed: true }));
+        return true;
+      }
+      function input(el, value) {
+        if (!el) return false;
+        el.value = value;
+        el.dispatchEvent(new InputEvent("input", { bubbles: true, cancelable: true, inputType: "insertText", data: value }));
+        return true;
+      }
+      function normalizeText(value) {
+        return String(value || "").trim().replace(/\s+/g, " ");
+      }
+      async function getModalRoot(doc) {
+        const host = doc.getElementById("alertingInlineRoot");
+        if (!host) return null;
+        if (host.shadowRoot) return host.shadowRoot;
+        for (let index = 0; index < 20; index += 1) {
+          const iframe = host.querySelector("iframe.alerting-inline-frame");
+          const modalDoc = iframe && iframe.contentDocument;
+          if (modalDoc && modalDoc.querySelector(".alerting-sidebar")) return modalDoc;
+          await sleep(250);
+        }
+        return null;
+      }
+      function findSidebarRow(root, pattern) {
+        return Array.from(root.querySelectorAll(".alerting-sidebar .side-row.sidebar-item-row.sidebar-item"))
+          .find((row) => pattern.test(row.textContent || ""));
+      }
+      function findRuleRow(root, pattern = null) {
+        const rows = Array.from(root.querySelectorAll("#rulesTableBody tr"));
+        if (!pattern) return rows[0] || null;
+        return rows.find((row) => pattern.test(row.textContent || "")) || null;
+      }
+      function getProtocolMenu(root) {
+        return root.querySelector('.suri-menu[data-menu-key="drawer:protocols:picker"]');
+      }
+      function getProtocolTrigger(root) {
+        return root.querySelector("[data-suri-protocol-trigger]");
+      }
+      function getProtocolRow(root, value) {
+        return Array.from(root.querySelectorAll(".suri-protocol-option"))
+          .find((row) => normalizeText(row.textContent) === value);
+      }
+      function configProtocol(modalWin, state) {
+        const firstLine = modalWin.buildSuricataDerivedConfig(state).split("\n")[0];
+        return firstLine.split(/\s+/)[1] || "";
+      }
+      frame.addEventListener("load", async () => {
+        const win = frame.contentWindow;
+        const doc = win.document;
+        try {
+          if (typeof win.initAlertsFeature === "function") win.initAlertsFeature();
+          if (typeof win.openManageModal === "function") win.openManageModal(null, false);
+          await sleep(500);
+          const root = await getModalRoot(doc);
+          if (!root) {
+            const payload = { ok: false, phase: "modal-root", error: "missing modal root" };
+            setStatus(payload); reportStatus(payload); return;
+          }
+
+          click(findSidebarRow(root, /Emerging Threats PRO/i));
+          await sleep(700);
+          click(findRuleRow(root, /Apache Log4j|Microsoft Exchange|Spring4Shell/i));
+          await sleep(700);
+          click(root.getElementById("editBtn"));
+          await sleep(700);
+
+          const modalWin = root.defaultView || frame.contentWindow;
+          const state = modalWin.getActiveDrawerState && modalWin.getActiveDrawerState();
+          state.protocols = [];
+          modalWin.renderSuricataDrawerContent();
+          await sleep(250);
+
+          const initialTriggerText = normalizeText(getProtocolTrigger(root)?.textContent);
+          click(getProtocolTrigger(root));
+          await sleep(350);
+
+          let menu = getProtocolMenu(root);
+          let menuList = menu?.querySelector(".menu-list.suri-protocol-menu-list");
+          const hasSearch = Boolean(menuList?.querySelector(".suri-protocol-search input"));
+          const checkboxRows = Array.from(menuList?.querySelectorAll(".menu-item.menu-item-checkbox") || []);
+          const rowsHaveCheckboxes = checkboxRows.length > 0 && checkboxRows.every((row) => row.querySelector(".sot-checkbox"));
+          const rowsHaveIcons = checkboxRows.length > 0 && checkboxRows.every((row) => row.querySelector(".suri-protocol-option-icon"));
+
+          input(menuList?.querySelector(".suri-protocol-search input"), "dns");
+          await sleep(350);
+          menu = getProtocolMenu(root);
+          const filteredRows = Array.from(menu?.querySelectorAll(".suri-protocol-option") || []).map((row) => normalizeText(row.textContent));
+          const searchShowsDns = filteredRows.length === 1 && filteredRows[0] === "DNS";
+
+          input(menu?.querySelector(".suri-protocol-search input"), "");
+          await sleep(350);
+          click(getProtocolRow(root, "HTTP"));
+          await sleep(350);
+          click(getProtocolRow(root, "TLS"));
+          await sleep(350);
+          const menuStillOpenAfterSelect = getProtocolMenu(root)?.classList.contains("is-open") || false;
+          const multiTriggerText = normalizeText(getProtocolTrigger(root)?.textContent);
+          const checkedAfterSelect = Array.from(root.querySelectorAll(".suri-protocol-option .sot-checkbox.is-checked")).length;
+
+          click(getProtocolRow(root, "HTTP"));
+          await sleep(350);
+          click(getProtocolRow(root, "TLS"));
+          await sleep(350);
+          const clearedTriggerText = normalizeText(getProtocolTrigger(root)?.textContent);
+          const checkedAfterClear = Array.from(root.querySelectorAll(".suri-protocol-option .sot-checkbox.is-checked")).length;
+
+          state.protocols = [];
+          const configNone = configProtocol(modalWin, state);
+          state.protocols = ["HTTP"];
+          const configSingle = configProtocol(modalWin, state);
+          state.protocols = ["HTTP", "TLS"];
+          const configMulti = configProtocol(modalWin, state);
+
+          const payload = {
+            ok:
+              initialTriggerText === "Any protocol" &&
+              Boolean(menuList) &&
+              hasSearch &&
+              checkboxRows.length >= 30 &&
+              rowsHaveCheckboxes &&
+              rowsHaveIcons &&
+              searchShowsDns &&
+              menuStillOpenAfterSelect &&
+              multiTriggerText === "2 Protocols" &&
+              checkedAfterSelect === 2 &&
+              clearedTriggerText === "Any protocol" &&
+              checkedAfterClear === 0 &&
+              configNone === "any" &&
+              configSingle === "http" &&
+              configMulti === "any",
+            initialTriggerText,
+            checkboxRows: checkboxRows.length,
+            hasSearch,
+            rowsHaveCheckboxes,
+            rowsHaveIcons,
+            filteredRows: filteredRows.join("|"),
+            menuStillOpenAfterSelect,
+            multiTriggerText,
+            checkedAfterSelect,
+            clearedTriggerText,
+            checkedAfterClear,
+            configNone,
+            configSingle,
+            configMulti
+          };
+          setStatus(payload);
+          reportStatus(payload);
+        } catch (error) {
+          const payload = { ok: false, phase: "probe", error: String(error && error.message || error) };
+          setStatus(payload);
+          reportStatus(payload);
+        }
+      });
+    </script>
+  </body>
+</html>

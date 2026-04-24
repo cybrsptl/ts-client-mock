@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head><meta charset="utf-8" /><title>Alerting Inline Embed Shell Check</title></head>
+  <body>
+    <pre id="status">Loading…</pre>
+    <iframe id="viewer" src="../viewer/viewer.html?alertingInlineEmbedShellCheck=1" style="width:1600px;height:1200px;border:0"></iframe>
+    <script>
+      const statusEl = document.getElementById('status');
+      const frame = document.getElementById('viewer');
+      let reported = false;
+      function setStatus(data){ statusEl.textContent = JSON.stringify(data, null, 2); }
+      function reportStatus(data){ if (reported) return; reported = true; const params = new URLSearchParams(); Object.entries(data).forEach(([k,v]) => params.set(k, String(v))); (new Image()).src = `/__codex_inline_embed_shell_status__?${params.toString()}`; }
+      frame.addEventListener('load', () => {
+        const win = frame.contentWindow;
+        const doc = win.document;
+        try {
+          if (typeof win.initAlertsFeature === 'function') win.initAlertsFeature();
+          if (typeof win.openManageModal === 'function') win.openManageModal(null, false);
+        } catch (error) {
+          const payload = { ok:false, phase:'open', error:String(error && error.message || error) }; setStatus(payload); reportStatus(payload); return;
+        }
+        setTimeout(() => {
+          try {
+            const host = doc.getElementById('alertingInlineRoot');
+            const modalFrame = host?.querySelector('iframe.alerting-inline-frame');
+            const modalDoc = modalFrame?.contentDocument;
+            const modalWin = modalFrame?.contentWindow;
+            const overlay = modalDoc?.querySelector('.modal-overlay');
+            const payload = {
+              ok: !!modalFrame && !!overlay && modalFrame.src.includes('embed=viewer') && modalWin.getComputedStyle(overlay).paddingTop === '0px' && modalWin.getComputedStyle(overlay).backgroundColor === 'rgba(0, 0, 0, 0)',
+              iframeSrc: modalFrame?.getAttribute('src') || '',
+              overlayPaddingTop: overlay ? modalWin.getComputedStyle(overlay).paddingTop : '',
+              overlayBackground: overlay ? modalWin.getComputedStyle(overlay).backgroundColor : ''
+            };
+            setStatus(payload); reportStatus(payload);
+          } catch (error) {
+            const payload = { ok:false, phase:'probe', error:String(error && error.message || error) }; setStatus(payload); reportStatus(payload);
+          }
+        }, 1800);
+      });
+    </script>
+  </body>
+</html>

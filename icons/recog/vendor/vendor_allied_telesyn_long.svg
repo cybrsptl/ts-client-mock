@@ -1,0 +1,15 @@
+<svg width="130" height="128" viewBox="0 0 130 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path fill-rule="evenodd" clip-rule="evenodd" d="M1 84.2838L52.6796 44.0422L67.5092 84.2838H45.921L43.5234 76.3019L32.8385 84.2838H1Z" fill="url(#paint0_linear_5027_53961)" stroke="#EFC031" stroke-width="1.2345" stroke-miterlimit="2.613" stroke-linecap="round" stroke-linejoin="round"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M113.846 44.0422C122.194 44.0422 129.001 50.9657 129.001 59.4534C129.001 67.9434 122.194 74.8668 113.846 74.8668C105.499 74.8668 98.6914 67.9434 98.6914 59.4534C98.6914 50.9657 105.499 44.0422 113.846 44.0422Z" fill="#6360A6" stroke="#EFC031" stroke-width="1.2345" stroke-miterlimit="2.613" stroke-linecap="round" stroke-linejoin="round"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M52.6797 44H104.796L89.5364 57.5973L67.4825 84.3307L61.5507 57.8135L52.6797 44ZM70.5621 84.2839L99.9093 53.4058C99.1015 55.3195 98.6869 57.3763 98.6904 59.4535C98.6904 67.9435 105.498 74.8669 113.845 74.8669C116.192 74.8669 118.413 74.3188 120.399 73.3427L113.736 84.2839H70.5621Z" fill="url(#paint1_linear_5027_53961)" stroke="#EFC031" stroke-width="1.2345" stroke-miterlimit="2.613" stroke-linecap="round" stroke-linejoin="round"/>
+<defs>
+<linearGradient id="paint0_linear_5027_53961" x1="34.2546" y1="44.0422" x2="34.2546" y2="84.2838" gradientUnits="userSpaceOnUse">
+<stop stop-color="#4648D3"/>
+<stop offset="1" stop-color="#33348E"/>
+</linearGradient>
+<linearGradient id="paint1_linear_5027_53961" x1="86.5393" y1="44" x2="86.5393" y2="84.3307" gradientUnits="userSpaceOnUse">
+<stop stop-color="#4648D3"/>
+<stop offset="1" stop-color="#33348E"/>
+</linearGradient>
+</defs>
+</svg>

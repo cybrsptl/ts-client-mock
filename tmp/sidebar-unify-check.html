@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+  <head><meta charset="utf-8" /><title>Sidebar Unify Check</title></head>
+  <body>
+    <pre id="status">Loading…</pre>
+    <iframe id="launcher" src="../launcher/launcher.html?sidebarUnify=1" style="width:1280px;height:900px;border:0"></iframe>
+    <iframe id="viewer" src="../viewer/viewer.html?sidebarUnify=1" style="width:1440px;height:1100px;border:0"></iframe>
+    <script>
+      const statusEl = document.getElementById('status');
+      const launcherFrame = document.getElementById('launcher');
+      const viewerFrame = document.getElementById('viewer');
+      let launchLoaded = false;
+      let viewerLoaded = false;
+      let reported = false;
+
+      function px(value) {
+        return Math.round(parseFloat(value || '0')) + 'px';
+      }
+
+      function setStatus(data) {
+        statusEl.textContent = JSON.stringify(data, null, 2);
+      }
+
+      function reportStatus(data) {
+        if (reported) return;
+        reported = true;
+        const params = new URLSearchParams();
+        Object.entries(data).forEach(([key, value]) => params.set(key, String(value)));
+        (new Image()).src = `/__codex_sidebar_status__?${params.toString()}`;
+      }
+
+      function maybeRun() {
+        if (!launchLoaded || !viewerLoaded) return;
+        setTimeout(runChecks, 1800);
+      }
+
+      launcherFrame.addEventListener('load', () => {
+        launchLoaded = true;
+        maybeRun();
+      });
+
+      viewerFrame.addEventListener('load', () => {
+        viewerLoaded = true;
+        maybeRun();
+      });
+
+      function runChecks() {
+        try {
+          const launcherWin = launcherFrame.contentWindow;
+          const launcherDoc = launcherWin.document;
+          const viewerWin = viewerFrame.contentWindow;
+          const viewerDoc = viewerWin.document;
+
+          if (typeof viewerWin.initAlertsFeature === 'function') viewerWin.initAlertsFeature();
+          if (typeof viewerWin.openManageModal === 'function') viewerWin.openManageModal(null, false);
+
+          setTimeout(() => {
+            try {
+              const launcherFavoriteHead = launcherDoc.getElementById('favoriteToggleButton');
+              const launcherFavoriteArrow = launcherFavoriteHead && launcherFavoriteHead.querySelector('.collection-arrow');
+              const launcherNavRow = launcherDoc.querySelector('.launcher-nav-row');
+              const launcherNavContent = launcherNavRow && launcherNavRow.querySelector('.row-content');
+              const launcherCountContainer = launcherNavRow && launcherNavRow.querySelector('.count-container');
+              const launcherFavoriteArrowStyles = launcherFavoriteArrow ? launcherWin.getComputedStyle(launcherFavoriteArrow) : null;
+              const launcherContentStyles = launcherNavContent ? launcherWin.getComputedStyle(launcherNavContent) : null;
+              const launcherCountStyles = launcherCountContainer ? launcherWin.getComputedStyle(launcherCountContainer) : null;
+
+              const viewerCollectionRow = viewerDoc.querySelector('.tree .row[data-type="collection"]');
+              const viewerCollectionArrow = viewerCollectionRow && viewerCollectionRow.querySelector('.collection-arrow');
+              const viewerItemContent = viewerDoc.querySelector('.tree .sidebar-item-row[data-sidebar-level="item"] .row-content');
+              const viewerCountContainer = viewerDoc.querySelector('.tree .count-container');
+              const viewerExpandedTreeArrow = viewerDoc.querySelector('.tree .row.has-children.is-expanded .tree-icon .icon-hover-button');
+              const viewerCollectionArrowStyles = viewerCollectionArrow ? viewerWin.getComputedStyle(viewerCollectionArrow) : null;
+              const viewerItemStyles = viewerItemContent ? viewerWin.getComputedStyle(viewerItemContent) : null;
+              const viewerCountStyles = viewerCountContainer ? viewerWin.getComputedStyle(viewerCountContainer) : null;
+              const viewerExpandedArrowStyles = viewerExpandedTreeArrow ? viewerWin.getComputedStyle(viewerExpandedTreeArrow) : null;
+
+              const host = viewerDoc.getElementById('alertingInlineRoot');
+              const shadow = host && host.shadowRoot;
+              const manageSection = shadow && shadow.querySelector('.alerting-sidebar .side-section-header.sidebar-item-row');
+              const manageSectionContent = manageSection && manageSection.querySelector('.row-content');
+              const manageItemContent = shadow && shadow.querySelector('.alerting-sidebar .side-row.sidebar-item-row[data-sidebar-level="item"] .row-content');
+              const manageCountContainer = shadow && shadow.querySelector('.alerting-sidebar .count-container');
+              const manageArrow = manageSection && manageSection.querySelector('.collection-arrow');
+              const manageTeleseerRow = shadow && shadow.querySelector('.alerting-sidebar .side-section-body .side-row.sidebar-item-row');
+              const manageSectionStyles = manageSectionContent ? viewerWin.getComputedStyle(manageSectionContent) : null;
+              const manageItemStyles = manageItemContent ? viewerWin.getComputedStyle(manageItemContent) : null;
+              const manageCountStyles = manageCountContainer ? viewerWin.getComputedStyle(manageCountContainer) : null;
+              const manageArrowStyles = manageArrow ? viewerWin.getComputedStyle(manageArrow) : null;
+              const manageTeleseerIcon = manageTeleseerRow && manageTeleseerRow.querySelector('.tree-icon .svg-icon');
+
+              const payload = {
+                ok:
+                  !!launcherFavoriteArrow &&
+                  !!launcherCountContainer &&
+                  !!viewerCollectionArrow &&
+                  !!viewerCountContainer &&
+                  !!shadow &&
+                  !!manageCountContainer &&
+                  px(launcherContentStyles?.paddingLeft) === '6px' &&
+                  px(launcherCountStyles?.paddingLeft) === '10px' &&
+                  px(launcherCountStyles?.paddingRight) === '10px' &&
+                  px(viewerItemStyles?.paddingLeft) === '6px' &&
+                  px(viewerCountStyles?.paddingLeft) === '10px' &&
+                  px(viewerCountStyles?.paddingRight) === '10px' &&
+                  px(manageSectionStyles?.paddingLeft) === '10px' &&
+                  px(manageItemStyles?.paddingLeft) === '6px' &&
+                  px(manageCountStyles?.paddingLeft) === '10px' &&
+                  px(manageCountStyles?.paddingRight) === '10px' &&
+                  launcherFavoriteArrowStyles?.opacity === '0' &&
+                  viewerCollectionArrowStyles?.opacity === '0' &&
+                  manageArrowStyles?.opacity === '0' &&
+                  viewerExpandedArrowStyles?.opacity === '0' &&
+                  Array.from(manageTeleseerIcon?.classList || []).includes('side-icon-teleseer'),
+                launcherFavoriteArrowOpacity: launcherFavoriteArrowStyles?.opacity || '',
+                launcherFavoriteArrowTransform: launcherFavoriteArrowStyles?.transform || '',
+                launcherItemPaddingLeft: px(launcherContentStyles?.paddingLeft),
+                launcherCountPaddingLeft: px(launcherCountStyles?.paddingLeft),
+                launcherCountPaddingRight: px(launcherCountStyles?.paddingRight),
+                viewerCollectionArrowOpacity: viewerCollectionArrowStyles?.opacity || '',
+                viewerCollectionArrowTransform: viewerCollectionArrowStyles?.transform || '',
+                viewerExpandedTreeArrowOpacity: viewerExpandedArrowStyles?.opacity || '',
+                viewerItemPaddingLeft: px(viewerItemStyles?.paddingLeft),
+                viewerCountPaddingLeft: px(viewerCountStyles?.paddingLeft),
+                viewerCountPaddingRight: px(viewerCountStyles?.paddingRight),
+                manageMounted: host ? host.dataset.mounted || '' : '',
+                manageSectionPaddingLeft: px(manageSectionStyles?.paddingLeft),
+                manageItemPaddingLeft: px(manageItemStyles?.paddingLeft),
+                manageCountPaddingLeft: px(manageCountStyles?.paddingLeft),
+                manageCountPaddingRight: px(manageCountStyles?.paddingRight),
+                manageArrowOpacity: manageArrowStyles?.opacity || '',
+                manageTeleseerIconClass: Array.from(manageTeleseerIcon?.classList || []).join(' '),
+              };
+
+              setStatus(payload);
+              reportStatus(payload);
+            } catch (error) {
+              const payload = { ok: false, phase: 'probe', error: String(error && error.message || error) };
+              setStatus(payload);
+              reportStatus(payload);
+            }
+          }, 1800);
+        } catch (error) {
+          const payload = { ok: false, phase: 'boot', error: String(error && error.message || error) };
+          setStatus(payload);
+          reportStatus(payload);
+        }
+      }
+    </script>
+  </body>
+</html>

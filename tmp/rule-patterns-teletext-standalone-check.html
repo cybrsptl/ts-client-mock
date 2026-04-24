@@ -1,0 +1,62 @@
+<!doctype html>
+<html>
+  <body>
+    <pre id="status">Loading…</pre>
+    <iframe id="modal" src="../alerting-modal/alert-modal.html?surface=manage-alerts&standaloneRulePatternTeletext=1" style="width:1440px;height:1400px;border:0"></iframe>
+    <script>
+      const statusEl = document.getElementById('status');
+      const frame = document.getElementById('modal');
+      let reported = false;
+      const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+      function setStatus(data) { statusEl.textContent = JSON.stringify(data, null, 2); }
+      function reportStatus(data) {
+        if (reported) return;
+        reported = true;
+        const params = new URLSearchParams();
+        Object.entries(data).forEach(([k, v]) => params.set(k, String(v)));
+        (new Image()).src = `/__codex_rule_patterns_teletext_standalone_status__?${params.toString()}`;
+      }
+      function click(el) {
+        if (!el) return false;
+        el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, composed: true }));
+        return true;
+      }
+      async function waitFor(fn, timeout = 8000) {
+        const start = Date.now();
+        while (Date.now() - start < timeout) {
+          const value = fn();
+          if (value) return value;
+          await sleep(100);
+        }
+        return null;
+      }
+      frame.addEventListener('load', async () => {
+        const win = frame.contentWindow;
+        const doc = win.document;
+        try {
+          await waitFor(() => doc.querySelector('#rulesTableBody tr'));
+          const firstRule = doc.querySelector('#rulesTableBody tr');
+          if (firstRule) click(firstRule);
+          await sleep(700);
+          const card = doc.getElementById('suriCard-rulePatterns');
+          const firstItem = card && card.querySelector('[data-rule-pattern-id]');
+          const firstSentence = firstItem && firstItem.querySelector('.suri-rule-pattern-sentence');
+          const payload = {
+            ok: Boolean(firstSentence) && (card ? card.querySelectorAll('.teletext').length : 0) > 0,
+            hasCard: Boolean(card),
+            hasSentence: Boolean(firstSentence),
+            teletextCount: card ? card.querySelectorAll('.teletext').length : 0,
+            hasGrab: Boolean(card && card.querySelector('.suri-rule-pattern-grab, .suri-rule-pattern-grab-slot')),
+            firstSentenceText: firstSentence ? firstSentence.textContent.replace(/\s+/g, ' ').trim() : ''
+          };
+          setStatus(payload);
+          reportStatus(payload);
+        } catch (error) {
+          const payload = { ok: false, phase: 'probe', error: String(error && error.message || error) };
+          setStatus(payload);
+          reportStatus(payload);
+        }
+      });
+    </script>
+  </body>
+</html>

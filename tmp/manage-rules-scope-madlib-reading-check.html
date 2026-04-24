@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+  <body>
+    <pre id="status">Loading...</pre>
+    <iframe id="viewer" src="../viewer/viewer.html?manageRulesScopeMadlibReadingCheck=1" style="width:1440px;height:1400px;border:0"></iframe>
+    <script>
+      const statusEl = document.getElementById("status");
+      const frame = document.getElementById("viewer");
+      let reported = false;
+      const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+      function setStatus(data) { statusEl.textContent = JSON.stringify(data, null, 2); }
+      function reportStatus(data) {
+        if (reported) return;
+        reported = true;
+        const params = new URLSearchParams();
+        Object.entries(data).forEach(([key, value]) => params.set(key, String(value)));
+        new Image().src = `/__codex_scope_madlib_reading_status__?${params.toString()}`;
+      }
+      function click(el) {
+        if (!el) return false;
+        el.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, composed: true }));
+        return true;
+      }
+      async function getModalRoot(doc) {
+        const host = doc.getElementById("alertingInlineRoot");
+        if (!host) return null;
+        if (host.shadowRoot) return host.shadowRoot;
+        for (let index = 0; index < 20; index += 1) {
+          const iframe = host.querySelector("iframe.alerting-inline-frame");
+          const modalDoc = iframe && iframe.contentDocument;
+          if (modalDoc && modalDoc.querySelector(".alerting-sidebar")) return modalDoc;
+          await sleep(250);
+        }
+        return null;
+      }
+      function findSidebarRow(root, pattern) {
+        return Array.from(root.querySelectorAll(".alerting-sidebar .side-row.sidebar-item-row.sidebar-item"))
+          .find((row) => pattern.test(row.textContent || ""));
+      }
+      function findRuleRow(root, pattern = null) {
+        const rows = Array.from(root.querySelectorAll("#rulesTableBody tr"));
+        if (!pattern) return rows[0] || null;
+        return rows.find((row) => pattern.test(row.textContent || "")) || null;
+      }
+      function normalizeText(value) {
+        return String(value || "").trim().replace(/\s+/g, " ");
+      }
+      function getVisibleSentenceText(sentenceEl) {
+        if (!sentenceEl) return "";
+        const clone = sentenceEl.cloneNode(true);
+        clone.querySelectorAll(".menu-list, .suri-scope-summary-popover, .suri-madlib-readonly-popover").forEach((el) => el.remove());
+        return normalizeText(clone.textContent);
+      }
+      frame.addEventListener("load", async () => {
+        const win = frame.contentWindow;
+        const doc = win.document;
+        try {
+          if (typeof win.initAlertsFeature === "function") win.initAlertsFeature();
+          if (typeof win.openManageModal === "function") win.openManageModal(null, false);
+          await sleep(500);
+          const root = await getModalRoot(doc);
+          if (!root) {
+            const payload = { ok: false, phase: "modal-root", error: "missing modal root" };
+            setStatus(payload); reportStatus(payload); return;
+          }
+
+          click(findSidebarRow(root, /Emerging Threats PRO/i));
+          await sleep(700);
+          click(findRuleRow(root, /Apache Log4j|Microsoft Exchange|Spring4Shell/i));
+          await sleep(700);
+          click(root.getElementById("editBtn"));
+          await sleep(700);
+
+          const modalWin = root.defaultView || frame.contentWindow;
+          const state = modalWin.getActiveDrawerState && modalWin.getActiveDrawerState();
+          if (!state) {
+            const payload = { ok: false, phase: "drawer-state", error: "missing active drawer state" };
+            setStatus(payload); reportStatus(payload); return;
+          }
+
+          state.action = "Drop";
+          state.protocols = "";
+          state.directionality = "Unidirectional";
+          state.flow = "To Server";
+          state.state = "Established";
+          state.subnetFilters = {
+            sourceSubnets: { includeVariables: ["HOME_NET"], excludeVariables: [], includeChecked: [], excludeChecked: [], includeManual: [], excludeManual: [] },
+            destinationSubnets: { includeVariables: ["EXTERNAL_NET"], excludeVariables: [], includeChecked: [], excludeChecked: [], includeManual: [], excludeManual: [] },
+          };
+          state.portFilters = {
+            sourcePorts: { includeVariables: [], excludeVariables: [], includeChecked: ["443"], excludeChecked: [], includeManual: [], excludeManual: [] },
+            destinationPorts: { includeVariables: [], excludeVariables: [], includeChecked: [], excludeChecked: [], includeManual: [], excludeManual: [] },
+          };
+          modalWin.renderSuricataDrawerContent();
+          await sleep(250);
+
+          const scopeCard = root.getElementById("suriCard-ruleScope");
+          const sentence = getVisibleSentenceText(scopeCard?.querySelector(".suri-param-sentence"));
+          const expected = "Any protocol from HOME_NET on ports 443 going one-way to EXTERNAL_NET on any port and inspect full transactions for established connections";
+          const forbidden = /\b(Take|Alert|Drop|Reject)\b/.test(sentence);
+          const orderPattern = /Any protocol.*from.*HOME_NET.*on.*ports 443.*going.*one-way.*to.*EXTERNAL_NET.*on.*any port.*inspect full transactions.*established.*connections/i;
+          const payload = {
+            ok: sentence === expected && !forbidden && orderPattern.test(sentence),
+            sentence,
+            expected,
+            forbidden,
+          };
+          setStatus(payload);
+          reportStatus(payload);
+        } catch (error) {
+          const payload = { ok: false, phase: "probe", error: String(error && error.message || error) };
+          setStatus(payload);
+          reportStatus(payload);
+        }
+      });
+    </script>
+  </body>
+</html>

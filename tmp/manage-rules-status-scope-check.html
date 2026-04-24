@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+  <body>
+    <pre id="status">Loading...</pre>
+    <iframe id="viewer" src="../viewer/viewer.html?manageRulesStatusScopeCheck=1" style="width:1440px;height:1600px;border:0"></iframe>
+    <script>
+      const statusEl = document.getElementById("status");
+      const frame = document.getElementById("viewer");
+      let reported = false;
+      const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+      function setStatus(data) {
+        statusEl.textContent = JSON.stringify(data, null, 2);
+      }
+      function reportStatus(data) {
+        if (reported) return;
+        reported = true;
+        const params = new URLSearchParams();
+        Object.entries(data).forEach(([key, value]) => params.set(key, String(value)));
+        new Image().src = `/__codex_status_scope_status__?${params.toString()}`;
+      }
+      function click(el) {
+        if (!el) return false;
+        el.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, composed: true }));
+        return true;
+      }
+      async function getModalRoot(doc) {
+        const host = doc.getElementById("alertingInlineRoot");
+        if (!host) return null;
+        for (let index = 0; index < 20; index += 1) {
+          const iframe = host.querySelector("iframe.alerting-inline-frame");
+          const modalDoc = iframe?.contentDocument;
+          if (modalDoc?.body) return modalDoc;
+          await sleep(250);
+        }
+        return null;
+      }
+      function findSidebarRow(root, pattern) {
+        return Array.from(root.querySelectorAll(".alerting-sidebar .side-row.sidebar-item-row.sidebar-item")).find((row) =>
+          pattern.test(row.textContent || ""),
+        ) || null;
+      }
+      function findRuleRow(root, pattern) {
+        return Array.from(root.querySelectorAll("#rulesTableBody tr")).find((row) =>
+          pattern.test(row.textContent || ""),
+        ) || null;
+      }
+      function getStatusLabels(root) {
+        return Array.from(root.querySelectorAll(".status-pill")).map((pill) =>
+          (pill.textContent || "").trim(),
+        );
+      }
+      frame.addEventListener("load", async () => {
+        const win = frame.contentWindow;
+        const doc = win.document;
+        try {
+          if (typeof win.initAlertsFeature === "function") win.initAlertsFeature();
+          if (typeof win.openManageModal === "function") win.openManageModal(null, false);
+          await sleep(1800);
+          const modalDoc = await getModalRoot(doc);
+          if (!modalDoc) {
+            const payload = { ok: false, phase: "modal-root", error: "missing modal root" };
+            setStatus(payload); reportStatus(payload); return;
+          }
+
+          const etLabels = getStatusLabels(modalDoc);
+          const etHasReadOnly = etLabels.includes("Read-only");
+          const disallowedStatus = etLabels.find((label) =>
+            !["Read-only", "Broken"].includes(label),
+          ) || "";
+
+          click(findSidebarRow(modalDoc, /Default Alerts/i));
+          await sleep(700);
+          const defaultLabels = getStatusLabels(modalDoc);
+          const defaultHasReadOnly = defaultLabels.includes("Read-only");
+          const defaultRow = modalDoc.querySelector("#rulesTableBody tr");
+          click(defaultRow);
+          await sleep(700);
+          const defaultEditHidden = modalDoc.getElementById("editBtn")?.classList.contains("hidden");
+          const defaultReadOnlyBanner = /Read-only/i.test(
+            Array.from(modalDoc.querySelectorAll(".suri-drawer-banner")).map((banner) => banner.textContent || "").join(" "),
+          );
+
+          click(findSidebarRow(modalDoc, /My Custom Detections/i));
+          await sleep(700);
+          const brokenRow = findRuleRow(modalDoc, /Broken/i);
+          click(brokenRow);
+          await sleep(700);
+          const brokenBanner = Array.from(modalDoc.querySelectorAll(".suri-drawer-banner")).find((banner) =>
+            /Broken/i.test(banner.textContent || ""),
+          );
+          const brokenIconUsesRepoAsset = Boolean(
+            brokenBanner?.querySelector('.suri-drawer-banner-svg-icon[style*="icon_error_fill"]'),
+          );
+          const brokenBannerStyle = brokenBanner ? getComputedStyle(brokenBanner) : null;
+          const brokenBannerBorder = brokenBannerStyle?.borderColor || "";
+          const brokenBannerBg = brokenBannerStyle?.backgroundColor || "";
+
+          const payload = {
+            ok:
+              etHasReadOnly &&
+              !disallowedStatus &&
+              defaultHasReadOnly &&
+              defaultEditHidden &&
+              defaultReadOnlyBanner &&
+              Boolean(brokenRow) &&
+              Boolean(brokenBanner) &&
+              brokenIconUsesRepoAsset,
+            etHasReadOnly,
+            disallowedStatus,
+            defaultHasReadOnly,
+            defaultEditHidden,
+            defaultReadOnlyBanner,
+            foundBrokenRow: Boolean(brokenRow),
+            foundBrokenBanner: Boolean(brokenBanner),
+            brokenIconUsesRepoAsset,
+            brokenBannerBorder,
+            brokenBannerBg,
+          };
+          setStatus(payload);
+          reportStatus(payload);
+        } catch (error) {
+          const payload = { ok: false, phase: "probe", error: String((error && error.message) || error) };
+          setStatus(payload);
+          reportStatus(payload);
+        }
+      });
+    </script>
+  </body>
+</html>

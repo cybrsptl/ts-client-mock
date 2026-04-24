@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+  <body>
+    <pre id="status">Loading…</pre>
+    <iframe id="viewer" src="../viewer/viewer.html?manageRulesRuleBehaviorsCheck=1" style="width:1440px;height:1600px;border:0"></iframe>
+    <script>
+      const statusEl = document.getElementById('status');
+      const frame = document.getElementById('viewer');
+      let reported = false;
+      const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+      function setStatus(data) { statusEl.textContent = JSON.stringify(data, null, 2); }
+      function reportStatus(data) {
+        if (reported) return;
+        reported = true;
+        const params = new URLSearchParams();
+        Object.entries(data).forEach(([key, value]) => params.set(key, String(value)));
+        (new Image()).src = `/__codex_rule_behaviors_status__?${params.toString()}`;
+      }
+      function click(el) {
+        if (!el) return false;
+        el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, composed: true }));
+        return true;
+      }
+      function findSidebarRow(shadow, pattern) {
+        return Array.from(shadow.querySelectorAll('.alerting-sidebar .side-row.sidebar-item-row.sidebar-item')).find((row) => pattern.test(row.textContent || '')) || null;
+      }
+      function findRuleRow(shadow, pattern) {
+        return Array.from(shadow.querySelectorAll('#rulesTableBody tr')).find((row) => pattern.test(row.textContent || '')) || null;
+      }
+      frame.addEventListener('load', async () => {
+        const win = frame.contentWindow;
+        const doc = win.document;
+        try {
+          if (typeof win.initAlertsFeature === 'function') win.initAlertsFeature();
+          if (typeof win.openManageModal === 'function') win.openManageModal(null, false);
+          await sleep(1800);
+          const host = doc.getElementById('alertingInlineRoot');
+          const shadow = host && host.shadowRoot;
+          if (!shadow) {
+            const payload = { ok: false, phase: 'shadow', error: 'missing shadow root' };
+            setStatus(payload); reportStatus(payload); return;
+          }
+
+          click(findSidebarRow(shadow, /Emerging Threats PRO/i));
+          await sleep(700);
+          click(findRuleRow(shadow, /Apache Log4j|Microsoft Exchange|Spring4Shell/i));
+          await sleep(700);
+          click(shadow.getElementById('editBtn'));
+          await sleep(900);
+
+          const patternsCard = shadow.getElementById('suriCard-rulePatterns');
+          const headerPattern = Array.from(patternsCard.querySelectorAll('[data-rule-pattern-id]')).find((item) => /HTTP Header/i.test(item.textContent || ''));
+          const headerTriggers = headerPattern ? headerPattern.querySelectorAll('.suri-rule-pattern-controls-row .suri-madlib-trigger').length : 0;
+          const headerFieldLabel = headerPattern ? (headerPattern.querySelector('.suri-rule-pattern-field-trigger .suri-madlib-trigger-label')?.textContent || '').trim() : '';
+          const relationLabel = headerPattern ? (headerPattern.querySelector('.suri-rule-pattern-relation-trigger .suri-madlib-trigger-label')?.textContent || '').trim() : '';
+
+          const behaviorsCard = shadow.getElementById('suriCard-ruleBehaviors');
+          const simpleSentences = behaviorsCard ? behaviorsCard.querySelectorAll('.suri-param-sentence').length : 0;
+          const limitRow = behaviorsCard ? Array.from(behaviorsCard.querySelectorAll('.suri-param-sentence')).find((row) => /Limit/i.test(row.textContent || '')) : null;
+          const limitToggle = limitRow ? limitRow.querySelector('.suri-toggle') : null;
+          const beforeLimitText = limitRow ? (limitRow.textContent || '') : '';
+          click(limitToggle);
+          await sleep(500);
+          const behaviorsCardAfterToggle = shadow.getElementById('suriCard-ruleBehaviors');
+          const limitRowAfterToggle = behaviorsCardAfterToggle ? Array.from(behaviorsCardAfterToggle.querySelectorAll('.suri-param-sentence')).find((row) => /Limit/i.test(row.textContent || '')) : null;
+          const afterLimitText = limitRowAfterToggle ? (limitRowAfterToggle.textContent || '') : '';
+
+          const modeToggle = behaviorsCardAfterToggle ? behaviorsCardAfterToggle.querySelector('.suri-param-mode-toggle') : null;
+          const verboseButton = modeToggle ? modeToggle.querySelectorAll('.suri-segment')[1] : null;
+          click(verboseButton);
+          await sleep(700);
+          const verboseCard = shadow.getElementById('suriCard-ruleBehaviors');
+          const verboseRows = verboseCard ? Array.from(verboseCard.querySelectorAll('.suri-row .suri-row-label')).map((el) => (el.textContent || '').trim()) : [];
+          const verboseHasLimit = verboseRows.some((text) => /Limit/i.test(text));
+
+          const payload = {
+            ok:
+              headerTriggers === 2 &&
+              headerFieldLabel === 'User-Agent' &&
+              relationLabel === 'Starts With' &&
+              simpleSentences === 2 &&
+              /alert per time window/i.test(beforeLimitText) &&
+              !/alert per time window/i.test(afterLimitText) &&
+              verboseRows.includes('Track By') &&
+              verboseRows.includes('Count') &&
+              verboseRows.includes('Seconds') &&
+              verboseRows.includes('Minutes') &&
+              verboseRows.includes('Hours') &&
+              !verboseHasLimit,
+            headerTriggers,
+            headerFieldLabel,
+            relationLabel,
+            simpleSentences,
+            beforeLimitText,
+            afterLimitText,
+            verboseRows: verboseRows.join('|'),
+            verboseHasLimit,
+          };
+          setStatus(payload);
+          reportStatus(payload);
+        } catch (error) {
+          const payload = { ok: false, phase: 'probe', error: String(error && error.message || error) };
+          setStatus(payload);
+          reportStatus(payload);
+        }
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+  <head><meta charset="utf-8" /><title>Workspace Variables Drawer Check</title></head>
+  <body>
+    <pre id="status">Loading…</pre>
+    <iframe id="viewer" src="../viewer/viewer.html?workspaceVariablesDrawerCheck=1" style="width:1600px;height:1200px;border:0"></iframe>
+    <script>
+      const statusEl = document.getElementById('status');
+      const frame = document.getElementById('viewer');
+      let reported = false;
+      function setStatus(data) { statusEl.textContent = JSON.stringify(data, null, 2); }
+      function reportStatus(data) {
+        if (reported) return;
+        reported = true;
+        const params = new URLSearchParams();
+        Object.entries(data).forEach(([key, value]) => params.set(key, String(value)));
+        (new Image()).src = `/__codex_variable_drawer_status__?${params.toString()}`;
+      }
+      frame.addEventListener('load', () => {
+        const win = frame.contentWindow;
+        const doc = win.document;
+        try {
+          if (typeof win.initAlertsFeature === 'function') win.initAlertsFeature();
+          if (typeof win.openWorkspaceVariablesModal === 'function') {
+            win.openWorkspaceVariablesModal();
+          } else {
+            const button = doc.getElementById('workspaceVariablesButton');
+            button?.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, composed: true }));
+          }
+        } catch (error) {
+          const payload = { ok: false, phase: 'open', error: String(error && error.message || error) };
+          setStatus(payload); reportStatus(payload); return;
+        }
+
+        setTimeout(() => {
+          try {
+            const host = doc.getElementById('alertingInlineRoot');
+            const shadow = host && host.shadowRoot;
+            if (!shadow) {
+              const payload = { ok: false, phase: 'shadow', error: 'missing shadow root' };
+              setStatus(payload); reportStatus(payload); return;
+            }
+            const modalTitle = shadow.querySelector('.modal-title')?.textContent?.trim() || '';
+            const sidebarEl = shadow.querySelector('.alerting-sidebar');
+            const sidebarHidden = !!sidebarEl && getComputedStyle(sidebarEl).display === 'none';
+            const tbody = shadow.getElementById('rulesTableBody');
+            const firstRow = tbody && tbody.querySelector('tr');
+            const firstName = firstRow?.querySelector('.variable-name')?.textContent?.trim() || '';
+            if (!firstRow) {
+              const payload = { ok: false, phase: 'row', modalTitle, sidebarHidden, error: 'missing variable row' };
+              setStatus(payload); reportStatus(payload); return;
+            }
+            firstRow.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, composed: true }));
+            setTimeout(() => {
+              try {
+                const drawer = shadow.getElementById('drawer');
+                const drawerTitle = shadow.getElementById('drawerTitle')?.textContent?.trim() || '';
+                const nameInput = shadow.querySelector('[data-variable-name-input]');
+                const valuesShell = shadow.querySelector('[data-variable-values-shell]');
+                const historyCard = shadow.getElementById('suriCard-variableHistory');
+                const tagsCard = shadow.getElementById('suriCard-variableTags');
+                const payload = {
+                  ok:
+                    modalTitle === 'Variables' &&
+                    sidebarHidden &&
+                    !!drawer?.classList.contains('open') &&
+                    !!firstName &&
+                    drawerTitle === firstName &&
+                    !!nameInput &&
+                    !!valuesShell &&
+                    !!historyCard &&
+                    !!tagsCard,
+                  modalTitle,
+                  sidebarHidden,
+                  drawerOpen: !!drawer?.classList.contains('open'),
+                  firstName,
+                  drawerTitle,
+                  nameInputPresent: !!nameInput,
+                  valuesShellPresent: !!valuesShell,
+                  historyCardPresent: !!historyCard,
+                  tagsCardPresent: !!tagsCard
+                };
+                setStatus(payload);
+                reportStatus(payload);
+              } catch (error) {
+                const payload = { ok: false, phase: 'post-click', error: String(error && error.message || error) };
+                setStatus(payload); reportStatus(payload);
+              }
+            }, 900);
+          } catch (error) {
+            const payload = { ok: false, phase: 'probe', error: String(error && error.message || error) };
+            setStatus(payload); reportStatus(payload);
+          }
+        }, 1800);
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,459 @@
+/*
+ * Source of truth for shared button components.
+ * Use these classes across prototype surfaces instead of redefining per feature.
+ */
+
+.btn-reset {
+  appearance: none;
+  border: 0;
+  outline: 0;
+  margin: 0;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  text-align: inherit;
+  background: transparent;
+  box-shadow: none;
+}
+
+.btn-secondary,
+.btn-secondary-icon {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  flex: 0 0 auto;
+  border-radius: 4px;
+  color: var(--text-secondary);
+  background: transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  font-weight: var(--font-weight-medium);
+  text-decoration: none;
+  transition:
+    background 120ms ease,
+    border-color 120ms ease,
+    box-shadow 120ms ease,
+    color 120ms ease;
+}
+
+.btn-secondary {
+  gap: 4px;
+}
+
+.btn-secondary:hover,
+.btn-secondary-icon:hover,
+.btn-secondary.active,
+.btn-secondary-icon.active,
+.btn-secondary.is-active,
+.btn-secondary-icon.is-active {
+  color: var(--text-primary);
+}
+
+.btn-secondary-labelgroup {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 0;
+}
+
+.btn-secondary .btn-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.btn-secondary .svg-icon,
+.btn-secondary-icon .svg-icon,
+.btn-secondary img,
+.btn-secondary-icon img {
+  color: currentColor;
+  flex: 0 0 auto;
+}
+
+.btn-icon-slot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+}
+
+.btn-chevron-slot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 10px;
+  height: 10px;
+  flex: 0 0 10px;
+  line-height: 0;
+  overflow: hidden;
+}
+
+.btn-secondary.size-l {
+  height: 32px;
+  gap: 6px;
+  padding: 0 8px;
+  font-size: 14px;
+  line-height: 18px;
+}
+
+.btn-secondary.size-l .btn-label {
+  font-size: 14px;
+  line-height: 18px;
+}
+
+.btn-secondary.size-m {
+  height: 28px;
+  gap: 6px;
+  padding: 0 8px;
+  font-size: 13px;
+  line-height: 16px;
+}
+
+.btn-secondary.size-m .btn-label {
+  font-size: 13px;
+  line-height: 16px;
+}
+
+.btn-secondary.size-s {
+  height: 24px;
+  gap: 6px;
+  padding: 0 6px;
+  border-radius: 3px;
+  font-size: 12px;
+  line-height: 14px;
+}
+
+.btn-secondary.size-s .btn-label {
+  font-size: 12px;
+  line-height: 14px;
+}
+
+.btn-secondary-icon {
+  gap: 6px;
+}
+
+.btn-secondary-icon.size-l {
+  min-width: 32px;
+  min-height: 32px;
+  padding: 7px;
+}
+
+.btn-secondary-icon.size-l .svg-icon,
+.btn-secondary-icon.size-l img,
+.btn-secondary.size-l .svg-icon,
+.btn-secondary.size-l img {
+  width: 18px;
+  height: 18px;
+}
+
+.btn-secondary-icon.size-m {
+  min-width: 28px;
+  min-height: 28px;
+  padding: 6px;
+}
+
+.btn-secondary-icon.size-m .svg-icon,
+.btn-secondary-icon.size-m img,
+.btn-secondary.size-m .svg-icon,
+.btn-secondary.size-m img {
+  width: 16px;
+  height: 16px;
+}
+
+.btn-secondary-icon.size-s {
+  min-width: 24px;
+  min-height: 24px;
+  padding: 5px;
+}
+
+.btn-secondary-icon.size-s.style-outline {
+  padding: 4px;
+}
+
+.btn-secondary-icon.size-s .svg-icon,
+.btn-secondary-icon.size-s img,
+.btn-secondary.size-s .svg-icon,
+.btn-secondary.size-s img {
+  width: 14px;
+  height: 14px;
+}
+
+/* Keep chevrons at 10px regardless of button size icon rules */
+.btn-secondary .btn-chevron-slot .svg-icon,
+.btn-secondary .btn-chevron-slot img,
+.btn-secondary .btn-chevron-slot.svg-icon,
+.btn-secondary .btn-chevron-slot.save-button-chevron,
+.btn-secondary-icon .btn-chevron-slot .svg-icon,
+.btn-secondary-icon .btn-chevron-slot img,
+.btn-secondary-icon .btn-chevron-slot.svg-icon,
+.btn-primary .btn-chevron-slot .svg-icon,
+.btn-primary .btn-chevron-slot img,
+.btn-primary .btn-chevron-slot.svg-icon {
+  width: 10px;
+  height: 10px;
+}
+
+.btn-secondary.style-default,
+.btn-secondary-icon.style-default {
+  background: var(--material-thin-white);
+  box-shadow: var(--shadow-btn-default);
+}
+
+.btn-secondary.style-default:hover,
+.btn-secondary-icon.style-default:hover,
+.btn-secondary.style-default.is-active,
+.btn-secondary-icon.style-default.is-active,
+.btn-secondary.active.style-default,
+.btn-secondary-icon.active.style-default {
+  background: var(--material-medium-white);
+  border-color: var(--material-medium-white);
+}
+
+.btn-secondary.style-outline,
+.btn-secondary-icon.style-outline {
+  border: 1px solid var(--material-medium-white);
+  background: var(--material-ultra-thin-white);
+}
+
+.btn-secondary.style-outline:hover,
+.btn-secondary-icon.style-outline:hover,
+.btn-secondary.style-outline.active,
+.btn-secondary-icon.style-outline.active,
+.btn-secondary.style-outline.is-active,
+.btn-secondary-icon.style-outline.is-active {
+  border-color: var(--material-xtra-thick-white);
+  background: var(--material-semi-thin-white);
+}
+
+.btn-secondary.style-ghost,
+.btn-secondary-icon.style-ghost {
+  background: transparent;
+}
+
+.btn-secondary.style-ghost:hover,
+.btn-secondary-icon.style-ghost:hover,
+.btn-secondary.style-ghost.active,
+.btn-secondary-icon.style-ghost.active,
+.btn-secondary.style-ghost.is-active,
+.btn-secondary-icon.style-ghost.is-active {
+  background: var(--material-thin-white);
+}
+
+/*
+ * Topbar menu triggers are open-state anchors, not selected toggles.
+ * Keep their icon/text at secondary emphasis while the menu/panel is open.
+ */
+.topbar .btn-secondary-icon.style-ghost.menu-anchor-button.active,
+.topbar .btn-secondary-icon.style-ghost.menu-anchor-button.is-active,
+.topbar .btn-secondary.style-ghost.menu-anchor-button.active,
+.topbar .btn-secondary.style-ghost.menu-anchor-button.is-active {
+  color: var(--text-secondary);
+}
+
+.btn-secondary.style-floating,
+.btn-secondary-icon.style-floating {
+  background-image:
+    linear-gradient(90deg, var(--material-ultra-thin-white) 0%, var(--material-ultra-thin-white) 100%),
+    linear-gradient(90deg, var(--surface-navbar-launcher) 0%, var(--surface-navbar-launcher) 100%);
+  box-shadow:
+    0 0 0 1px var(--material-thick-white),
+    0 2px 8px 2px var(--material-xtra-thick-black);
+  backdrop-filter: blur(48px);
+}
+
+.btn-secondary.style-floating:hover,
+.btn-secondary-icon.style-floating:hover,
+.btn-secondary.style-floating.active,
+.btn-secondary-icon.style-floating.active,
+.btn-secondary.style-floating.is-active,
+.btn-secondary-icon.style-floating.is-active {
+  background-image:
+    linear-gradient(
+      90deg,
+      var(--material-thin-white) 0%,
+      var(--material-thin-white) 100%
+    ),
+    linear-gradient(90deg, var(--surface-navbar-launcher) 0%, var(--surface-navbar-launcher) 100%);
+}
+
+.btn-secondary:focus-visible,
+.btn-secondary-icon:focus-visible {
+  outline: none;
+  border-color: var(--stroke-active);
+  box-shadow: 0 0 0 1px var(--fill-menu-item-hover);
+}
+
+.btn-secondary:disabled,
+.btn-secondary-icon:disabled {
+  opacity: 1;
+  color: var(--text-quaternary);
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+  cursor: default;
+  pointer-events: none;
+}
+
+.btn-secondary.prominent,
+.btn-secondary.prominent .btn-label {
+  color: var(--text-primary);
+}
+
+.btn-secondary-colored {
+  display: none;
+  border: 1px solid var(--orange-soft-border, var(--cyber-orange-600));
+  background: var(--tag-chip-label-orange-alpha-fill);
+  color: var(--text-highlight);
+}
+
+.btn-secondary-colored .btn-label,
+.btn-secondary-colored .inline-icon,
+.btn-secondary-colored .svg-icon {
+  color: var(--text-highlight);
+}
+
+.btn-secondary-colored.visible {
+  display: inline-flex;
+}
+
+.btn-secondary-colored:hover {
+  background: var(--tag-chip-label-orange-alpha-fill-hover);
+}
+
+.btn-secondary-colored.active {
+  background: var(--tag-chip-label-orange-alpha-fill);
+}
+
+/* Note: rgba(167,95,0,X) is an orange tint used only here — not repeated enough to token */
+
+.save-menu-button .btn-secondary-labelgroup {
+  gap: 8px;
+}
+
+.save-button-chevron {
+  --icon-url: url("../../../icons/icon_arrow_head_outline_down.svg");
+}
+
+.save-menu-button.active .save-button-chevron {
+  transform: rotate(180deg);
+}
+
+/* User settings button: secondary button variant with 24px leading avatar */
+.btn-secondary.user-settings-button {
+  min-height: 32px;
+  padding: 4px 8px 4px 4px;
+  color: var(--text-secondary);
+  background: transparent;
+  box-shadow: none;
+}
+
+.btn-secondary.user-settings-button:hover,
+.btn-secondary.user-settings-button.active,
+.btn-secondary.user-settings-button.is-active {
+  color: var(--text-primary);
+  background: var(--material-thin-white);
+  box-shadow: none;
+}
+
+.btn-secondary.user-settings-button .user-avatar {
+  width: 24px;
+  height: 24px;
+}
+
+/* Compatibility default when no explicit size/style classes are provided */
+.btn-secondary:not(.size-l):not(.size-m):not(.size-s) {
+  min-height: 28px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  line-height: 16px;
+}
+
+.btn-secondary-icon:not(.size-l):not(.size-m):not(.size-s) {
+  min-width: 28px;
+  min-height: 28px;
+  padding: 6px;
+}
+
+.btn-secondary:not(.style-default):not(.style-outline):not(.style-ghost):not(
+    .style-floating
+  ),
+.btn-secondary-icon:not(.style-default):not(.style-outline):not(
+    .style-ghost
+  ):not(.style-floating) {
+  background: var(--material-thin-white);
+  border: 1px solid var(--material-medium-white);
+  box-shadow: var(--shadow-btn-default);
+  color: var(--text-secondary);
+}
+
+.btn-secondary:not(.style-default):not(.style-outline):not(.style-ghost):not(
+    .style-floating
+  ):hover,
+.btn-secondary-icon:not(.style-default):not(.style-outline):not(
+    .style-ghost
+  ):not(.style-floating):hover {
+  background: var(--material-medium-white);
+  border-color: var(--material-thick-white);
+}
+
+/* Shared primary button */
+.btn-primary {
+  -webkit-appearance: none;
+  appearance: none;
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font: inherit;
+  font-size: 13px;
+  text-decoration: none;
+  border: 0px solid var(--primary);
+  outline: 0;
+  background-image: none;
+  height: 28px;
+  padding: 6px 10px;
+  background: var(--primary);
+  color: var(--text-primary);
+  border-radius: 4px;
+  box-shadow: none;
+  cursor: pointer;
+}
+
+.btn-primary:hover {
+  background: var(--primary);
+}
+
+/* Shared icon-only utility button for surfaces that still use btn-icon markup */
+.btn-icon {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--text-secondary);
+  min-width: 28px;
+  min-height: 28px;
+  padding: 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    background 120ms ease,
+    color 120ms ease;
+}
+
+.btn-icon:hover {
+  background: var(--material-thin-white);
+  color: var(--text-primary);
+}
+
+.btn-icon svg {
+  width: 16px;
+  height: 16px;
+}

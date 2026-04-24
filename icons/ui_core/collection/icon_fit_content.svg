@@ -1,0 +1,28 @@
+<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M1.71153 1.71153C1.84698 1.57609 2.03068 1.5 2.22222 1.5H5.11111V2.94444H2.94444V5.11111H1.5V2.22222C1.5 2.03068 1.57609 1.84698 1.71153 1.71153Z" fill="#F7F8FB" fill-opacity="0.64"/>
+<path d="M1.71153 1.71153C1.84698 1.57609 2.03068 1.5 2.22222 1.5H5.11111V2.94444H2.94444V5.11111H1.5V2.22222C1.5 2.03068 1.57609 1.84698 1.71153 1.71153Z" fill="url(#paint0_linear_4978_159)" fill-opacity="0.08"/>
+<path d="M10.8889 1.5H13.7778C13.9693 1.5 14.153 1.57609 14.2885 1.71153C14.4239 1.84698 14.5 2.03068 14.5 2.22222V5.11111H13.0556V2.94444H10.8889V1.5Z" fill="#F7F8FB" fill-opacity="0.64"/>
+<path d="M10.8889 1.5H13.7778C13.9693 1.5 14.153 1.57609 14.2885 1.71153C14.4239 1.84698 14.5 2.03068 14.5 2.22222V5.11111H13.0556V2.94444H10.8889V1.5Z" fill="url(#paint1_linear_4978_159)" fill-opacity="0.08"/>
+<path d="M2.94444 13.0556V10.8889H1.5V13.7778C1.5 13.9693 1.57609 14.153 1.71153 14.2885C1.84698 14.4239 2.03068 14.5 2.22222 14.5H5.11111V13.0556H2.94444Z" fill="#F7F8FB" fill-opacity="0.64"/>
+<path d="M2.94444 13.0556V10.8889H1.5V13.7778C1.5 13.9693 1.57609 14.153 1.71153 14.2885C1.84698 14.4239 2.03068 14.5 2.22222 14.5H5.11111V13.0556H2.94444Z" fill="url(#paint2_linear_4978_159)" fill-opacity="0.08"/>
+<path d="M13.0556 13.0556V10.8889H14.5V13.7778C14.5 13.9693 14.4239 14.153 14.2885 14.2885C14.153 14.4239 13.9693 14.5 13.7778 14.5H10.8889V13.0556H13.0556Z" fill="#F7F8FB" fill-opacity="0.64"/>
+<path d="M13.0556 13.0556V10.8889H14.5V13.7778C14.5 13.9693 14.4239 14.153 14.2885 14.2885C14.153 14.4239 13.9693 14.5 13.7778 14.5H10.8889V13.0556H13.0556Z" fill="url(#paint3_linear_4978_159)" fill-opacity="0.08"/>
+<defs>
+<linearGradient id="paint0_linear_4978_159" x1="8" y1="1.5" x2="8" y2="14.5" gradientUnits="userSpaceOnUse">
+<stop stop-opacity="0"/>
+<stop offset="1"/>
+</linearGradient>
+<linearGradient id="paint1_linear_4978_159" x1="8" y1="1.5" x2="8" y2="14.5" gradientUnits="userSpaceOnUse">
+<stop stop-opacity="0"/>
+<stop offset="1"/>
+</linearGradient>
+<linearGradient id="paint2_linear_4978_159" x1="8" y1="1.5" x2="8" y2="14.5" gradientUnits="userSpaceOnUse">
+<stop stop-opacity="0"/>
+<stop offset="1"/>
+</linearGradient>
+<linearGradient id="paint3_linear_4978_159" x1="8" y1="1.5" x2="8" y2="14.5" gradientUnits="userSpaceOnUse">
+<stop stop-opacity="0"/>
+<stop offset="1"/>
+</linearGradient>
+</defs>
+</svg>

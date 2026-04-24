@@ -1,0 +1,11 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect width="128" height="128" rx="24" fill="url(#paint0_linear_264_2706)"/>
+<path d="M72.3657 107.175V105.136H75.8397V23.0387H72.3657V21H110L109.998 46.7692H107.962C106.885 28.5514 101.37 23.0387 92.0243 23.0387H89.1456V61.63H90.2221C97.5315 61.63 99.6871 58.6345 100.41 46.7692H102.327V79.3668H100.41C99.6898 66.4224 97.5315 63.6688 90.8201 63.666L89.1456 63.6688V105.133H94.4164V107.175H72.3657Z" fill="black"/>
+<path d="M59.1085 23.0387L42.5678 107.177L36.8159 107.175L20.2779 23.0387H18V21H39.2134V23.0387H33.4615L45.0876 82.4846L56.7109 23.0387H49.8799L49.8826 21H62.944V23.0387H59.1085Z" fill="black"/>
+<defs>
+<linearGradient id="paint0_linear_264_2706" x1="64" y1="0" x2="64" y2="128" gradientUnits="userSpaceOnUse">
+<stop stop-color="white"/>
+<stop offset="1" stop-color="#EEEEEE"/>
+</linearGradient>
+</defs>
+</svg>

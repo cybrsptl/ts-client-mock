@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+  <body>
+    <pre id="status">Loading…</pre>
+    <iframe id="viewer" src="../viewer/viewer.html?manageRulesRulePatternsCatalogCheck=1" style="width:1440px;height:1500px;border:0"></iframe>
+    <script>
+      const statusEl = document.getElementById('status');
+      const frame = document.getElementById('viewer');
+      let reported = false;
+      const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+      function setStatus(data) { statusEl.textContent = JSON.stringify(data, null, 2); }
+      function reportStatus(data) {
+        if (reported) return;
+        reported = true;
+        const params = new URLSearchParams();
+        Object.entries(data).forEach(([key, value]) => params.set(key, String(value)));
+        (new Image()).src = `/__codex_rule_patterns_catalog_status__?${params.toString()}`;
+      }
+      function click(el) {
+        if (!el) return false;
+        el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, composed: true }));
+        return true;
+      }
+      function type(el, value) {
+        if (!el) return false;
+        el.value = value;
+        el.dispatchEvent(new Event('input', { bubbles: true, cancelable: true, composed: true }));
+        return true;
+      }
+      function findSidebarRow(shadow, pattern) {
+        return Array.from(shadow.querySelectorAll('.alerting-sidebar .side-row.sidebar-item-row.sidebar-item')).find((row) => pattern.test(row.textContent || ''));
+      }
+      function findRuleRow(shadow, pattern) {
+        return Array.from(shadow.querySelectorAll('#rulesTableBody tr')).find((row) => pattern.test(row.textContent || '')) || null;
+      }
+      frame.addEventListener('load', async () => {
+        const win = frame.contentWindow;
+        const doc = win.document;
+        try {
+          if (typeof win.initAlertsFeature === 'function') win.initAlertsFeature();
+          if (typeof win.openManageModal === 'function') win.openManageModal(null, false);
+          await sleep(1800);
+          const host = doc.getElementById('alertingInlineRoot');
+          const shadow = host && host.shadowRoot;
+          if (!shadow) {
+            const payload = { ok: false, phase: 'shadow', error: 'missing shadow root' };
+            setStatus(payload); reportStatus(payload); return;
+          }
+
+          click(findSidebarRow(shadow, /Emerging Threats PRO/i));
+          await sleep(700);
+          click(findRuleRow(shadow, /Apache Log4j|Microsoft Exchange|Spring4Shell/i));
+          await sleep(700);
+          click(shadow.getElementById('editBtn'));
+          await sleep(900);
+
+          const card = shadow.getElementById('suriCard-rulePatterns');
+          const addButton = card && card.querySelector('.suri-rule-pattern-add-button');
+          const addLabel = addButton ? addButton.textContent.trim() : '';
+          click(addButton);
+          await sleep(300);
+
+          const searchInput = card && card.querySelector('.suri-rule-pattern-add-search input');
+          type(searchInput, 'hash');
+          await sleep(200);
+          const disabledHash = Array.from(card.querySelectorAll('.suri-rule-pattern-add-results .suri-menu-option')).find((el) => /File\s*⋅\s*Hash/i.test(el.textContent || ''));
+
+          type(searchInput, 'ttl');
+          await sleep(200);
+          const ttlOption = Array.from(card.querySelectorAll('.suri-rule-pattern-add-results .suri-menu-option')).find((el) => /IP\s*⋅\s*TTL/i.test(el.textContent || ''));
+          click(ttlOption);
+          await sleep(700);
+
+          const configText = shadow.querySelector('.suri-rule-config-code.is-derived')?.textContent || '';
+          const latestPattern = Array.from(shadow.querySelectorAll('#suriCard-rulePatterns [data-rule-pattern-id]')).pop();
+          const latestTitle = latestPattern?.querySelector('.suri-rule-pattern-title')?.textContent?.trim() || '';
+          const menuResults = card && card.querySelector('.suri-rule-pattern-add-results');
+          const maxHeight = menuResults ? win.getComputedStyle(menuResults).maxHeight : '';
+
+          const payload = {
+            ok:
+              addLabel === 'Add Pattern' &&
+              Boolean(searchInput) &&
+              Boolean(disabledHash) &&
+              disabledHash.disabled === true &&
+              /TTL/i.test(latestTitle) &&
+              /ttl:=64;/i.test(configText) &&
+              maxHeight === '360px',
+            addLabel,
+            hasSearchInput: Boolean(searchInput),
+            disabledHashFound: Boolean(disabledHash),
+            disabledHashDisabled: Boolean(disabledHash && disabledHash.disabled),
+            latestTitle,
+            configHasTtl: /ttl:=64;/i.test(configText),
+            menuMaxHeight: maxHeight,
+          };
+          setStatus(payload);
+          reportStatus(payload);
+        } catch (error) {
+          const payload = { ok: false, phase: 'probe', error: String(error && error.message || error) };
+          setStatus(payload);
+          reportStatus(payload);
+        }
+      });
+    </script>
+  </body>
+</html>

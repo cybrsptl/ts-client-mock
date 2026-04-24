@@ -1,0 +1,1474 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Alert Modal</title>
+
+    <link rel="stylesheet" href="../shared/styles/base.css?v=20260425-card-semantics-1" />
+    <link rel="stylesheet" href="style.css?v=20260417-tooltip-figma-23" />
+    <link rel="stylesheet" href="../shared/styles/components/buttons.css" />
+    <link
+      rel="stylesheet"
+      href="../shared/styles/components/sidebar.css?v=20260413-alerting-sidebar-tree-sot-1"
+    />
+    <link
+      rel="stylesheet"
+      href="../shared/styles/components/ui-primitives.css?v=20260425-card-semantics-1"
+    />
+    <link
+      rel="stylesheet"
+      href="../shared/styles/components/checkbox.css?v=20260422-alerting-suricata-checkbox-1"
+    />
+  </head>
+  <body class="alerting-modal-app">
+    <div class="modal-overlay">
+      <div class="modal">
+        <div class="modal-header">
+          <div class="modal-title">Manage Alerts</div>
+          <button
+            class="btn-reset btn-secondary-icon size-m style-ghost modal-close modal-icon-button"
+            onclick="closeModal()"
+            type="button"
+            aria-label="Close manage alerts"
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              aria-hidden="true"
+            >
+              <path d="M18 6L6 18M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="modal-search-row">
+          <div class="search-input">
+            <div class="ui-field input-shell input-shell--with-icon">
+              <span class="input-icon" aria-hidden="true">
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <circle cx="11" cy="11" r="8" />
+                  <path d="m21 21-4.35-4.35" />
+                </svg>
+              </span>
+              <input
+                class="input-control"
+                type="text"
+                placeholder="Search..."
+                id="ruleSearch"
+                oninput="filterRules()"
+              />
+            </div>
+          </div>
+          <div class="modal-toolbar-controls" id="modalToolbarControls">
+            <div class="toolbar-menu-anchor">
+              <button
+                class="btn-reset btn-secondary size-m style-outline toolbar-menu-button"
+                id="ruleSortButton"
+                type="button"
+                aria-haspopup="menu"
+                aria-expanded="false"
+                onclick="
+                  toggleToolbarMenu(event, 'ruleSortMenu', 'ruleSortButton')
+                "
+              >
+                <span class="btn-secondary-labelgroup">
+                  <span class="btn-label" id="ruleSortButtonLabel">Sort</span>
+                </span>
+                <span class="btn-chevron-slot" aria-hidden="true">
+                  <span class="svg-icon svg-icon-chevron-down"></span>
+                </span>
+              </button>
+              <div
+                class="menu-list dropdown-menu toolbar-dropdown-menu"
+                id="ruleSortMenu"
+              ></div>
+            </div>
+            <div class="toolbar-menu-anchor">
+              <button
+                class="btn-reset btn-secondary size-m style-outline toolbar-menu-button"
+                id="ruleGroupButton"
+                type="button"
+                aria-haspopup="menu"
+                aria-expanded="false"
+                onclick="
+                  toggleToolbarMenu(event, 'ruleGroupMenu', 'ruleGroupButton')
+                "
+              >
+                <span class="btn-secondary-labelgroup">
+                  <span class="btn-label" id="ruleGroupButtonLabel">Group</span>
+                </span>
+                <span class="btn-chevron-slot" aria-hidden="true">
+                  <span class="svg-icon svg-icon-chevron-down"></span>
+                </span>
+              </button>
+              <div
+                class="menu-list dropdown-menu toolbar-dropdown-menu"
+                id="ruleGroupMenu"
+              ></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-body">
+          <!-- Sidebar -->
+          <div class="sidebar alerting-sidebar">
+            <div class="sidebar-content" id="sidebarContent"></div>
+            <div class="sidebar-footer" id="sidebarFooterActions"></div>
+          </div>
+
+          <!-- Main Content -->
+          <div class="content-wrapper">
+            <div class="main-content">
+              <div
+                class="main-dimmer"
+                id="mainDimmer"
+                onclick="closeDrawer()"
+              ></div>
+
+              <div class="content-header">
+                <div class="content-breadcrumb" id="contentBreadcrumb"></div>
+
+                <div class="content-actions" style="position: relative">
+                  <div class="toolbar-menu-anchor">
+                    <button
+                      class="btn-reset btn-secondary-icon size-m style-ghost modal-icon-button hidden"
+                      id="contentViewSettingsBtn"
+                      type="button"
+                      aria-label="View settings"
+                      aria-haspopup="menu"
+                      aria-expanded="false"
+                      onclick="
+                        toggleToolbarMenu(
+                          event,
+                          'viewSettingsMenu',
+                          'contentViewSettingsBtn',
+                        )
+                      "
+                    >
+                      <span
+                        class="btn-icon-slot svg-icon svg-icon-view-settings"
+                        aria-hidden="true"
+                      ></span>
+                    </button>
+                    <div
+                      class="menu-list dropdown-menu toolbar-dropdown-menu view-settings-menu"
+                      id="viewSettingsMenu"
+                    ></div>
+                  </div>
+                  <button
+                    class="btn-reset btn-secondary-icon size-m style-ghost modal-icon-button hidden"
+                    id="contentThresholdBtn"
+                    type="button"
+                    aria-label="Threshold settings"
+                    onclick="openThresholdSettingsDrawer()"
+                  >
+                    <span
+                      class="btn-icon-slot svg-icon svg-icon-gear"
+                      aria-hidden="true"
+                    ></span>
+                  </button>
+                  <button
+                    class="btn-reset btn-secondary size-m style-default"
+                    id="createRuleBtn"
+                    onclick="openNewRuleDialog()"
+                    type="button"
+                  >
+                    Create New Rule
+                  </button>
+                </div>
+              </div>
+
+              <div class="table-shell">
+                <div
+                  class="table-header-container"
+                  id="rulesTableHeaderContainer"
+                >
+                  <table
+                    class="rules-table rules-table-head"
+                    id="rulesTableHeadTable"
+                  >
+                    <colgroup id="rulesTableHeadColgroup"></colgroup>
+                    <thead id="rulesTableHead"></thead>
+                  </table>
+                </div>
+                <div
+                  class="table-container"
+                  id="rulesTableBodyContainer"
+                  onscroll="handleRulesTableBodyScroll()"
+                >
+                  <table
+                    class="rules-table rules-table-body"
+                    id="rulesTableBodyTable"
+                  >
+                    <colgroup id="rulesTableBodyColgroup"></colgroup>
+                    <tbody id="rulesTableBody"></tbody>
+                  </table>
+                </div>
+                <div
+                  class="multi-select-ribbon hidden"
+                  id="multiSelectRibbon"
+                  aria-live="polite"
+                ></div>
+              </div>
+
+              <div class="pagination hidden">
+                <div class="pagination-info">
+                  Showing <strong id="paginationStart">1</strong>-<strong
+                    id="paginationEnd"
+                    >25</strong
+                  >
+                  of <strong id="paginationTotal">248</strong> rules
+                </div>
+                <div class="pagination-controls">
+                  <button
+                    class="btn-reset btn-secondary size-s style-ghost pagination-btn"
+                    id="prevPage"
+                    onclick="changePage(-1)"
+                    type="button"
+                    disabled
+                  >
+                    ← Prev
+                  </button>
+                  <button
+                    class="btn-reset btn-secondary size-s style-ghost pagination-btn active"
+                    data-page="1"
+                    type="button"
+                  >
+                    1
+                  </button>
+                  <button
+                    class="btn-reset btn-secondary size-s style-ghost pagination-btn"
+                    data-page="2"
+                    type="button"
+                  >
+                    2
+                  </button>
+                  <button
+                    class="btn-reset btn-secondary size-s style-ghost pagination-btn"
+                    data-page="3"
+                    type="button"
+                  >
+                    3
+                  </button>
+                  <span style="padding: 0 4px">...</span>
+                  <button
+                    class="btn-reset btn-secondary size-s style-ghost pagination-btn"
+                    data-page="10"
+                    type="button"
+                  >
+                    10
+                  </button>
+                  <button
+                    class="btn-reset btn-secondary size-s style-ghost pagination-btn"
+                    id="nextPage"
+                    onclick="changePage(1)"
+                    type="button"
+                  >
+                    Next →
+                  </button>
+                </div>
+              </div>
+
+              <!-- Drawer -->
+              <div class="drawer-open-container">
+                <div class="drawer" id="drawer">
+                  <div class="drawer-header">
+                    <div class="drawer-header-left">
+                      <button
+                        class="btn-reset btn-secondary-icon size-m style-ghost drawer-close modal-icon-button"
+                        onclick="closeDrawer()"
+                        type="button"
+                        aria-label="Close rule drawer"
+                      >
+                        <svg
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          aria-hidden="true"
+                        >
+                          <path d="M18 6L6 18M6 6l12 12" />
+                        </svg>
+                      </button>
+
+                      <div class="drawer-title" id="drawerTitle">
+                        ET Malware Vidar Stealer
+                      </div>
+                    </div>
+
+                    <div class="drawer-actions">
+                      <button
+                        class="btn-reset btn-secondary size-m style-outline"
+                        id="editBtn"
+                        onclick="toggleEditMode()"
+                        type="button"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        class="btn-primary hidden"
+                        id="saveBtn"
+                        onclick="saveChanges()"
+                        type="button"
+                      >
+                        Save
+                      </button>
+                      <button
+                        class="btn-reset btn-secondary size-m style-ghost hidden"
+                        id="cancelBtn"
+                        onclick="cancelEdit()"
+                        type="button"
+                      >
+                        Cancel
+                      </button>
+
+                      <div style="position: relative">
+                        <button
+                          id="drawerMenuButton"
+                          class="btn-reset btn-secondary-icon size-m style-ghost modal-icon-button"
+                          onclick="toggleDrawerMenu()"
+                          type="button"
+                          aria-label="Drawer actions"
+                        >
+                          <svg
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            aria-hidden="true"
+                          >
+                            <circle cx="12" cy="12" r="1" />
+                            <circle cx="19" cy="12" r="1" />
+                            <circle cx="5" cy="12" r="1" />
+                          </svg>
+                        </button>
+
+                        <div class="menu-list dropdown-menu" id="drawerMenu">
+                          <button
+                            type="button"
+                            class="menu-item"
+                            onclick="triggerDrawerRename()"
+                          >
+                            <span class="menu-item-icon"
+                              ><span
+                                class="svg-icon"
+                                style="
+                                  --icon-url: url(&quot;../icons/ui_core/collection/icon_pencil.svg&quot;);
+                                "
+                              ></span
+                            ></span>
+                            <span class="menu-item-label">Rename</span>
+                          </button>
+                          <div class="dropdown-divider"></div>
+                          <button
+                            type="button"
+                            class="menu-item"
+                            onclick="exportCurrentRule()"
+                          >
+                            <span class="menu-item-icon"
+                              ><span
+                                class="svg-icon"
+                                style="
+                                  --icon-url: url(&quot;../icons/ui_core/collection/icon_export_file.svg&quot;);
+                                "
+                              ></span
+                            ></span>
+                            <span class="menu-item-label">Export</span>
+                          </button>
+                          <div class="dropdown-divider"></div>
+                          <button
+                            type="button"
+                            class="menu-item"
+                            onclick="deleteCurrentRule()"
+                          >
+                            <span class="menu-item-icon"
+                              ><span
+                                class="svg-icon"
+                                style="
+                                  --icon-url: url(&quot;../icons/ui_core/collection/icon_delete.svg&quot;);
+                                "
+                              ></span
+                            ></span>
+                            <span class="menu-item-label">Delete</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="drawer-content" id="drawerContent">
+                    <div class="drawer-description" id="drawerDescription">
+                      Detects Vidar Stealer malware communication patterns. This
+                      rule triggers on outbound HTTP POST requests matching
+                      known Vidar C2 infrastructure patterns.
+                    </div>
+
+                    <!-- Card: top-level parameters -->
+                    <div class="card">
+                      <div class="card-item">
+                        <span class="field-label">Severity Override</span>
+                        <span class="field-value">High</span>
+                      </div>
+
+                      <div class="card-item">
+                        <span class="field-label">Threshold</span>
+                        <span class="field-value">1</span>
+                      </div>
+
+                      <div class="card-item">
+                        <span class="field-label">
+                          Enabled
+                          <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                          >
+                            <circle cx="12" cy="12" r="10" />
+                            <path d="M12 16v-4" />
+                            <path d="M12 8h.01" />
+                          </svg>
+                        </span>
+                        <div
+                          class="toggle active"
+                          id="enabledToggle"
+                          onclick="toggleEnabled()"
+                        ></div>
+                      </div>
+                    </div>
+
+                    <!-- Card: read-only metadata -->
+                    <div class="card">
+                      <div class="card-item">
+                        <span class="field-label">Version</span>
+                        <span class="field-value" id="versionValue"
+                          >v4 · Latest</span
+                        >
+                      </div>
+
+                      <div class="card-item">
+                        <span class="field-label">SID</span>
+                        <span class="field-value">2024847</span>
+                      </div>
+
+                      <div class="card-item">
+                        <span class="field-label">Classtype</span>
+                        <span class="field-value">trojan-activity</span>
+                      </div>
+                    </div>
+
+                    <!-- Everything below stays inside drawer-content -->
+
+                    <!-- Alert Parameters Accordion -->
+                    <div class="accordion open" id="alertParamsAccordion">
+                      <div
+                        class="accordion-header"
+                        onclick="toggleAccordion('alertParamsAccordion')"
+                      >
+                        <span class="accordion-title"> Alert Parameters </span>
+                        <svg
+                          class="accordion-chevron"
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                        >
+                          <polyline points="6 9 12 15 18 9" />
+                        </svg>
+                      </div>
+
+                      <div class="accordion-content">
+                        <div class="drawer-field">
+                          <span class="field-label">Severity Override</span>
+                          <span
+                            class="field-value edit-field"
+                            data-field="severity"
+                          >
+                            <span class="read-only">High</span>
+                            <select class="edit-control hidden">
+                              <option value="critical">Critical</option>
+                              <option value="high" selected>High</option>
+                              <option value="medium">Medium</option>
+                              <option value="low">Low</option>
+                              <option value="info">Info</option>
+                            </select>
+                          </span>
+                        </div>
+
+                        <div class="drawer-field">
+                          <span class="field-label">Threshold</span>
+                          <span
+                            class="field-value edit-field threshold-field"
+                            data-field="threshold"
+                          >
+                            <span class="read-only">1</span>
+                            <span class="threshold-control edit-control hidden">
+                              <input
+                                type="range"
+                                class="threshold-slider"
+                                id="thresholdSlider"
+                                min="1"
+                                max="100"
+                                value="1"
+                                oninput="syncThresholdFromSlider(this.value)"
+                              />
+                              <input
+                                type="text"
+                                class="threshold-input"
+                                id="thresholdInput"
+                                inputmode="numeric"
+                                pattern="[0-9]*"
+                                value="1"
+                                oninput="syncThresholdFromInput(this.value)"
+                                onblur="commitThresholdInput()"
+                              />
+                            </span>
+                          </span>
+                        </div>
+
+                        <div class="drawer-field">
+                          <span class="field-label">Suppress</span>
+                          <span
+                            class="field-value edit-field"
+                            data-field="suppress"
+                          >
+                            <span class="read-only muted">None</span>
+                            <input
+                              type="text"
+                              class="edit-control hidden"
+                              placeholder="track by_src, ip..."
+                            />
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Alert Filters Accordion -->
+                    <div class="accordion open" id="alertFiltersAccordion">
+                      <div
+                        class="accordion-header"
+                        onclick="toggleAccordion('alertFiltersAccordion')"
+                      >
+                        <span class="accordion-title"> Alert Filters </span>
+                        <svg
+                          class="accordion-chevron"
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                        >
+                          <polyline points="6 9 12 15 18 9" />
+                        </svg>
+                      </div>
+
+                      <div class="accordion-content">
+                        <div class="drawer-field">
+                          <span class="field-label">Source Networks</span>
+                          <span
+                            class="field-value edit-field"
+                            data-field="source-nets"
+                            style="position: relative"
+                          >
+                            <span class="read-only">HOME_NET</span>
+
+                            <div class="combobox edit-control hidden">
+                              <div
+                                class="combobox-trigger"
+                                onclick="toggleCombobox('sourceNetsCombo')"
+                              >
+                                <span>1 selected</span>
+                                <svg
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  stroke-width="2"
+                                >
+                                  <polyline points="6 9 12 15 18 9" />
+                                </svg>
+                              </div>
+
+                              <div
+                                class="combobox-dropdown"
+                                id="sourceNetsCombo"
+                              >
+                                <div class="combobox-search">
+                                  <input
+                                    type="text"
+                                    placeholder="Search or add..."
+                                  />
+                                </div>
+                                <div class="menu-list combobox-options">
+                                  <div class="combobox-section-label">
+                                    Address Groups
+                                  </div>
+                                  <div
+                                    class="menu-item menu-item-check combobox-option selected"
+                                    onclick="toggleComboOption(this)"
+                                  >
+                                    <div class="combobox-checkbox">
+                                      <svg
+                                        width="10"
+                                        height="10"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="white"
+                                        stroke-width="3"
+                                      >
+                                        <polyline points="20 6 9 17 4 12" />
+                                      </svg>
+                                    </div>
+                                    HOME_NET
+                                  </div>
+                                  <div
+                                    class="menu-item menu-item-check combobox-option"
+                                    onclick="toggleComboOption(this)"
+                                  >
+                                    <div class="combobox-checkbox"></div>
+                                    EXTERNAL_NET
+                                  </div>
+                                  <div
+                                    class="menu-item menu-item-check combobox-option"
+                                    onclick="toggleComboOption(this)"
+                                  >
+                                    <div class="combobox-checkbox"></div>
+                                    DNS_SERVERS
+                                  </div>
+                                  <div
+                                    class="menu-item menu-item-check combobox-option"
+                                    onclick="toggleComboOption(this)"
+                                  >
+                                    <div class="combobox-checkbox"></div>
+                                    HTTP_SERVERS
+                                  </div>
+
+                                  <div class="combobox-section-label">
+                                    Project CIDRs
+                                  </div>
+                                  <div
+                                    class="menu-item menu-item-check combobox-option"
+                                    onclick="toggleComboOption(this)"
+                                  >
+                                    <div class="combobox-checkbox"></div>
+                                    192.168.10.0/24
+                                  </div>
+                                  <div
+                                    class="menu-item menu-item-check combobox-option"
+                                    onclick="toggleComboOption(this)"
+                                  >
+                                    <div class="combobox-checkbox"></div>
+                                    192.168.20.0/24
+                                  </div>
+                                  <div
+                                    class="menu-item menu-item-check combobox-option"
+                                    onclick="toggleComboOption(this)"
+                                  >
+                                    <div class="combobox-checkbox"></div>
+                                    10.0.0.0/8
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </span>
+                        </div>
+
+                        <div class="drawer-field">
+                          <span class="field-label">Destination Networks</span>
+                          <span
+                            class="field-value edit-field"
+                            data-field="dest-nets"
+                          >
+                            <span class="read-only">EXTERNAL_NET</span>
+
+                            <div class="combobox edit-control hidden">
+                              <div
+                                class="combobox-trigger"
+                                onclick="toggleCombobox('destNetsCombo')"
+                              >
+                                <span>1 selected</span>
+                                <svg
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  stroke-width="2"
+                                >
+                                  <polyline points="6 9 12 15 18 9" />
+                                </svg>
+                              </div>
+
+                              <div class="combobox-dropdown" id="destNetsCombo">
+                                <div class="combobox-search">
+                                  <input
+                                    type="text"
+                                    placeholder="Search or add..."
+                                  />
+                                </div>
+                                <div class="menu-list combobox-options">
+                                  <div class="combobox-section-label">
+                                    Address Groups
+                                  </div>
+                                  <div
+                                    class="menu-item menu-item-check combobox-option"
+                                    onclick="toggleComboOption(this)"
+                                  >
+                                    <div class="combobox-checkbox"></div>
+                                    HOME_NET
+                                  </div>
+                                  <div
+                                    class="menu-item menu-item-check combobox-option selected"
+                                    onclick="toggleComboOption(this)"
+                                  >
+                                    <div class="combobox-checkbox">
+                                      <svg
+                                        width="10"
+                                        height="10"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="white"
+                                        stroke-width="3"
+                                      >
+                                        <polyline points="20 6 9 17 4 12" />
+                                      </svg>
+                                    </div>
+                                    EXTERNAL_NET
+                                  </div>
+                                  <div
+                                    class="menu-item menu-item-check combobox-option"
+                                    onclick="toggleComboOption(this)"
+                                  >
+                                    <div class="combobox-checkbox"></div>
+                                    ANY
+                                  </div>
+                                  <div
+                                    class="menu-item menu-item-check combobox-option"
+                                    onclick="toggleComboOption(this)"
+                                  >
+                                    <div class="combobox-checkbox"></div>
+                                    RFC1918_NET
+                                  </div>
+
+                                  <div class="combobox-section-label">
+                                    Server Groups
+                                  </div>
+                                  <div
+                                    class="menu-item menu-item-check combobox-option"
+                                    onclick="toggleComboOption(this)"
+                                  >
+                                    <div class="combobox-checkbox"></div>
+                                    DNS_SERVERS
+                                  </div>
+                                  <div
+                                    class="menu-item menu-item-check combobox-option"
+                                    onclick="toggleComboOption(this)"
+                                  >
+                                    <div class="combobox-checkbox"></div>
+                                    HTTP_SERVERS
+                                  </div>
+                                  <div
+                                    class="menu-item menu-item-check combobox-option"
+                                    onclick="toggleComboOption(this)"
+                                  >
+                                    <div class="combobox-checkbox"></div>
+                                    SMTP_SERVERS
+                                  </div>
+                                  <div
+                                    class="menu-item menu-item-check combobox-option"
+                                    onclick="toggleComboOption(this)"
+                                  >
+                                    <div class="combobox-checkbox"></div>
+                                    SSH_SERVERS
+                                  </div>
+                                  <div
+                                    class="menu-item menu-item-check combobox-option"
+                                    onclick="toggleComboOption(this)"
+                                  >
+                                    <div class="combobox-checkbox"></div>
+                                    FILE_SERVERS
+                                  </div>
+
+                                  <div class="combobox-section-label">
+                                    Project CIDRs
+                                  </div>
+                                  <div
+                                    class="menu-item menu-item-check combobox-option"
+                                    onclick="toggleComboOption(this)"
+                                  >
+                                    <div class="combobox-checkbox"></div>
+                                    192.168.10.0/24
+                                  </div>
+                                  <div
+                                    class="menu-item menu-item-check combobox-option"
+                                    onclick="toggleComboOption(this)"
+                                  >
+                                    <div class="combobox-checkbox"></div>
+                                    192.168.20.0/24
+                                  </div>
+                                  <div
+                                    class="menu-item menu-item-check combobox-option"
+                                    onclick="toggleComboOption(this)"
+                                  >
+                                    <div class="combobox-checkbox"></div>
+                                    10.0.0.0/8
+                                  </div>
+                                  <div
+                                    class="menu-item menu-item-check combobox-option"
+                                    onclick="toggleComboOption(this)"
+                                  >
+                                    <div class="combobox-checkbox"></div>
+                                    172.16.0.0/12
+                                  </div>
+                                  <div
+                                    class="menu-item menu-item-check combobox-option"
+                                    onclick="toggleComboOption(this)"
+                                  >
+                                    <div class="combobox-checkbox"></div>
+                                    192.168.0.0/16
+                                  </div>
+
+                                  <div class="combobox-section-label">
+                                    External / Third-Party
+                                  </div>
+                                  <div
+                                    class="menu-item menu-item-check combobox-option"
+                                    onclick="toggleComboOption(this)"
+                                  >
+                                    <div class="combobox-checkbox"></div>
+                                    8.8.8.8/32 (Google DNS)
+                                  </div>
+                                  <div
+                                    class="menu-item menu-item-check combobox-option"
+                                    onclick="toggleComboOption(this)"
+                                  >
+                                    <div class="combobox-checkbox"></div>
+                                    1.1.1.1/32 (Cloudflare DNS)
+                                  </div>
+                                  <div
+                                    class="menu-item menu-item-check combobox-option"
+                                    onclick="toggleComboOption(this)"
+                                  >
+                                    <div class="combobox-checkbox"></div>
+                                    203.0.113.0/24 (Example ISP range)
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </span>
+                        </div>
+
+                        <div class="drawer-field">
+                          <span class="field-label">Ports</span>
+                          <span
+                            class="field-value edit-field"
+                            data-field="ports"
+                          >
+                            <span class="read-only">HTTP_PORTS</span>
+
+                            <div class="combobox edit-control hidden">
+                              <div
+                                class="combobox-trigger"
+                                onclick="toggleCombobox('portsCombo')"
+                              >
+                                <span>1 selected</span>
+                                <svg
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  stroke-width="2"
+                                >
+                                  <polyline points="6 9 12 15 18 9" />
+                                </svg>
+                              </div>
+
+                              <div class="combobox-dropdown" id="portsCombo">
+                                <div class="combobox-search">
+                                  <input
+                                    type="text"
+                                    placeholder="Search or add..."
+                                  />
+                                </div>
+                                <div class="menu-list combobox-options">
+                                  <div class="combobox-section-label">
+                                    Port Groups
+                                  </div>
+                                  <div
+                                    class="menu-item menu-item-check combobox-option selected"
+                                    onclick="toggleComboOption(this)"
+                                  >
+                                    <div class="combobox-checkbox">
+                                      <svg
+                                        width="10"
+                                        height="10"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="white"
+                                        stroke-width="3"
+                                      >
+                                        <polyline points="20 6 9 17 4 12" />
+                                      </svg>
+                                    </div>
+                                    HTTP_PORTS
+                                  </div>
+                                  <div
+                                    class="menu-item menu-item-check combobox-option"
+                                    onclick="toggleComboOption(this)"
+                                  >
+                                    <div class="combobox-checkbox"></div>
+                                    HTTPS_PORTS
+                                  </div>
+                                  <div
+                                    class="menu-item menu-item-check combobox-option"
+                                    onclick="toggleComboOption(this)"
+                                  >
+                                    <div class="combobox-checkbox"></div>
+                                    DNS_PORTS
+                                  </div>
+                                  <div
+                                    class="menu-item menu-item-check combobox-option"
+                                    onclick="toggleComboOption(this)"
+                                  >
+                                    <div class="combobox-checkbox"></div>
+                                    SMTP_PORTS
+                                  </div>
+                                  <div
+                                    class="menu-item menu-item-check combobox-option"
+                                    onclick="toggleComboOption(this)"
+                                  >
+                                    <div class="combobox-checkbox"></div>
+                                    FTP_PORTS
+                                  </div>
+                                  <div
+                                    class="menu-item menu-item-check combobox-option"
+                                    onclick="toggleComboOption(this)"
+                                  >
+                                    <div class="combobox-checkbox"></div>
+                                    SSH_PORTS
+                                  </div>
+                                  <div
+                                    class="menu-item menu-item-check combobox-option"
+                                    onclick="toggleComboOption(this)"
+                                  >
+                                    <div class="combobox-checkbox"></div>
+                                    SMB_PORTS
+                                  </div>
+                                  <div
+                                    class="menu-item menu-item-check combobox-option"
+                                    onclick="toggleComboOption(this)"
+                                  >
+                                    <div class="combobox-checkbox"></div>
+                                    RDP_PORTS
+                                  </div>
+                                  <div
+                                    class="menu-item menu-item-check combobox-option"
+                                    onclick="toggleComboOption(this)"
+                                  >
+                                    <div class="combobox-checkbox"></div>
+                                    SNMP_PORTS
+                                  </div>
+                                  <div
+                                    class="menu-item menu-item-check combobox-option"
+                                    onclick="toggleComboOption(this)"
+                                  >
+                                    <div class="combobox-checkbox"></div>
+                                    NTP_PORTS
+                                  </div>
+
+                                  <div class="combobox-section-label">
+                                    Common Single Ports
+                                  </div>
+                                  <div
+                                    class="menu-item menu-item-check combobox-option"
+                                    onclick="toggleComboOption(this)"
+                                  >
+                                    <div class="combobox-checkbox"></div>
+                                    80 (HTTP)
+                                  </div>
+                                  <div
+                                    class="menu-item menu-item-check combobox-option"
+                                    onclick="toggleComboOption(this)"
+                                  >
+                                    <div class="combobox-checkbox"></div>
+                                    443 (HTTPS)
+                                  </div>
+                                  <div
+                                    class="menu-item menu-item-check combobox-option"
+                                    onclick="toggleComboOption(this)"
+                                  >
+                                    <div class="combobox-checkbox"></div>
+                                    53 (DNS)
+                                  </div>
+                                  <div
+                                    class="menu-item menu-item-check combobox-option"
+                                    onclick="toggleComboOption(this)"
+                                  >
+                                    <div class="combobox-checkbox"></div>
+                                    25 (SMTP)
+                                  </div>
+                                  <div
+                                    class="menu-item menu-item-check combobox-option"
+                                    onclick="toggleComboOption(this)"
+                                  >
+                                    <div class="combobox-checkbox"></div>
+                                    22 (SSH)
+                                  </div>
+                                  <div
+                                    class="menu-item menu-item-check combobox-option"
+                                    onclick="toggleComboOption(this)"
+                                  >
+                                    <div class="combobox-checkbox"></div>
+                                    445 (SMB)
+                                  </div>
+                                  <div
+                                    class="menu-item menu-item-check combobox-option"
+                                    onclick="toggleComboOption(this)"
+                                  >
+                                    <div class="combobox-checkbox"></div>
+                                    3389 (RDP)
+                                  </div>
+
+                                  <div class="combobox-section-label">
+                                    Ranges / Custom
+                                  </div>
+                                  <div
+                                    class="menu-item menu-item-check combobox-option"
+                                    onclick="toggleComboOption(this)"
+                                  >
+                                    <div class="combobox-checkbox"></div>
+                                    1024:65535 (Ephemeral)
+                                  </div>
+                                  <div
+                                    class="menu-item menu-item-check combobox-option"
+                                    onclick="toggleComboOption(this)"
+                                  >
+                                    <div class="combobox-checkbox"></div>
+                                    8000:9000
+                                  </div>
+                                  <div
+                                    class="menu-item menu-item-check combobox-option"
+                                    onclick="toggleComboOption(this)"
+                                  >
+                                    <div class="combobox-checkbox"></div>
+                                    8080
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </span>
+                        </div>
+
+                        <div class="drawer-field">
+                          <span class="field-label">Direction</span>
+                          <span
+                            class="field-value edit-field"
+                            data-field="direction"
+                          >
+                            <span class="read-only">→ src to dst</span>
+                            <select class="edit-control hidden">
+                              <option value="forward" selected>
+                                → src to dst
+                              </option>
+                              <option value="bidirectional">
+                                ↔ bidirectional
+                              </option>
+                            </select>
+                          </span>
+                        </div>
+
+                        <div class="drawer-field">
+                          <span class="field-label">Flow</span>
+                          <span
+                            class="field-value edit-field"
+                            data-field="flow"
+                          >
+                            <span class="read-only"
+                              >to_server, established</span
+                            >
+                            <select class="edit-control hidden">
+                              <option value="to_server" selected>
+                                to_server, established
+                              </option>
+                              <option value="to_client">
+                                to_client, established
+                              </option>
+                              <option value="both">bidirectional</option>
+                            </select>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Raw YAML Section -->
+                    <div class="yaml-section">
+                      <div class="yaml-header">
+                        <span class="yaml-title">
+                          <svg
+                            width="14"
+                            height="14"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                          >
+                            <polyline points="16 18 22 12 16 6" />
+                            <polyline points="8 6 2 12 8 18" />
+                          </svg>
+                          Raw YAML
+                        </span>
+                        <div class="yaml-actions">
+                          <button
+                            class="btn-reset btn-secondary size-s style-ghost yaml-action-button"
+                            onclick="copyYaml()"
+                            type="button"
+                          >
+                            Copy
+                          </button>
+                          <button
+                            class="btn-reset btn-secondary size-s style-ghost yaml-action-button"
+                            id="editYamlBtn"
+                            onclick="showYamlWarning()"
+                            type="button"
+                          >
+                            Edit YAML
+                          </button>
+                        </div>
+                      </div>
+
+                      <div class="yaml-content" id="yamlContent">
+                        <span class="comment"
+                          ># Suricata rule configuration</span
+                        >
+                        <span class="key">sid:</span>
+                        <span class="value">2024847</span>
+                        <span class="key">msg:</span>
+                        <span class="value"
+                          >"ET MALWARE Vidar Stealer CnC Activity"</span
+                        >
+                        <span class="key">classtype:</span>
+                        <span class="value">trojan-activity</span>
+                        <span class="key">severity:</span>
+                        <span class="value">2</span>
+                        <span class="key">metadata:</span>
+                        <span class="key">created_at:</span>
+                        <span class="value">2024_01_15</span>
+                        <span class="key">updated_at:</span>
+                        <span class="value">2024_11_20</span>
+                        <span class="key">attack_target:</span>
+                        <span class="value">Client_Endpoint</span>
+
+                        <span class="comment"># Network scope</span>
+                        <span class="key">vars:</span>
+                        <span class="key">address-groups:</span>
+                        <span class="key">src:</span>
+                        <span class="value">$HOME_NET</span>
+                        <span class="key">dst:</span>
+                        <span class="value">$EXTERNAL_NET</span>
+                        <span class="key">port-groups:</span>
+                        <span class="key">dst:</span>
+                        <span class="value">$HTTP_PORTS</span>
+
+                        <span class="key">direction:</span>
+                        <span class="value">"->"</span>
+                        <span class="key">flow:</span>
+                        <span class="value">to_server,established</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- YAML Edit Warning Dialog -->
+    <div class="dialog-overlay" id="yamlWarningDialog">
+      <div class="dialog">
+        <div class="dialog-icon">
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path
+              d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
+            />
+            <line x1="12" y1="9" x2="12" y2="13" />
+            <line x1="12" y1="17" x2="12.01" y2="17" />
+          </svg>
+        </div>
+        <div class="dialog-title">Edit Raw YAML?</div>
+        <div class="dialog-description">
+          Editing YAML directly can break rule configuration if syntax is
+          incorrect. Only make changes if you understand Suricata rule format.
+          Your changes will override any UI-configured values.
+        </div>
+        <div class="dialog-actions">
+          <button
+            class="btn-reset btn-secondary size-m style-ghost"
+            onclick="closeYamlWarning()"
+            type="button"
+          >
+            Cancel
+          </button>
+          <button class="btn-primary" onclick="enableYamlEdit()" type="button">
+            Continue to Edit
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Assign to Project Dialog -->
+    <div class="dialog-overlay" id="assignProjectDialog">
+      <div class="dialog">
+        <div class="dialog-title" style="margin-bottom: 16px">
+          Assign to Project
+        </div>
+        <div style="margin-bottom: 16px">
+          <div
+            style="
+              font-size: 12px;
+              color: var(--text-tertiary);
+              margin-bottom: 8px;
+            "
+          >
+            Select projects to assign this rule:
+          </div>
+          <div
+            style="
+              background: var(--bg-tertiary);
+              border-radius: 8px;
+              padding: 8px;
+              max-height: 200px;
+              overflow-y: auto;
+            "
+          >
+            <label
+              style="
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 8px;
+                cursor: pointer;
+                border-radius: 4px;
+              "
+            >
+              <input
+                type="checkbox"
+                checked
+                style="accent-color: var(--accent-blue)"
+              />
+              <span style="font-size: 13px">Production Network</span>
+            </label>
+            <label
+              style="
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 8px;
+                cursor: pointer;
+                border-radius: 4px;
+              "
+            >
+              <input
+                type="checkbox"
+                checked
+                style="accent-color: var(--accent-blue)"
+              />
+              <span style="font-size: 13px">Development Lab</span>
+            </label>
+            <label
+              style="
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 8px;
+                cursor: pointer;
+                border-radius: 4px;
+              "
+            >
+              <input type="checkbox" style="accent-color: var(--accent-blue)" />
+              <span style="font-size: 13px">Cloud Infrastructure</span>
+            </label>
+            <label
+              style="
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 8px;
+                cursor: pointer;
+                border-radius: 4px;
+              "
+            >
+              <input type="checkbox" style="accent-color: var(--accent-blue)" />
+              <span style="font-size: 13px">Remote Sites</span>
+            </label>
+          </div>
+        </div>
+
+        <div
+          style="
+            font-size: 11px;
+            color: var(--text-tertiary);
+            margin-bottom: 16px;
+            padding: 8px;
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+          "
+        >
+          <strong>Note:</strong> Rules are assigned to feeds associated with
+          these projects. Changes apply to all feeds the project subscribes to.
+        </div>
+
+        <div class="dialog-actions">
+          <button
+            class="btn-reset btn-secondary size-m style-ghost"
+            onclick="closeAssignDialog()"
+            type="button"
+          >
+            Cancel
+          </button>
+          <button class="btn-primary" onclick="confirmAssign()" type="button">
+            Assign
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="dialog-overlay" id="copyRuleDialog">
+      <div class="dialog copy-rule-dialog">
+        <div class="dialog-title" id="copyRuleDialogTitle">Make a Copy</div>
+        <div class="copy-rule-fields">
+          <label class="copy-rule-field">
+            <span class="copy-rule-label">Create from</span>
+            <select
+              class="copy-rule-select"
+              id="copyRuleSourceSelect"
+              onchange="selectCopyRuleSource(this.value)"
+              aria-label="Select source rule"
+            ></select>
+          </label>
+          <label class="copy-rule-field">
+            <span class="copy-rule-label">Move to Folder</span>
+            <select
+              class="copy-rule-select"
+              id="copyRuleTargetSelect"
+              onchange="handleCopyRuleTargetChange(this.value)"
+              aria-label="Select destination folder"
+            ></select>
+          </label>
+        </div>
+        <div class="copy-rule-create-row hidden" id="copyRuleCreateRow">
+          <label class="copy-rule-field">
+            <span class="copy-rule-label" id="copyRuleCreateLabel"
+              >New Custom Detection</span
+            >
+            <input
+              class="input-control copy-rule-create-input"
+              id="copyRuleCreateInput"
+              type="text"
+              placeholder="Custom detection name"
+              onkeydown="handleCopyRuleCreateKey(event)"
+            />
+          </label>
+        </div>
+        <div class="dialog-actions">
+          <button
+            class="btn-reset btn-secondary size-m style-ghost"
+            onclick="closeCopyRuleDialog()"
+            type="button"
+          >
+            Cancel
+          </button>
+          <button
+            class="btn-primary"
+            id="copyRuleConfirmButton"
+            onclick="confirmCopyRule()"
+            type="button"
+          >
+            Save
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast">
+      <span class="toast-icon">
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+          <polyline points="22 4 12 14.01 9 11.01" />
+        </svg>
+      </span>
+      <span class="toast-message" id="toastMessage"
+        >Changes saved successfully</span
+      >
+    </div>
+    <script
+      src="../shared/features/sidebar/sidebar-accordion-icons.js"
+      defer
+    ></script>
+    <script
+      src="../shared/features/sidebar/sidebar-sot.js?v=20260320-alerting-sot-1"
+      defer
+    ></script>
+    <script
+      src="../shared/app-data.js?v=20260407-shared-app-data-1"
+      defer
+    ></script>
+    <script
+      src="core-runtime.js?v=20260414-suricata-toolbar-status-16"
+      defer
+    ></script>
+    <script
+      src="table-runtime.js?v=20260414-suricata-toolbar-status-15"
+      defer
+    ></script>
+    <script
+      src="drawer-runtime.js?v=20260415-rule-pattern-readonly-20"
+      defer
+    ></script>
+    <script
+      src="rule-scope-runtime.js?v=20260415-rule-config-readonly-19"
+      defer
+    ></script>
+    <script src="variables-runtime.js?v=20260414-table-shell-12" defer></script>
+    <script
+      src="modal-ui-runtime.js?v=20260417-tooltip-truncate-only-24"
+      defer
+    ></script>
+    <script
+      src="content-browser-runtime.js?v=20260417-default-hits-pill-25"
+      defer
+    ></script>
+    <script src="script.js?v=20260410-inline-embed-shell-1" defer></script>
+  </body>
+</html>

@@ -1,0 +1,814 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Teleseer Launcher</title>
+
+    <link
+      rel="stylesheet"
+      href="../shared/styles/base.css?v=20260425-card-semantics-1"
+    />
+    <link
+      rel="stylesheet"
+      href="../shared/styles/components/buttons.css?v=20260316-buttons-reset-1"
+    />
+    <link
+      rel="stylesheet"
+      href="../shared/styles/components/checkbox.css?v=20260313-sot-checkbox-5"
+    />
+    <link
+      rel="stylesheet"
+      href="../shared/styles/components/inspector-drawer.css?v=20260425-card-semantics-1"
+    />
+    <link
+      rel="stylesheet"
+      href="../shared/styles/components/sidebar.css?v=20260406-sidebar-unify-2"
+    />
+    <link rel="stylesheet" href="./launcher.css?v=20260417-user-settings-icons-1" />
+    <link
+      rel="stylesheet"
+      href="../shared/styles/components/ui-primitives.css?v=20260425-card-semantics-1"
+    />
+  </head>
+  <body class="theme-midnight launcher-body">
+    <div class="app launcher-app">
+      <div class="layout launcher-layout">
+        <aside class="sidebar-shell" id="sidebarShell">
+          <div class="sidebar launcher-sidebar">
+            <div
+              class="chrome-sidebar-slot launcher-sidebar-slot"
+              id="chromeSidebarSlot"
+            >
+              <div class="sidebar-header launcher-sidebar-header">
+                <button
+                  class="btn-reset btn-secondary size-m style-ghost prominent project-dropdown workspace-dropdown"
+                  type="button"
+                  aria-haspopup="listbox"
+                  aria-label="Select workspace"
+                >
+                  <span
+                    class="launcher-workspace-thumb"
+                    aria-hidden="true"
+                  ></span>
+                  <span class="btn-secondary-labelgroup">
+                    <span class="btn-label label">My Workspace</span>
+                    <span
+                      class="btn-chevron-slot svg-icon svg-icon-chevron-down"
+                      aria-hidden="true"
+                    ></span>
+                  </span>
+                </button>
+                <button
+                  class="btn-reset btn-secondary-icon size-m style-ghost chrome-toggle"
+                  id="toggleSidebarSide"
+                  type="button"
+                  aria-label="Collapse sidebar"
+                >
+                  <span
+                    class="btn-icon-slot svg-icon svg-icon-sidebar"
+                    aria-hidden="true"
+                  ></span>
+                </button>
+              </div>
+            </div>
+
+            <div class="sidebar-search launcher-sidebar-search">
+              <div class="search-field launcher-sidebar-search-field">
+                <span
+                  class="inline-icon svg-icon svg-icon-search"
+                  aria-hidden="true"
+                ></span>
+                <input
+                  id="sidebarFilterInput"
+                  placeholder="Search navigation..."
+                  aria-label="Search navigation"
+                />
+                <button
+                  class="btn-reset btn-secondary-icon size-s style-ghost"
+                  id="clearSidebarFilterButton"
+                  type="button"
+                  aria-label="Clear navigation search"
+                >
+                  <span
+                    class="inline-icon svg-icon svg-icon-close-small"
+                    aria-hidden="true"
+                  ></span>
+                </button>
+              </div>
+            </div>
+
+            <div class="launcher-sidebar-scroll">
+              <button
+                class="btn-reset btn-secondary-icon size-m style-ghost launcher-rail-toggle"
+                id="toggleSidebarRail"
+                type="button"
+                aria-label="Expand sidebar"
+              >
+                <span
+                  class="btn-icon-slot svg-icon svg-icon-sidebar"
+                  aria-hidden="true"
+                ></span>
+              </button>
+              <div class="launcher-rail-divider" aria-hidden="true"></div>
+
+              <nav
+                class="launcher-nav"
+                id="launcherNav"
+                aria-label="Launcher sections"
+              ></nav>
+
+              <button
+                class="btn-reset btn-secondary-icon size-m style-ghost launcher-collapsed-favorite"
+                id="collapsedFavoriteButton"
+                type="button"
+                aria-label="Favorites"
+              >
+                <span
+                  class="btn-icon-slot launcher-svg-icon"
+                  style="
+                    --icon-url: url(&quot;../icons/icon_favorite.svg&quot;);
+                  "
+                  aria-hidden="true"
+                ></span>
+              </button>
+
+              <section class="launcher-favorites" id="launcherFavoritesSection">
+                <button
+                  class="btn-reset row launcher-favorites-head"
+                  id="favoriteToggleButton"
+                  type="button"
+                  aria-controls="favoriteProjectList"
+                  aria-expanded="true"
+                >
+                  <span class="row-content">
+                    <span class="row-main">
+                      <span class="collection-label-wrap">
+                        <span class="row-label">Favorites</span>
+                        <span
+                          class="launcher-svg-icon collection-arrow"
+                          style="
+                            --icon-url: url(&quot;../icons/icon_arrow_head_right.svg&quot;);
+                          "
+                          aria-hidden="true"
+                        ></span>
+                      </span>
+                    </span>
+                  </span>
+                </button>
+                <div
+                  class="launcher-favorite-list"
+                  id="favoriteProjectList"
+                ></div>
+              </section>
+            </div>
+
+            <div class="launcher-storage">
+              <div
+                class="launcher-storage-meter"
+                role="progressbar"
+                aria-label="Workspace storage used"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                aria-valuenow="18"
+              >
+                <span class="launcher-storage-meter-fill"></span>
+              </div>
+              <div class="launcher-storage-meta">
+                <span>9.3 GB of 50 GB storage used</span>
+                <span>18%</span>
+              </div>
+              <div class="launcher-version">Teleseer v1.0.5-rc2-fro</div>
+
+              <div class="launcher-storage-collapsed" aria-hidden="true">
+                <span
+                  class="launcher-svg-icon launcher-storage-icon"
+                  style="
+                    --icon-url: url(&quot;../icons/icon_database.svg&quot;);
+                  "
+                ></span>
+                <span class="launcher-storage-mini-version">v1.0.5</span>
+                <span class="launcher-storage-mini-dots">...</span>
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        <div class="launcher-main-column">
+          <div class="topbar launcher-topbar" id="topbar">
+            <div class="topbar-left">
+              <div class="launcher-section-title">
+                <span id="sectionTitle">Capture Feeds</span>
+              </div>
+            </div>
+
+            <div class="topbar-right">
+              <a
+                class="btn-reset btn-secondary size-m style-ghost launcher-viewer-link"
+                href="../viewer/viewer.html"
+              >
+                Open Viewer
+              </a>
+              <button
+                class="btn-reset btn-secondary size-m style-ghost user-settings-button menu-anchor-button"
+                id="userSettingsButton"
+                type="button"
+                aria-haspopup="menu"
+                aria-expanded="false"
+                aria-label="User settings"
+              >
+                <span class="user-avatar">RT</span>
+                <span class="btn-secondary-labelgroup">
+                  <span class="btn-label">Ricky Tan</span>
+                  <span
+                    class="btn-chevron-slot svg-icon svg-icon-chevron-down"
+                    aria-hidden="true"
+                  ></span>
+                </span>
+              </button>
+            </div>
+          </div>
+
+          <main class="main launcher-main">
+            <section class="launcher-surface">
+              <header class="launcher-toolbar">
+                <div class="launcher-toolbar-left">
+                  <div class="toolbar-search">
+                    <button
+                      class="btn-reset btn-secondary-icon size-s style-ghost"
+                      type="button"
+                      aria-label="Search"
+                    >
+                      <span
+                        class="btn-icon-slot svg-icon svg-icon-search"
+                        aria-hidden="true"
+                      ></span>
+                    </button>
+                    <input
+                      id="contentSearchInput"
+                      placeholder="Search capture feed name or source..."
+                      aria-label="Search current section"
+                    />
+                  </div>
+
+                  <div class="launcher-feeds-filters" id="feedsFilters">
+                    <div class="launcher-filter-dropdown">
+                      <button
+                        class="btn-reset btn-secondary size-l style-outline launcher-filter-trigger"
+                        id="feedTypeFilterTrigger"
+                        type="button"
+                        aria-haspopup="menu"
+                        aria-expanded="false"
+                        aria-controls="feedTypeFilterMenu"
+                        aria-label="Filter feeds by type"
+                      >
+                        <span class="btn-secondary-labelgroup">
+                          <span class="btn-label launcher-filter-text">
+                            <span class="launcher-filter-key">Type</span>
+                            <span class="launcher-filter-separator">:</span>
+                            <span
+                              class="launcher-filter-value"
+                              id="feedTypeFilterValue"
+                              >All</span
+                            >
+                          </span>
+                          <span
+                            class="btn-chevron-slot svg-icon svg-icon-chevron-down"
+                            aria-hidden="true"
+                          ></span>
+                        </span>
+                      </button>
+                      <div
+                        class="menu hidden launcher-filter-menu"
+                        id="feedTypeFilterMenu"
+                        role="menu"
+                      ></div>
+                    </div>
+
+                    <div class="launcher-filter-dropdown">
+                      <button
+                        class="btn-reset btn-secondary size-l style-outline launcher-filter-trigger"
+                        id="feedStatusFilterTrigger"
+                        type="button"
+                        aria-haspopup="menu"
+                        aria-expanded="false"
+                        aria-controls="feedStatusFilterMenu"
+                        aria-label="Filter feeds by status"
+                      >
+                        <span class="btn-secondary-labelgroup">
+                          <span class="btn-label launcher-filter-text">
+                            <span class="launcher-filter-key">Status</span>
+                            <span class="launcher-filter-separator">:</span>
+                            <span
+                              class="launcher-filter-value"
+                              id="feedStatusFilterValue"
+                              >All</span
+                            >
+                          </span>
+                          <span
+                            class="btn-chevron-slot svg-icon svg-icon-chevron-down"
+                            aria-hidden="true"
+                          ></span>
+                        </span>
+                      </button>
+                      <div
+                        class="menu hidden launcher-filter-menu"
+                        id="feedStatusFilterMenu"
+                        role="menu"
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="launcher-toolbar-right">
+                  <div class="launcher-feeds-bulk hidden" id="feedsBulkActions">
+                    <span class="launcher-feeds-bulk-count" id="feedsBulkCount"
+                      >0 selected</span
+                    >
+                    <button
+                      class="btn-reset btn-secondary size-m style-outline"
+                      id="feedsBulkPause"
+                      type="button"
+                    >
+                      <span class="btn-icon-slot">
+                        <span
+                          class="launcher-svg-icon launcher-icon-pause"
+                          aria-hidden="true"
+                        ></span>
+                      </span>
+                      <span class="btn-secondary-labelgroup">
+                        <span class="btn-label">Stop</span>
+                      </span>
+                    </button>
+                    <button
+                      class="btn-reset btn-secondary size-m style-outline"
+                      id="feedsBulkResume"
+                      type="button"
+                    >
+                      <span class="btn-icon-slot">
+                        <span
+                          class="launcher-svg-icon launcher-icon-play"
+                          aria-hidden="true"
+                        ></span>
+                      </span>
+                      <span class="btn-secondary-labelgroup">
+                        <span class="btn-label">Start</span>
+                      </span>
+                    </button>
+                    <button
+                      class="btn-reset btn-secondary size-s style-ghost"
+                      id="feedsBulkDelete"
+                      type="button"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                  <button
+                    class="btn-reset btn-secondary-icon size-m style-ghost"
+                    id="utilityPrimaryButton"
+                    type="button"
+                    aria-label="Primary utility action"
+                    hidden
+                  >
+                    <span
+                      class="btn-icon-slot launcher-svg-icon"
+                      id="utilityPrimaryIcon"
+                    ></span>
+                  </button>
+                  <button
+                    class="btn-reset btn-secondary-icon size-m style-ghost"
+                    id="utilitySecondaryButton"
+                    type="button"
+                    aria-label="Secondary utility action"
+                    hidden
+                  >
+                    <span
+                      class="btn-icon-slot launcher-svg-icon"
+                      id="utilitySecondaryIcon"
+                    ></span>
+                  </button>
+                  <button
+                    class="btn-primary"
+                    id="primaryActionButton"
+                    type="button"
+                  >
+                    New Feed
+                  </button>
+                </div>
+              </header>
+
+              <div class="launcher-content-shell">
+                <section class="launcher-grid-panel" id="gridPanel">
+                  <div class="launcher-grid-scroll" id="gridScroll">
+                    <table
+                      class="launcher-grid"
+                      id="launcherGrid"
+                      aria-label="Launcher records"
+                    >
+                      <thead id="gridHead"></thead>
+                      <tbody id="gridBody"></tbody>
+                    </table>
+                  </div>
+
+                  <div class="launcher-empty hidden" id="emptyState">
+                    <h2>No matching records</h2>
+                    <p id="emptyStateCopy">
+                      Adjust filters or change sections to continue the
+                      investigation.
+                    </p>
+                  </div>
+                </section>
+
+                <div class="launcher-loading hidden" id="loadingState">
+                  <div
+                    class="launcher-loading-spinner"
+                    aria-hidden="true"
+                  ></div>
+                  <span id="loadingStateCopy"
+                    >Refreshing workspace inventory...</span
+                  >
+                </div>
+              </div>
+
+              <div
+                class="launcher-feed-drawer-shell hidden"
+                id="feedDrawerShell"
+              >
+                <aside
+                  class="launcher-feed-drawer"
+                  id="feedDrawer"
+                  aria-label="Capture feed details drawer"
+                >
+                  <header class="launcher-feed-drawer-head suri-drawer-header">
+                    <div class="suri-drawer-header-left">
+                      <button
+                        class="btn-reset btn-secondary-icon size-m style-ghost drawer-close"
+                        id="closeFeedDrawer"
+                        type="button"
+                        aria-label="Close capture feed details drawer"
+                      >
+                        <span
+                          class="inline-icon svg-icon svg-icon-close-small"
+                          aria-hidden="true"
+                        ></span>
+                      </button>
+                      <div
+                        class="launcher-feed-drawer-titlegroup suri-drawer-title"
+                      >
+                        <h2 id="feedDrawerTitle">Capture feed details</h2>
+                        <p id="feedDrawerSubtitle"></p>
+                      </div>
+                    </div>
+                    <div
+                      class="launcher-feed-drawer-actions suri-drawer-actions"
+                    >
+                      <div
+                        class="launcher-feed-drawer-actions-view"
+                        id="feedDrawerActionsView"
+                      >
+                        <button
+                          class="btn-reset btn-secondary size-m style-outline"
+                          id="feedDrawerEdit"
+                          type="button"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          class="btn-reset btn-secondary-icon size-m style-ghost"
+                          id="feedDrawerMenu"
+                          type="button"
+                          aria-label="Feed drawer actions"
+                          aria-haspopup="menu"
+                          aria-expanded="false"
+                          aria-controls="feedDrawerActionsMenu"
+                        >
+                          <span
+                            class="btn-icon-slot launcher-svg-icon launcher-icon-meatball"
+                            aria-hidden="true"
+                          ></span>
+                        </button>
+                      </div>
+                      <div
+                        class="launcher-feed-drawer-actions-edit hidden"
+                        id="feedDrawerActionsEdit"
+                      >
+                        <button
+                          class="btn-reset btn-secondary size-m style-outline"
+                          id="feedDrawerCancel"
+                          type="button"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          class="btn-primary"
+                          id="feedDrawerSave"
+                          type="button"
+                        >
+                          Save
+                        </button>
+                      </div>
+                    </div>
+                  </header>
+                  <div
+                    class="launcher-feed-drawer-scroll suri-drawer-content"
+                    id="feedDrawerBody"
+                  ></div>
+                </aside>
+              </div>
+            </section>
+          </main>
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="menu launcher-drawer-action-menu hidden"
+      id="feedDrawerActionsMenu"
+      role="menu"
+      aria-label="Feed actions"
+    ></div>
+
+    <div
+      class="menu user-settings-menu hidden"
+      id="userSettingsMenu"
+      role="menu"
+      aria-label="User settings"
+    >
+      <button class="menu-item" type="button" role="menuitem">
+        <span class="user-menu-item-main">
+          <span class="svg-icon svg-icon-ready user-menu-icon" aria-hidden="true">
+            <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M5.375 7.07579C5.375 5.62678 6.551 4.45078 8 4.45078C9.449 4.45078 10.625 5.62678 10.625 7.07579C10.618 8.49679 9.505 9.64479 8.091 9.69379H7.965C6.488 9.65179 5.375 8.49679 5.375 7.07579Z" fill="currentColor" fill-opacity="0.64"/>
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M8 1C11.857 1 15 4.143 15 8C15 10.03 14.125 11.857 12.732 13.138C12.669 13.215 12.592 13.278 12.515 13.341C12.4864 13.3601 12.461 13.3824 12.4345 13.4057C12.4221 13.4167 12.4094 13.4278 12.396 13.439C12.27 13.544 12.137 13.642 11.997 13.74C11.9222 13.7953 11.8913 13.8184 11.857 13.838C11.6703 13.9531 11.577 14.0075 11.437 14.09C11.4183 14.1007 11.3997 14.1123 11.3806 14.1243C11.3497 14.1436 11.3177 14.1637 11.283 14.181C11.136 14.258 10.989 14.328 10.842 14.391C10.786 14.419 10.73 14.447 10.674 14.468C10.576 14.51 10.4718 14.5458 10.3676 14.5816C10.3154 14.5994 10.2633 14.6173 10.212 14.636C10.156 14.65 10.1 14.671 10.044 14.692C9.92527 14.7333 9.79894 14.7632 9.67341 14.7929C9.62871 14.8034 9.58411 14.814 9.54 14.825C9.51019 14.8287 9.48236 14.8364 9.45546 14.8439C9.43183 14.8504 9.40892 14.8567 9.386 14.86C9.19 14.902 8.994 14.93 8.791 14.951C8.763 14.958 8.735 14.965 8.707 14.965C8.476 14.986 8.238 15 8 15C7.762 15 7.524 14.986 7.286 14.965C7.258 14.958 7.23 14.951 7.202 14.951C6.999 14.93 6.803 14.902 6.607 14.86C6.551 14.853 6.502 14.839 6.453 14.825C6.28503 14.783 6.11697 14.741 5.949 14.692C5.89301 14.678 5.83702 14.657 5.78103 14.636C5.62703 14.587 5.473 14.531 5.319 14.468C5.26301 14.447 5.20702 14.419 5.15103 14.391C4.99703 14.328 4.85 14.258 4.71 14.181C4.6855 14.167 4.65926 14.1513 4.63302 14.1355C4.60676 14.1198 4.5805 14.104 4.556 14.09C4.409 14.013 4.269 13.929 4.136 13.838C4.11149 13.8205 4.08874 13.8047 4.06598 13.789C4.04324 13.7732 4.02049 13.7575 3.996 13.74C3.96559 13.7176 3.93482 13.6952 3.90394 13.6727C3.79972 13.5968 3.69419 13.52 3.597 13.439C3.56839 13.4199 3.54303 13.3976 3.5165 13.3743C3.50408 13.3633 3.49139 13.3522 3.478 13.341C3.44867 13.3146 3.41689 13.2894 3.38471 13.264C3.34008 13.2286 3.29467 13.1927 3.254 13.152C3.261 13.145 3.261 13.145 3.261 13.138C1.875 11.857 1 10.03 1 8C1 4.143 4.143 1 8 1ZM4.542 11.479C6.453 10.205 9.561 10.205 11.458 11.479C11.766 11.682 12.025 11.92 12.228 12.179C13.292 11.101 13.95 9.624 13.95 8C13.95 4.717 11.283 2.05 8 2.05C4.717 2.05 2.05 4.717 2.05 8C2.05 9.624 2.708 11.101 3.772 12.179C3.982 11.92 4.234 11.682 4.542 11.479Z" fill="currentColor" fill-opacity="0.64"/>
+            </svg>
+          </span>
+          <span>Account Settings</span>
+        </span>
+      </button>
+      <button
+        class="menu-item user-submenu-trigger"
+        id="userThemeTrigger"
+        type="button"
+        role="menuitem"
+        aria-haspopup="menu"
+        aria-expanded="false"
+      >
+        <span class="user-menu-item-main">
+          <span class="svg-icon svg-icon-ready user-menu-icon" aria-hidden="true">
+            <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M8.59091 12.1364V14.5H7.40909V12.1364H8.59091ZM11.3427 10.507L13.014 12.1784L12.1784 13.014L10.507 11.3427L11.3427 10.507ZM4.65731 10.507L5.49299 11.3427L3.82164 13.014L2.98597 12.1784L4.65731 10.507ZM8 4.76901C9.78443 4.76901 11.231 6.21557 11.231 8C11.231 9.78443 9.78443 11.231 8 11.231C7.14259 11.2326 6.31982 10.8927 5.71353 10.2865C5.10725 9.68018 4.76737 8.85741 4.769 8C4.769 6.21557 6.21557 4.76901 8 4.76901ZM14.5 7.40909V8.59091H12.1364V7.40909H14.5ZM3.86364 7.40909V8.59091H1.5V7.40909H3.86364ZM3.82164 2.98597L5.49299 4.65731L4.65731 5.49299L2.98597 3.82164L3.82164 2.98597ZM12.1784 2.98597L13.014 3.82164L11.3427 5.49299L10.507 4.65731L12.1784 2.98597ZM8.59091 1.5V3.86364H7.40909V1.5H8.59091Z" fill="currentColor" fill-opacity="0.64"/>
+            </svg>
+          </span>
+          <span>Appearance</span>
+        </span>
+        <span class="menu-item-trailing" aria-hidden="true">
+          <span class="svg-icon svg-icon-ready user-submenu-chevron" aria-hidden="true">
+            <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M4.76802 12.8262L9.27269 8L4.76802 3.17382C4.41066 2.79096 4.41066 2.17359 4.76802 1.79073C5.12983 1.40309 5.72002 1.40309 6.08183 1.79073L11.232 7.30845C11.5893 7.69131 11.5893 8.30869 11.232 8.69155L6.08183 14.2093C5.72002 14.5969 5.12983 14.5969 4.76802 14.2093C4.41066 13.8264 4.41066 13.209 4.76802 12.8262Z" fill="currentColor" fill-opacity="0.64"/>
+            </svg>
+          </span>
+        </span>
+      </button>
+      <button class="menu-item" type="button" role="menuitem">
+        <span class="user-menu-item-main">
+          <span class="svg-icon svg-icon-ready user-menu-icon" aria-hidden="true">
+            <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M8 14.5C11.5898 14.5 14.5 11.5898 14.5 8C14.5 7.69925 14.0492 7.64952 13.8937 7.90692C13.4167 9.89583 10.7808 10.8708 9.24583 10.8708C6.9124 10.8708 5.02083 8.97927 5.02083 6.64583C5.02083 5.11083 5.5625 2.85417 8.09308 2.10629C8.35048 1.95076 8.30076 1.5 8 1.5C4.41015 1.5 1.5 4.41015 1.5 8C1.5 11.5898 4.41015 14.5 8 14.5Z" fill="currentColor" fill-opacity="0.64"/>
+            </svg>
+          </span>
+          <span>Dark Mode</span>
+        </span>
+        <span class="toggle-switch user-menu-toggle"></span>
+      </button>
+      <div class="divider"></div>
+      <div class="menu-section-label">Help &amp; Support</div>
+      <button class="menu-item" type="button" role="menuitem">
+        <span class="user-menu-item-main">
+          <span class="svg-icon svg-icon-ready user-menu-icon" aria-hidden="true">
+            <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M7.99772 4.1C7.3198 4.10086 6.6699 4.37054 6.19053 4.84991C5.71117 5.32927 5.44148 5.97918 5.44062 6.6571H6.74062C6.74062 5.96355 7.30482 5.4 7.99772 5.4C8.69062 5.4 9.25482 5.96355 9.25482 6.6571C9.25482 7.0458 8.94217 7.3279 8.46443 7.714C8.30835 7.83626 8.15845 7.96621 8.01528 8.10335C7.36658 8.7514 7.34772 9.43975 7.34772 9.51645V9.95H8.64772L8.64707 9.53855C8.64772 9.52815 8.66852 9.28765 8.93372 9.0231C9.03122 8.9256 9.15407 8.8281 9.28147 8.7254C9.78782 8.31525 10.5542 7.6958 10.5542 6.6571C10.5537 5.97919 10.2842 5.32918 9.80488 4.84976C9.32558 4.37034 8.67564 4.10069 7.99772 4.1ZM7.34772 10.6H8.64772V11.9H7.34772V10.6Z" fill="currentColor" fill-opacity="0.64"/>
+              <path d="M8 1.5C4.4159 1.5 1.5 4.4159 1.5 8C1.5 11.5841 4.4159 14.5 8 14.5C11.5841 14.5 14.5 11.5841 14.5 8C14.5 4.4159 11.5841 1.5 8 1.5ZM8 13.2C5.13285 13.2 2.8 10.8671 2.8 8C2.8 5.13285 5.13285 2.8 8 2.8C10.8671 2.8 13.2 5.13285 13.2 8C13.2 10.8671 10.8671 13.2 8 13.2Z" fill="currentColor" fill-opacity="0.64"/>
+            </svg>
+          </span>
+          <span>Help Center</span>
+        </span>
+      </button>
+      <div class="divider"></div>
+      <button class="menu-item" type="button" role="menuitem">
+        <span class="user-menu-item-main">
+          <span class="svg-icon svg-icon-ready user-menu-icon" aria-hidden="true">
+            <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M3.55263 2.8C3.17475 2.8 2.86842 3.09101 2.86842 3.45V12.55C2.86842 12.909 3.17475 13.2 3.55263 13.2H8.34211C8.72001 13.2 9.02632 12.909 9.02632 12.55V10.925C9.02632 10.566 9.33265 10.275 9.71053 10.275C10.0884 10.275 10.3947 10.566 10.3947 10.925V12.55C10.3947 13.627 9.47576 14.5 8.34211 14.5H3.55263C2.419 14.5 1.5 13.627 1.5 12.55V3.45C1.5 2.37304 2.41899 1.5 3.55263 1.5H8.34211C9.47577 1.5 10.3947 2.37305 10.3947 3.45V5.44062C10.3947 5.79961 10.0884 6.09062 9.71053 6.09062C9.33265 6.09062 9.02632 5.79961 9.02632 5.44062V3.45C9.02632 3.09101 8.72 2.8 8.34211 2.8H3.55263ZM11.6215 5.91538C11.8887 5.66154 12.3219 5.66154 12.5891 5.91538L14.2996 7.54038C14.5668 7.79422 14.5668 8.20578 14.2996 8.45962L12.5891 10.0846C12.3219 10.3385 11.8887 10.3385 11.6215 10.0846C11.3543 9.83078 11.3543 9.41922 11.6215 9.16538L12.164 8.65H6.97368C6.5958 8.65 6.28947 8.35899 6.28947 8C6.28947 7.64101 6.5958 7.35 6.97368 7.35H12.164L11.6215 6.83462C11.3543 6.58078 11.3543 6.16922 11.6215 5.91538Z" fill="currentColor" fill-opacity="0.64"/>
+            </svg>
+          </span>
+          <span>Log out</span>
+        </span>
+      </button>
+    </div>
+    <div
+      class="menu user-theme-menu hidden"
+      id="userThemeMenu"
+      role="menu"
+      aria-label="Appearance"
+    >
+      <div class="menu-section-label">Theme</div>
+      <button
+        class="menu-item"
+        type="button"
+        role="menuitemradio"
+        data-theme-option="space"
+      >
+        <span class="user-menu-item-main">
+          <span class="svg-icon svg-icon-ready user-theme-check" aria-hidden="true">
+            <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M13.9385 3.64758C14.0192 3.69209 14.095 3.74831 14.166 3.8139C14.6113 4.23321 14.6113 4.91255 14.166 5.33186L6.89893 12.1908L6.84999 12.2353C6.83286 12.247 6.81573 12.2611 6.79861 12.2728C6.77169 12.2915 6.75946 12.3009 6.74722 12.3103C6.69584 12.3431 6.66158 12.3641 6.62488 12.3805C6.59552 12.3946 6.58084 12.4016 6.56616 12.4063C6.51233 12.4297 6.47318 12.4414 6.43403 12.4531C6.40222 12.4625 6.38754 12.4649 6.37286 12.4695C6.3386 12.4766 6.31903 12.4813 6.29945 12.4836C6.27499 12.4883 6.25541 12.4906 6.23584 12.493C6.20403 12.4953 6.18935 12.4977 6.17467 12.4977C6.13796 12.5 6.11839 12.5 6.09881 12.5C6.08169 12.5 6.067 12.5 6.05232 12.5C5.96179 12.493 5.92754 12.4906 5.89328 12.4836C5.87126 12.4789 5.84924 12.4766 5.82722 12.4695C5.63881 12.4321 5.46019 12.3501 5.30604 12.2212L5.2571 12.1767L1.93187 9.04945C1.89761 9.02369 1.8658 8.99792 1.83399 8.96747C1.38867 8.54815 1.38867 7.86882 1.83399 7.44951C1.84867 7.43545 1.86091 7.42374 1.87559 7.41203C1.93431 7.36283 1.99548 7.32067 2.0591 7.28553C2.13985 7.24102 2.22548 7.20588 2.31357 7.18012C2.41878 7.14966 2.52889 7.13561 2.63655 7.13561C2.65368 7.13561 2.67325 7.13561 2.69038 7.13795C2.70996 7.13795 2.72953 7.14029 2.75155 7.14264C2.82251 7.14966 2.89102 7.16137 2.95953 7.18012C3.03049 7.19886 3.099 7.22697 3.16507 7.25976C3.18709 7.27147 3.20911 7.28319 3.23358 7.29724C3.2923 7.33004 3.34613 7.36986 3.39996 7.41437C3.41464 7.42608 3.42932 7.44014 3.44156 7.45185L6.07679 9.9279L12.4801 3.8912C12.5022 3.86543 12.5266 3.83967 12.5511 3.81624C12.6074 3.76471 12.6661 3.71786 12.7297 3.67803C12.7517 3.66398 12.7738 3.65226 12.7958 3.64055C12.8227 3.6265 12.8496 3.61244 12.8765 3.60073C12.9108 3.58667 12.945 3.57262 12.9793 3.56091C13.0111 3.55154 13.0429 3.54217 13.0747 3.53514C13.0967 3.53045 13.1188 3.52577 13.1383 3.52108C13.1555 3.51874 13.175 3.51406 13.1922 3.51171C13.246 3.50469 13.2998 3.5 13.3561 3.5C13.4124 3.5 13.4662 3.50469 13.52 3.51171C13.5567 3.5164 13.591 3.52343 13.6277 3.53045C13.6644 3.53748 13.6987 3.54919 13.7329 3.56091C13.7672 3.57262 13.8014 3.58433 13.8357 3.60073C13.8724 3.61244 13.9066 3.62884 13.9385 3.64758Z" fill="currentColor" fill-opacity="0.64"/>
+            </svg>
+          </span>
+          <span>Space</span>
+        </span>
+      </button>
+      <button
+        class="menu-item active"
+        type="button"
+        role="menuitemradio"
+        data-theme-option="midnight"
+      >
+        <span class="user-menu-item-main">
+          <span class="svg-icon svg-icon-ready user-theme-check" aria-hidden="true">
+            <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M13.9385 3.64758C14.0192 3.69209 14.095 3.74831 14.166 3.8139C14.6113 4.23321 14.6113 4.91255 14.166 5.33186L6.89893 12.1908L6.84999 12.2353C6.83286 12.247 6.81573 12.2611 6.79861 12.2728C6.77169 12.2915 6.75946 12.3009 6.74722 12.3103C6.69584 12.3431 6.66158 12.3641 6.62488 12.3805C6.59552 12.3946 6.58084 12.4016 6.56616 12.4063C6.51233 12.4297 6.47318 12.4414 6.43403 12.4531C6.40222 12.4625 6.38754 12.4649 6.37286 12.4695C6.3386 12.4766 6.31903 12.4813 6.29945 12.4836C6.27499 12.4883 6.25541 12.4906 6.23584 12.493C6.20403 12.4953 6.18935 12.4977 6.17467 12.4977C6.13796 12.5 6.11839 12.5 6.09881 12.5C6.08169 12.5 6.067 12.5 6.05232 12.5C5.96179 12.493 5.92754 12.4906 5.89328 12.4836C5.87126 12.4789 5.84924 12.4766 5.82722 12.4695C5.63881 12.4321 5.46019 12.3501 5.30604 12.2212L5.2571 12.1767L1.93187 9.04945C1.89761 9.02369 1.8658 8.99792 1.83399 8.96747C1.38867 8.54815 1.38867 7.86882 1.83399 7.44951C1.84867 7.43545 1.86091 7.42374 1.87559 7.41203C1.93431 7.36283 1.99548 7.32067 2.0591 7.28553C2.13985 7.24102 2.22548 7.20588 2.31357 7.18012C2.41878 7.14966 2.52889 7.13561 2.63655 7.13561C2.65368 7.13561 2.67325 7.13561 2.69038 7.13795C2.70996 7.13795 2.72953 7.14029 2.75155 7.14264C2.82251 7.14966 2.89102 7.16137 2.95953 7.18012C3.03049 7.19886 3.099 7.22697 3.16507 7.25976C3.18709 7.27147 3.20911 7.28319 3.23358 7.29724C3.2923 7.33004 3.34613 7.36986 3.39996 7.41437C3.41464 7.42608 3.42932 7.44014 3.44156 7.45185L6.07679 9.9279L12.4801 3.8912C12.5022 3.86543 12.5266 3.83967 12.5511 3.81624C12.6074 3.76471 12.6661 3.71786 12.7297 3.67803C12.7517 3.66398 12.7738 3.65226 12.7958 3.64055C12.8227 3.6265 12.8496 3.61244 12.8765 3.60073C12.9108 3.58667 12.945 3.57262 12.9793 3.56091C13.0111 3.55154 13.0429 3.54217 13.0747 3.53514C13.0967 3.53045 13.1188 3.52577 13.1383 3.52108C13.1555 3.51874 13.175 3.51406 13.1922 3.51171C13.246 3.50469 13.2998 3.5 13.3561 3.5C13.4124 3.5 13.4662 3.50469 13.52 3.51171C13.5567 3.5164 13.591 3.52343 13.6277 3.53045C13.6644 3.53748 13.6987 3.54919 13.7329 3.56091C13.7672 3.57262 13.8014 3.58433 13.8357 3.60073C13.8724 3.61244 13.9066 3.62884 13.9385 3.64758Z" fill="currentColor" fill-opacity="0.64"/>
+            </svg>
+          </span>
+          <span>Midnight</span>
+        </span>
+      </button>
+      <button
+        class="menu-item"
+        type="button"
+        role="menuitemradio"
+        data-theme-option="cadet"
+      >
+        <span class="user-menu-item-main">
+          <span class="svg-icon svg-icon-ready user-theme-check" aria-hidden="true">
+            <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M13.9385 3.64758C14.0192 3.69209 14.095 3.74831 14.166 3.8139C14.6113 4.23321 14.6113 4.91255 14.166 5.33186L6.89893 12.1908L6.84999 12.2353C6.83286 12.247 6.81573 12.2611 6.79861 12.2728C6.77169 12.2915 6.75946 12.3009 6.74722 12.3103C6.69584 12.3431 6.66158 12.3641 6.62488 12.3805C6.59552 12.3946 6.58084 12.4016 6.56616 12.4063C6.51233 12.4297 6.47318 12.4414 6.43403 12.4531C6.40222 12.4625 6.38754 12.4649 6.37286 12.4695C6.3386 12.4766 6.31903 12.4813 6.29945 12.4836C6.27499 12.4883 6.25541 12.4906 6.23584 12.493C6.20403 12.4953 6.18935 12.4977 6.17467 12.4977C6.13796 12.5 6.11839 12.5 6.09881 12.5C6.08169 12.5 6.067 12.5 6.05232 12.5C5.96179 12.493 5.92754 12.4906 5.89328 12.4836C5.87126 12.4789 5.84924 12.4766 5.82722 12.4695C5.63881 12.4321 5.46019 12.3501 5.30604 12.2212L5.2571 12.1767L1.93187 9.04945C1.89761 9.02369 1.8658 8.99792 1.83399 8.96747C1.38867 8.54815 1.38867 7.86882 1.83399 7.44951C1.84867 7.43545 1.86091 7.42374 1.87559 7.41203C1.93431 7.36283 1.99548 7.32067 2.0591 7.28553C2.13985 7.24102 2.22548 7.20588 2.31357 7.18012C2.41878 7.14966 2.52889 7.13561 2.63655 7.13561C2.65368 7.13561 2.67325 7.13561 2.69038 7.13795C2.70996 7.13795 2.72953 7.14029 2.75155 7.14264C2.82251 7.14966 2.89102 7.16137 2.95953 7.18012C3.03049 7.19886 3.099 7.22697 3.16507 7.25976C3.18709 7.27147 3.20911 7.28319 3.23358 7.29724C3.2923 7.33004 3.34613 7.36986 3.39996 7.41437C3.41464 7.42608 3.42932 7.44014 3.44156 7.45185L6.07679 9.9279L12.4801 3.8912C12.5022 3.86543 12.5266 3.83967 12.5511 3.81624C12.6074 3.76471 12.6661 3.71786 12.7297 3.67803C12.7517 3.66398 12.7738 3.65226 12.7958 3.64055C12.8227 3.6265 12.8496 3.61244 12.8765 3.60073C12.9108 3.58667 12.945 3.57262 12.9793 3.56091C13.0111 3.55154 13.0429 3.54217 13.0747 3.53514C13.0967 3.53045 13.1188 3.52577 13.1383 3.52108C13.1555 3.51874 13.175 3.51406 13.1922 3.51171C13.246 3.50469 13.2998 3.5 13.3561 3.5C13.4124 3.5 13.4662 3.50469 13.52 3.51171C13.5567 3.5164 13.591 3.52343 13.6277 3.53045C13.6644 3.53748 13.6987 3.54919 13.7329 3.56091C13.7672 3.57262 13.8014 3.58433 13.8357 3.60073C13.8724 3.61244 13.9066 3.62884 13.9385 3.64758Z" fill="currentColor" fill-opacity="0.64"/>
+            </svg>
+          </span>
+          <span>Cadet</span>
+        </span>
+      </button>
+    </div>
+
+    <div
+      class="launcher-modal-backdrop hidden"
+      id="feedCreateModal"
+      role="dialog"
+      aria-modal="true"
+    >
+      <div class="launcher-modal">
+        <header class="launcher-modal-head">
+          <h2 id="feedCreateTitle">New Capture Feed</h2>
+          <button
+            class="btn-reset btn-secondary-icon size-m style-ghost"
+            id="closeFeedCreateModal"
+            type="button"
+            aria-label="Close new capture feed"
+          >
+            <span
+              class="inline-icon svg-icon svg-icon-close-small"
+              aria-hidden="true"
+            ></span>
+          </button>
+        </header>
+        <div class="launcher-modal-stepper" id="feedCreateStepper">
+          <span class="active">Category</span>
+          <span>Configuration</span>
+          <span>Summary</span>
+        </div>
+        <div class="launcher-modal-body" id="feedCreateBody"></div>
+        <footer class="launcher-modal-foot">
+          <button
+            class="btn-reset btn-secondary size-m style-ghost"
+            id="feedCreateBack"
+            type="button"
+          >
+            Back
+          </button>
+          <button
+            class="btn-reset btn-secondary size-m style-ghost"
+            id="feedCreateNext"
+            type="button"
+          >
+            Next
+          </button>
+          <button
+            class="btn-primary hidden"
+            id="feedCreateConfirm"
+            type="button"
+          >
+            Create Capture Feed
+          </button>
+        </footer>
+      </div>
+    </div>
+
+    <div
+      class="launcher-modal-backdrop hidden"
+      id="feedDeleteModal"
+      role="dialog"
+      aria-modal="true"
+    >
+      <div class="launcher-modal launcher-modal-sm">
+        <header class="launcher-modal-head">
+          <h2>Delete Capture Feed</h2>
+          <button
+            class="btn-reset btn-secondary-icon size-m style-ghost"
+            id="closeFeedDeleteModal"
+            type="button"
+            aria-label="Close delete capture feed confirmation"
+          >
+            <span
+              class="inline-icon svg-icon svg-icon-close-small"
+              aria-hidden="true"
+            ></span>
+          </button>
+        </header>
+        <div class="launcher-modal-body">
+          <p class="launcher-modal-copy">
+            Deleting this capture feed will stop capture and affect these
+            subscribed projects:
+          </p>
+          <ul class="launcher-modal-list" id="feedDeleteAffectedProjects"></ul>
+        </div>
+        <footer class="launcher-modal-foot">
+          <button
+            class="btn-reset btn-secondary size-m style-ghost"
+            id="feedDeleteCancel"
+            type="button"
+          >
+            Cancel
+          </button>
+          <button class="btn-primary" id="feedDeleteConfirm" type="button">
+            Delete Capture Feed
+          </button>
+        </footer>
+      </div>
+    </div>
+
+    <div
+      class="launcher-modal-backdrop hidden"
+      id="deviceAdminModal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="deviceAdminTitle"
+    >
+      <div class="launcher-modal launcher-device-modal">
+        <header class="launcher-modal-head launcher-device-modal-head">
+          <div class="launcher-modal-titlegroup">
+            <h2 id="deviceAdminTitle">Device Port Map</h2>
+            <p id="deviceAdminSubtitle">
+              Detected from firmware and sensor inventory. Read-only in
+              Teleseer.
+            </p>
+          </div>
+          <button
+            class="btn-reset btn-secondary-icon size-m style-ghost"
+            id="closeDeviceAdminModal"
+            type="button"
+            aria-label="Close device port map"
+          >
+            <span
+              class="inline-icon svg-icon svg-icon-close-small"
+              aria-hidden="true"
+            ></span>
+          </button>
+        </header>
+        <div
+          class="launcher-modal-body launcher-device-modal-body"
+          id="deviceAdminBody"
+        ></div>
+        <footer class="launcher-modal-foot">
+          <button
+            class="btn-reset btn-secondary size-m style-ghost"
+            id="deviceAdminCloseSecondary"
+            type="button"
+          >
+            Close
+          </button>
+        </footer>
+      </div>
+    </div>
+
+    <div
+      class="launcher-toast-stack"
+      id="launcherToastStack"
+      aria-live="polite"
+    ></div>
+
+    <script src="../shared/features/sidebar/sidebar-sot.js?v=20260311-sot-cta-1"></script>
+    <script src="../shared/app-data.js?v=20260407-shared-app-data-1"></script>
+    <script src="./components/sidebar-components.js?v=20260406-sidebar-unify-1"></script>
+    <script src="./components/table-components.js?v=20260324-table-name-disclosure-1"></script>
+    <script src="./launcher.js?v=20260407-shared-project-data-1"></script>
+  </body>
+</html>

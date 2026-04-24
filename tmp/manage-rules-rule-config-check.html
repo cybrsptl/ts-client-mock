@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+  <body>
+    <pre id="status">Loading…</pre>
+    <iframe id="viewer" src="../viewer/viewer.html?manageRulesRuleConfigCheck=1" style="width:1440px;height:1400px;border:0"></iframe>
+    <script>
+      const statusEl = document.getElementById('status');
+      const frame = document.getElementById('viewer');
+      let reported = false;
+      const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+      function setStatus(data) { statusEl.textContent = JSON.stringify(data, null, 2); }
+      function reportStatus(data) {
+        if (reported) return;
+        reported = true;
+        const params = new URLSearchParams();
+        Object.entries(data).forEach(([key, value]) => params.set(key, String(value)));
+        (new Image()).src = `/__codex_rule_config_status__?${params.toString()}`;
+      }
+      function click(el) {
+        if (!el) return false;
+        el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, composed: true }));
+        return true;
+      }
+      function findSidebarRow(shadow, pattern) {
+        return Array.from(shadow.querySelectorAll('.alerting-sidebar .side-row.sidebar-item-row.sidebar-item')).find((row) => pattern.test(row.textContent || ''));
+      }
+      function findRuleRow(shadow, pattern = null) {
+        const rows = Array.from(shadow.querySelectorAll('#rulesTableBody tr'));
+        if (!pattern) return rows[0] || null;
+        return rows.find((row) => pattern.test(row.textContent || '')) || null;
+      }
+      function getButtonText(button) {
+        return button ? (button.textContent || '').trim().replace(/\s+/g, ' ') : '';
+      }
+      async function getModalRoot(doc) {
+        const host = doc.getElementById('alertingInlineRoot');
+        if (!host) return null;
+        if (host.shadowRoot) return host.shadowRoot;
+        for (let index = 0; index < 20; index += 1) {
+          const iframe = host.querySelector('iframe.alerting-inline-frame');
+          const modalDoc = iframe && iframe.contentDocument;
+          if (modalDoc && modalDoc.querySelector('.alerting-sidebar')) return modalDoc;
+          await sleep(250);
+        }
+        return null;
+      }
+      frame.addEventListener('load', async () => {
+        const win = frame.contentWindow;
+        const doc = win.document;
+        try {
+          if (typeof win.initAlertsFeature === 'function') win.initAlertsFeature();
+          if (typeof win.openManageModal === 'function') win.openManageModal(null, false);
+          await sleep(500);
+          const shadow = await getModalRoot(doc);
+          if (!shadow) {
+            const payload = { ok: false, phase: 'modal-root', error: 'missing modal root' };
+            setStatus(payload); reportStatus(payload); return;
+          }
+
+          click(findSidebarRow(shadow, /Default Alerts/i));
+          await sleep(700);
+          click(findRuleRow(shadow));
+          await sleep(700);
+
+          const defaultAlertFiltersCardReadonly = shadow.getElementById('suriCard-alertFilters');
+          const defaultReadonlyTriggers = defaultAlertFiltersCardReadonly ? defaultAlertFiltersCardReadonly.querySelectorAll('.suri-madlib-trigger.is-readonly').length : 0;
+          const defaultReadonlyChevronCount = defaultAlertFiltersCardReadonly ? defaultAlertFiltersCardReadonly.querySelectorAll('.suri-madlib-trigger.is-readonly .suri-madlib-trigger-icon, .suri-madlib-trigger.is-readonly .btn-chevron-slot').length : 0;
+
+          click(shadow.getElementById('editBtn'));
+          await sleep(900);
+
+          const defaultAlertFiltersCard = shadow.getElementById('suriCard-alertFilters');
+          const defaultSimpleTriggers = defaultAlertFiltersCard ? defaultAlertFiltersCard.querySelectorAll('.suri-madlib-trigger.btn-secondary').length : 0;
+          const defaultSimpleChipboxes = defaultAlertFiltersCard ? defaultAlertFiltersCard.querySelectorAll('.default-alert-filter-chipbox').length : 0;
+          const defaultSimpleTriggerText = getButtonText(defaultAlertFiltersCard?.querySelector('.suri-madlib-trigger'));
+          const defaultSimpleTrigger = defaultAlertFiltersCard?.querySelector('.suri-madlib-trigger.btn-secondary');
+          const defaultSimpleTriggerHasSizeS = defaultSimpleTrigger ? defaultSimpleTrigger.classList.contains('size-s') : false;
+          const defaultSimpleTriggerHeight = defaultSimpleTrigger ? Math.round(defaultSimpleTrigger.getBoundingClientRect().height) : 0;
+
+          const defaultModeButtons = defaultAlertFiltersCard ? defaultAlertFiltersCard.querySelectorAll('.suri-param-mode-toggle .suri-segment') : [];
+          click(defaultModeButtons[1]);
+          await sleep(900);
+
+          const defaultAlertFiltersCardVerbose = shadow.getElementById('suriCard-alertFilters');
+          const defaultVerboseChipboxes = defaultAlertFiltersCardVerbose ? defaultAlertFiltersCardVerbose.querySelectorAll('.default-alert-filter-chipbox').length : 0;
+          const defaultVerboseMetaCount = defaultAlertFiltersCardVerbose ? defaultAlertFiltersCardVerbose.querySelectorAll('.default-alert-filter-option .meta').length : 0;
+          const defaultVerboseChipboxEls = defaultAlertFiltersCardVerbose ? Array.from(defaultAlertFiltersCardVerbose.querySelectorAll('.default-alert-filter-chipbox')) : [];
+          const defaultVerboseChip = defaultAlertFiltersCardVerbose?.querySelector('.default-alert-filter-chip');
+          const defaultVerboseChipRemove = defaultVerboseChip?.querySelector('.suri-subnet-chip-remove');
+          const defaultVerboseChipIcon = defaultVerboseChip?.querySelector('.svg-icon-close-small');
+          const defaultVerboseChipStyle = defaultVerboseChip ? win.getComputedStyle(defaultVerboseChip) : null;
+          const defaultWidthDelta = defaultVerboseChipboxEls.length >= 2
+            ? Math.abs(Math.round(defaultVerboseChipboxEls[0].getBoundingClientRect().width) - Math.round(defaultVerboseChipboxEls[1].getBoundingClientRect().width))
+            : 999;
+          const defaultVerboseChipHeight = defaultVerboseChip ? Math.round(defaultVerboseChip.getBoundingClientRect().height) : 0;
+          const defaultVerboseChipPadding = defaultVerboseChipStyle ? `${defaultVerboseChipStyle.paddingTop} ${defaultVerboseChipStyle.paddingRight} ${defaultVerboseChipStyle.paddingBottom} ${defaultVerboseChipStyle.paddingLeft}` : '';
+          const defaultVerboseChipFontSize = defaultVerboseChipStyle?.fontSize || '';
+          const defaultVerboseChipLineHeight = defaultVerboseChipStyle?.lineHeight || '';
+          const defaultVerboseChipColor = defaultVerboseChipStyle?.color || '';
+          const defaultVerboseRemoveButtonHeight = defaultVerboseChipRemove ? Math.round(defaultVerboseChipRemove.getBoundingClientRect().height) : 0;
+          const defaultVerboseRemoveButtonColor = defaultVerboseChipRemove ? win.getComputedStyle(defaultVerboseChipRemove).color : '';
+          const defaultVerboseRemoveIconSize = defaultVerboseChipIcon ? `${Math.round(defaultVerboseChipIcon.getBoundingClientRect().width)}x${Math.round(defaultVerboseChipIcon.getBoundingClientRect().height)}` : '';
+
+          click(shadow.getElementById('cancelBtn'));
+          await sleep(700);
+
+          click(findSidebarRow(shadow, /Emerging Threats PRO/i));
+          await sleep(700);
+          click(findRuleRow(shadow, /Apache Log4j|Microsoft Exchange|Spring4Shell/i));
+          await sleep(700);
+
+          const suriRuleConfigCardReadonly = shadow.getElementById('suriCard-ruleScope');
+          const suriRuleConfigTitle = suriRuleConfigCardReadonly?.querySelector('.suri-card-title')?.textContent?.trim() || '';
+          const suriReadonlyTriggers = suriRuleConfigCardReadonly ? suriRuleConfigCardReadonly.querySelectorAll('.suri-madlib-trigger.is-readonly').length : 0;
+          const suriReadonlyChevronCount = suriRuleConfigCardReadonly ? suriRuleConfigCardReadonly.querySelectorAll('.suri-madlib-trigger.is-readonly .suri-madlib-trigger-icon, .suri-madlib-trigger.is-readonly .btn-chevron-slot').length : 0;
+
+          click(shadow.getElementById('editBtn'));
+          await sleep(900);
+
+          const suriRuleConfigCard = shadow.getElementById('suriCard-ruleScope');
+          const suriSimpleTriggers = suriRuleConfigCard ? suriRuleConfigCard.querySelectorAll('.suri-madlib-trigger.btn-secondary').length : 0;
+          const suriSimpleChipboxes = suriRuleConfigCard ? suriRuleConfigCard.querySelectorAll('.suri-scope-chipbox').length : 0;
+          const ruleConfigInfoSrc = suriRuleConfigCard?.querySelector('.suri-card-title .suri-header-info')?.getAttribute('src') || '';
+          const suriSimpleTrigger = suriRuleConfigCard?.querySelector('.suri-madlib-trigger.btn-secondary');
+          const suriSimpleTriggerHasSizeS = suriSimpleTrigger ? suriSimpleTrigger.classList.contains('size-s') : false;
+          const suriSimpleTriggerHeight = suriSimpleTrigger ? Math.round(suriSimpleTrigger.getBoundingClientRect().height) : 0;
+
+          const suriModeButtons = suriRuleConfigCard ? suriRuleConfigCard.querySelectorAll('.suri-param-mode-toggle .suri-segment') : [];
+          click(suriModeButtons[1]);
+          await sleep(900);
+
+          const suriRuleConfigCardVerbose = shadow.getElementById('suriCard-ruleScope');
+          const suriVerboseChipboxes = suriRuleConfigCardVerbose ? suriRuleConfigCardVerbose.querySelectorAll('.suri-scope-chipbox').length : 0;
+          const suriVerboseMetaCount = suriRuleConfigCardVerbose ? suriRuleConfigCardVerbose.querySelectorAll('.suri-scope-suggestion-item .meta').length : 0;
+          const suriVerboseChipboxEls = suriRuleConfigCardVerbose ? Array.from(suriRuleConfigCardVerbose.querySelectorAll('.suri-scope-chipbox')) : [];
+          const suriVerboseChip = suriRuleConfigCardVerbose?.querySelector('.suri-subnet-chip');
+          const suriVerboseChipRemove = suriVerboseChip?.querySelector('.suri-subnet-chip-remove');
+          const suriVerboseChipIcon = suriVerboseChip?.querySelector('.svg-icon-close-small');
+          const suriVerboseChipStyle = suriVerboseChip ? win.getComputedStyle(suriVerboseChip) : null;
+          const suriWidthDelta = suriVerboseChipboxEls.length >= 2
+            ? Math.abs(Math.round(suriVerboseChipboxEls[0].getBoundingClientRect().width) - Math.round(suriVerboseChipboxEls[1].getBoundingClientRect().width))
+            : 999;
+          const sourceSubnetsLabel = Array.from(suriRuleConfigCardVerbose?.querySelectorAll('.suri-row-label') || []).find((el) => /Source Subnets/i.test(el.textContent || ''));
+          const sourceSubnetsWhiteSpace = sourceSubnetsLabel ? win.getComputedStyle(sourceSubnetsLabel).whiteSpace : '';
+          const suriVerboseChipHeight = suriVerboseChip ? Math.round(suriVerboseChip.getBoundingClientRect().height) : 0;
+          const suriVerboseChipPadding = suriVerboseChipStyle ? `${suriVerboseChipStyle.paddingTop} ${suriVerboseChipStyle.paddingRight} ${suriVerboseChipStyle.paddingBottom} ${suriVerboseChipStyle.paddingLeft}` : '';
+          const suriVerboseChipFontSize = suriVerboseChipStyle?.fontSize || '';
+          const suriVerboseChipLineHeight = suriVerboseChipStyle?.lineHeight || '';
+          const suriVerboseChipColor = suriVerboseChipStyle?.color || '';
+          const suriVerboseRemoveButtonHeight = suriVerboseChipRemove ? Math.round(suriVerboseChipRemove.getBoundingClientRect().height) : 0;
+          const suriVerboseRemoveButtonColor = suriVerboseChipRemove ? win.getComputedStyle(suriVerboseChipRemove).color : '';
+          const suriVerboseRemoveIconSize = suriVerboseChipIcon ? `${Math.round(suriVerboseChipIcon.getBoundingClientRect().width)}x${Math.round(suriVerboseChipIcon.getBoundingClientRect().height)}` : '';
+
+          const payload = {
+            ok:
+              defaultReadonlyTriggers > 0 &&
+              defaultReadonlyChevronCount === 0 &&
+              suriRuleConfigTitle.includes('Scope') &&
+              suriReadonlyTriggers > 0 &&
+              suriReadonlyChevronCount === 0 &&
+              suriSimpleTriggers > 0 &&
+              suriSimpleChipboxes === 0 &&
+              suriSimpleTriggerHasSizeS &&
+              suriSimpleTriggerHeight === 24 &&
+              suriVerboseChipboxes > 0 &&
+              suriVerboseMetaCount === 0 &&
+              suriWidthDelta <= 4 &&
+              suriVerboseChipHeight === 26 &&
+              suriVerboseChipPadding === '4px 6px 4px 6px' &&
+              suriVerboseChipFontSize === '13px' &&
+              suriVerboseChipLineHeight === '16px' &&
+              suriVerboseChipColor === 'rgba(247, 248, 251, 0.64)' &&
+              suriVerboseRemoveButtonHeight === 14 &&
+              suriVerboseRemoveButtonColor === 'rgba(247, 248, 251, 0.64)' &&
+              suriVerboseRemoveIconSize === '12x12' &&
+              !!suriVerboseChipIcon &&
+              sourceSubnetsWhiteSpace === 'nowrap' &&
+              /icon_info\.svg$/i.test(ruleConfigInfoSrc),
+            defaultReadonlyTriggers,
+            defaultReadonlyChevronCount,
+            defaultSimpleTriggers,
+            defaultSimpleChipboxes,
+            defaultSimpleTriggerText,
+            defaultSimpleTriggerHasSizeS,
+            defaultSimpleTriggerHeight,
+            defaultVerboseChipboxes,
+            defaultVerboseMetaCount,
+            defaultWidthDelta,
+            defaultVerboseChipHeight,
+            defaultVerboseChipPadding,
+            defaultVerboseChipFontSize,
+            defaultVerboseChipLineHeight,
+            defaultVerboseChipColor,
+            defaultVerboseRemoveButtonHeight,
+            defaultVerboseRemoveButtonColor,
+            defaultVerboseRemoveIconSize,
+            suriRuleConfigTitle,
+            suriReadonlyTriggers,
+            suriReadonlyChevronCount,
+            suriSimpleTriggers,
+            suriSimpleChipboxes,
+            suriSimpleTriggerHasSizeS,
+            suriSimpleTriggerHeight,
+            suriVerboseChipboxes,
+            suriVerboseMetaCount,
+            suriWidthDelta,
+            suriVerboseChipHeight,
+            suriVerboseChipPadding,
+            suriVerboseChipFontSize,
+            suriVerboseChipLineHeight,
+            suriVerboseChipColor,
+            suriVerboseRemoveButtonHeight,
+            suriVerboseRemoveButtonColor,
+            suriVerboseRemoveIconSize,
+            sourceSubnetsWhiteSpace,
+            ruleConfigInfoSrc
+          };
+          setStatus(payload);
+          reportStatus(payload);
+        } catch (error) {
+          const payload = { ok: false, phase: 'probe', error: String(error && error.message || error) };
+          setStatus(payload);
+          reportStatus(payload);
+        }
+      });
+    </script>
+  </body>
+</html>

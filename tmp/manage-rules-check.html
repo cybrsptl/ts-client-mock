@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+  <head><meta charset="utf-8" /><title>Manage Rules Check</title></head>
+  <body>
+    <pre id="status">Loading…</pre>
+    <iframe id="viewer" src="../viewer/viewer.html?manageRulesFix=4" style="width:1440px;height:1100px;border:0"></iframe>
+    <script>
+      const statusEl = document.getElementById('status');
+      const frame = document.getElementById('viewer');
+      let reported = false;
+      function setStatus(data) { statusEl.textContent = JSON.stringify(data, null, 2); }
+      function reportStatus(data) {
+        if (reported) return;
+        reported = true;
+        const params = new URLSearchParams();
+        Object.entries(data).forEach(([key, value]) => params.set(key, String(value)));
+        (new Image()).src = `/__codex_manage_rules_status__?${params.toString()}`;
+      }
+      frame.addEventListener('load', () => {
+        const win = frame.contentWindow;
+        const doc = win.document;
+        try {
+          if (typeof win.initAlertsFeature === 'function') win.initAlertsFeature();
+          if (typeof win.openManageModal === 'function') win.openManageModal(null, false);
+        } catch (error) {
+          const payload = { ok: false, phase: 'open', error: String(error && error.message || error) };
+          setStatus(payload); reportStatus(payload); return;
+        }
+        setTimeout(() => {
+          try {
+            const host = doc.getElementById('alertingInlineRoot');
+            const shadow = host && host.shadowRoot;
+            const sidebarButtons = shadow ? Array.from(shadow.querySelectorAll('.side-row.sidebar-item-row.sidebar-item')) : [];
+            const teleseerRow = shadow ? shadow.querySelector('.alerting-sidebar .side-section-body .side-row.sidebar-item-row') : null;
+            const suricataRow = shadow ? shadow.querySelectorAll('.alerting-sidebar .side-section-body .side-row.sidebar-item-row')[2] : null;
+            const tbody = shadow && shadow.getElementById('rulesTableBody');
+            const firstRow = tbody && tbody.querySelector('tr');
+            const targetSidebarButton = sidebarButtons.find((el) => !el.classList.contains('is-active')) || null;
+            const initialBreadcrumb = shadow && shadow.getElementById('contentBreadcrumb') ? shadow.getElementById('contentBreadcrumb').textContent.trim() : '';
+            const payload = {
+              ok: false,
+              hasShadow: !!shadow,
+              sidebarRowContentCount: shadow ? shadow.querySelectorAll('.alerting-sidebar .row-content').length : 0,
+              sidebarCollectionArrowCount: shadow ? shadow.querySelectorAll('.alerting-sidebar .collection-arrow').length : 0,
+              sidebarBrokenImageCount: shadow ? shadow.querySelectorAll('.alerting-sidebar .side-image-icon').length : 0,
+              sidebarSideCountClassCount: shadow ? shadow.querySelectorAll('.alerting-sidebar .side-count').length : 0,
+              teleseerIconClass: teleseerRow ? Array.from(teleseerRow.querySelector('.tree-icon .svg-icon')?.classList || []).join(' ') : '',
+              suricataIconClass: suricataRow ? Array.from(suricataRow.querySelector('.tree-icon .svg-icon')?.classList || []).join(' ') : '',
+              globalSelectCategoryType: typeof win.selectCategory,
+              inlineApiSelectCategoryType: typeof (win.__alertingInlineApi && win.__alertingInlineApi.selectCategory),
+              globalOpenDrawerType: typeof win.openDrawer,
+              inlineApiOpenDrawerType: typeof (win.__alertingInlineApi && win.__alertingInlineApi.openDrawer),
+              mounted: host ? host.dataset.mounted || '' : '',
+              sidebarButtonCount: sidebarButtons.length,
+              sidebarOnclickType: targetSidebarButton ? typeof targetSidebarButton.onclick : 'missing',
+              sidebarOnclickAttr: targetSidebarButton ? targetSidebarButton.getAttribute('onclick') || '' : '',
+              rowOnclickType: firstRow ? typeof firstRow.onclick : 'missing',
+              rowOnclickAttr: firstRow ? firstRow.getAttribute('onclick') || '' : '',
+              initialBreadcrumb,
+            };
+            if (targetSidebarButton) {
+              targetSidebarButton.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, composed: true }));
+            }
+            if (firstRow) {
+              firstRow.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, composed: true }));
+            }
+            setTimeout(() => {
+              try {
+                payload.postBreadcrumb = shadow && shadow.getElementById('contentBreadcrumb') ? shadow.getElementById('contentBreadcrumb').textContent.trim() : '';
+                payload.drawerOpen = shadow && shadow.getElementById('drawer') ? shadow.getElementById('drawer').classList.contains('open') : false;
+                payload.ok =
+                  payload.hasShadow &&
+                  payload.mounted === 'true' &&
+                  payload.inlineApiSelectCategoryType === 'function' &&
+                  payload.inlineApiOpenDrawerType === 'function' &&
+                  payload.sidebarOnclickType === 'function' &&
+                  payload.rowOnclickType === 'function' &&
+                  payload.postBreadcrumb !== payload.initialBreadcrumb &&
+                  payload.drawerOpen === true;
+                setStatus(payload);
+                reportStatus(payload);
+              } catch (error) {
+                const fail = { ok: false, phase: 'post', error: String(error && error.message || error) };
+                setStatus(fail); reportStatus(fail);
+              }
+            }, 500);
+          } catch (error) {
+            const payload = { ok: false, phase: 'probe', error: String(error && error.message || error) };
+            setStatus(payload); reportStatus(payload);
+          }
+        }, 1800);
+      });
+    </script>
+  </body>
+</html>

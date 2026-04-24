@@ -1,0 +1,80 @@
+<!doctype html>
+<html>
+  <body>
+    <pre id="status">Loading…</pre>
+    <iframe id="viewer" src="../viewer/viewer.html?rulePatternsTeletextCheck=1" style="width:1440px;height:1400px;border:0"></iframe>
+    <script>
+      const statusEl = document.getElementById('status');
+      const frame = document.getElementById('viewer');
+      let reported = false;
+      const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+      function setStatus(data) { statusEl.textContent = JSON.stringify(data, null, 2); }
+      function reportStatus(data) {
+        if (reported) return;
+        reported = true;
+        const params = new URLSearchParams();
+        Object.entries(data).forEach(([k, v]) => params.set(k, String(v)));
+        (new Image()).src = `/__codex_rule_patterns_teletext_status__?${params.toString()}`;
+      }
+      function click(el) {
+        if (!el) return false;
+        el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, composed: true }));
+        return true;
+      }
+      async function waitFor(fn, timeout = 8000) {
+        const start = Date.now();
+        while (Date.now() - start < timeout) {
+          const value = fn();
+          if (value) return value;
+          await sleep(100);
+        }
+        return null;
+      }
+      function findSidebarRow(doc, pattern) {
+        return Array.from(doc.querySelectorAll('.alerting-sidebar .side-row.sidebar-item-row.sidebar-item')).find((row) => pattern.test(row.textContent || '')) || null;
+      }
+      function findRuleRow(doc, pattern) {
+        return Array.from(doc.querySelectorAll('#rulesTableBody tr')).find((row) => pattern.test(row.textContent || '')) || null;
+      }
+      frame.addEventListener('load', async () => {
+        const viewerWin = frame.contentWindow;
+        const viewerDoc = viewerWin.document;
+        try {
+          if (typeof viewerWin.initAlertsFeature === 'function') viewerWin.initAlertsFeature();
+          if (typeof viewerWin.openManageModal === 'function') viewerWin.openManageModal(null, false);
+          const modalFrame = await waitFor(() => viewerDoc.querySelector('#alertingInlineRoot iframe.alerting-inline-frame'));
+          if (!modalFrame) {
+            const payload = { ok: false, phase: 'mount', error: 'missing alerting iframe' };
+            setStatus(payload); reportStatus(payload); return;
+          }
+          const modalDoc = modalFrame.contentDocument;
+          await waitFor(() => modalDoc && modalDoc.querySelector('#sidebarContent'));
+          const sidebarRow = findSidebarRow(modalDoc, /Emerging Threats PRO|Custom Suricata Rules/i);
+          if (sidebarRow) click(sidebarRow);
+          await sleep(500);
+          const firstRuleRow = modalDoc.querySelector('#rulesTableBody tr');
+          if (firstRuleRow) click(firstRuleRow);
+          await sleep(700);
+          const card = modalDoc.getElementById('suriCard-rulePatterns');
+          const firstItem = card && card.querySelector('[data-rule-pattern-id]');
+          const firstSentence = firstItem && firstItem.querySelector('.suri-rule-pattern-sentence');
+          const teletext = card ? card.querySelectorAll('.teletext').length : 0;
+          const grab = card && card.querySelector('.suri-rule-pattern-grab, .suri-rule-pattern-grab-slot');
+          const payload = {
+            ok: Boolean(firstSentence) && teletext > 0 && !grab,
+            hasCard: Boolean(card),
+            hasSentence: Boolean(firstSentence),
+            teletextCount: teletext,
+            hasGrab: Boolean(grab),
+            firstSentenceText: firstSentence ? firstSentence.textContent.replace(/\s+/g, ' ').trim() : '',
+          };
+          setStatus(payload);
+          reportStatus(payload);
+        } catch (error) {
+          const payload = { ok: false, phase: 'probe', error: String(error && error.message || error) };
+          setStatus(payload); reportStatus(payload);
+        }
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+  <body>
+    <pre id="status">Loading…</pre>
+    <iframe id="viewer" src="../viewer/viewer.html?manageRulesComboboxToggleCheck=1" style="width:1440px;height:1800px;border:0"></iframe>
+    <script>
+      const statusEl = document.getElementById("status");
+      const frame = document.getElementById("viewer");
+      let reported = false;
+      const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+      function setStatus(data) {
+        statusEl.textContent = JSON.stringify(data, null, 2);
+      }
+      function reportStatus(data) {
+        if (reported) return;
+        reported = true;
+        const params = new URLSearchParams();
+        Object.entries(data).forEach(([key, value]) => params.set(key, String(value)));
+        (new Image()).src = `/__codex_combobox_toggle_status__?${params.toString()}`;
+      }
+      function click(el) {
+        if (!el) return false;
+        el.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, composed: true }));
+        return true;
+      }
+      function inputText(el, value) {
+        if (!el) return false;
+        el.focus();
+        el.value = value;
+        el.dispatchEvent(new InputEvent("input", { bubbles: true, cancelable: true, composed: true, data: value }));
+        return true;
+      }
+      function findSidebarRow(shadow, pattern) {
+        return Array.from(shadow.querySelectorAll(".alerting-sidebar .side-row.sidebar-item-row.sidebar-item")).find((row) => pattern.test(row.textContent || ""));
+      }
+      function findRuleRow(shadow, pattern = null) {
+        const rows = Array.from(shadow.querySelectorAll("#rulesTableBody tr"));
+        if (!pattern) return rows[0] || null;
+        return rows.find((row) => pattern.test(row.textContent || "")) || null;
+      }
+
+      frame.addEventListener("load", async () => {
+        const win = frame.contentWindow;
+        const doc = win.document;
+        try {
+          if (typeof win.initAlertsFeature === "function") win.initAlertsFeature();
+          if (typeof win.openManageModal === "function") win.openManageModal(null, false);
+          await sleep(1800);
+          const host = doc.getElementById("alertingInlineRoot");
+          const shadow = host && host.shadowRoot;
+          if (!shadow) {
+            const payload = { ok: false, phase: "shadow", error: "missing shadow root" };
+            setStatus(payload);
+            reportStatus(payload);
+            return;
+          }
+
+          click(findSidebarRow(shadow, /Default Alerts/i));
+          await sleep(700);
+          click(findRuleRow(shadow));
+          await sleep(700);
+          click(shadow.getElementById("editBtn"));
+          await sleep(900);
+          click(Array.from(shadow.querySelectorAll(".suri-param-mode-toggle .suri-segment"))[1]);
+          await sleep(900);
+
+          const defaultChipboxInput = shadow.querySelector(".default-alert-filter-chipbox .suri-scope-manual-input");
+          inputText(defaultChipboxInput, "D");
+          await sleep(500);
+          const defaultPanel = shadow.querySelector(".default-alert-filter-anchor.is-stable-open .suri-scope-suggestion-panel");
+          const defaultOption = defaultPanel?.querySelector(".default-alert-filter-option");
+          const defaultOptionToggleCount = defaultOption ? defaultOption.querySelectorAll(".suri-item-mode-toggle").length : 0;
+          const defaultOptionButtonCount = defaultOption ? defaultOption.querySelectorAll(".suri-item-mode-button").length : 0;
+          const defaultNestedButtons = defaultOption ? defaultOption.querySelectorAll("button .suri-item-mode-button, .suri-item-mode-button button").length : 0;
+          const defaultOptionTailCount = defaultOption ? defaultOption.querySelectorAll(".suri-option-tail").length : 0;
+
+          click(shadow.getElementById("cancelBtn"));
+          await sleep(700);
+
+          click(findSidebarRow(shadow, /Emerging Threats PRO/i));
+          await sleep(700);
+          click(findRuleRow(shadow, /Apache Log4j|Microsoft Exchange|Spring4Shell/i));
+          await sleep(700);
+          click(shadow.getElementById("editBtn"));
+          await sleep(900);
+          click(Array.from(shadow.querySelectorAll(".suri-param-mode-toggle .suri-segment"))[1]);
+          await sleep(900);
+
+          const suriChipboxInput = shadow.querySelector(".suri-scope-chipbox .suri-scope-manual-input");
+          inputText(suriChipboxInput, "4");
+          await sleep(500);
+          const suriPanel = shadow.querySelector(".suri-scope-suggestion-anchor.is-stable-open .suri-scope-suggestion-panel");
+          const suriOption = suriPanel?.querySelector(".suri-scope-suggestion-item, .suri-subnet-project-option");
+          const suriOptionToggleCount = suriOption ? suriOption.querySelectorAll(".suri-item-mode-toggle").length : 0;
+          const suriOptionButtonCount = suriOption ? suriOption.querySelectorAll(".suri-item-mode-button").length : 0;
+          const suriNestedButtons = suriOption ? suriOption.querySelectorAll("button .suri-item-mode-button, .suri-item-mode-button button").length : 0;
+          const suriOptionTailCount = suriOption ? suriOption.querySelectorAll(".suri-option-tail").length : 0;
+
+          const payload = {
+            ok:
+              defaultOptionToggleCount === 1 &&
+              defaultOptionButtonCount === 2 &&
+              defaultNestedButtons === 0 &&
+              defaultOptionTailCount === 1 &&
+              suriOptionToggleCount === 1 &&
+              suriOptionButtonCount === 2 &&
+              suriNestedButtons === 0 &&
+              suriOptionTailCount === 1,
+            defaultOptionToggleCount,
+            defaultOptionButtonCount,
+            defaultNestedButtons,
+            defaultOptionTailCount,
+            suriOptionToggleCount,
+            suriOptionButtonCount,
+            suriNestedButtons,
+            suriOptionTailCount
+          };
+          setStatus(payload);
+          reportStatus(payload);
+        } catch (error) {
+          const payload = { ok: false, phase: "probe", error: String(error && error.message || error) };
+          setStatus(payload);
+          reportStatus(payload);
+        }
+      });
+    </script>
+  </body>
+</html>

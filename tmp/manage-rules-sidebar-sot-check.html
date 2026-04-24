@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <head><meta charset="utf-8" /><title>Manage Rules Sidebar SOT Check</title></head>
+  <body>
+    <pre id="status">Loading…</pre>
+    <iframe id="viewer" src="../viewer/viewer.html?sidebarSotCheck=3" style="width:1440px;height:1100px;border:0"></iframe>
+    <script>
+      const statusEl = document.getElementById('status');
+      const frame = document.getElementById('viewer');
+      let reported = false;
+      function setStatus(data) { statusEl.textContent = JSON.stringify(data, null, 2); }
+      function report(data) {
+        if (reported) return;
+        reported = true;
+        const params = new URLSearchParams();
+        Object.entries(data).forEach(([key, value]) => params.set(key, String(value)));
+        (new Image()).src = '/__codex_sidebar_sot_status__?' + params.toString();
+      }
+      frame.addEventListener('load', () => {
+        const win = frame.contentWindow;
+        const doc = win.document;
+        try {
+          if (typeof win.initAlertsFeature === 'function') win.initAlertsFeature();
+          if (typeof win.openManageModal === 'function') win.openManageModal(null, false);
+        } catch (error) {
+          const payload = { ok: false, phase: 'open', error: String(error && error.message || error) };
+          setStatus(payload); report(payload); return;
+        }
+        setTimeout(() => {
+          try {
+            const modalHost = doc.getElementById('alertingInlineRoot');
+            const modalFrame = modalHost && modalHost.querySelector('iframe');
+            const modalDoc = modalFrame && modalFrame.contentWindow && modalFrame.contentWindow.document;
+            const modalWin = modalFrame && modalFrame.contentWindow;
+            const sidebarContent = modalDoc && modalDoc.getElementById('sidebarContent');
+            const activeThreatsRow = modalDoc && Array.from(modalDoc.querySelectorAll('.side-tree-row')).find((row) => row.textContent.includes('Active Threats'));
+            const malwareRow = modalDoc && Array.from(modalDoc.querySelectorAll('.side-tree-row')).find((row) => row.textContent.includes('Malware'));
+            const arrow = activeThreatsRow && activeThreatsRow.querySelector('.tree-icon .icon-hover-button');
+            const defaultIcon = activeThreatsRow && activeThreatsRow.querySelector('.tree-icon .icon-default-button');
+            const firstIndent = malwareRow && malwareRow.querySelector('.indent-track');
+            const children = modalDoc && modalDoc.querySelector('.side-tree-children[data-node-children="suricata-etp-active-threats"]');
+            const payload = {
+              ok: false,
+              hasModalFrame: !!modalFrame,
+              hasActiveThreatsRow: !!activeThreatsRow,
+              sidebarPadding: sidebarContent ? modalWin.getComputedStyle(sidebarContent).padding : '',
+              rowBorderRadius: activeThreatsRow ? modalWin.getComputedStyle(activeThreatsRow).borderRadius : '',
+              indentTrackBg: firstIndent ? modalWin.getComputedStyle(firstIndent, '::before').backgroundColor : '',
+              childrenGridRowsBefore: children ? modalWin.getComputedStyle(children).gridTemplateRows : '',
+              childrenCollapsedBefore: children ? children.classList.contains('is-collapsed') : null,
+            };
+            if (activeThreatsRow) {
+              activeThreatsRow.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));
+              activeThreatsRow.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
+            }
+            setTimeout(() => {
+              payload.hoverArrowOpacity = arrow ? modalWin.getComputedStyle(arrow).opacity : '';
+              payload.hoverDefaultOpacity = defaultIcon ? modalWin.getComputedStyle(defaultIcon).opacity : '';
+              if (activeThreatsRow) {
+                activeThreatsRow.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+              }
+              setTimeout(() => {
+                payload.childrenGridRowsAfter = children ? modalWin.getComputedStyle(children).gridTemplateRows : '';
+                payload.childrenCollapsedAfter = children ? children.classList.contains('is-collapsed') : null;
+                payload.ok = !!modalFrame && !!activeThreatsRow && payload.sidebarPadding.startsWith('6px 8px') && payload.rowBorderRadius === '6px' && payload.indentTrackBg !== 'rgba(0, 0, 0, 0)' && payload.hoverArrowOpacity !== '0' && payload.hoverDefaultOpacity === '0' && payload.childrenGridRowsBefore !== payload.childrenGridRowsAfter;
+                setStatus(payload);
+                report(payload);
+              }, 500);
+            }, 160);
+          } catch (error) {
+            const payload = { ok: false, phase: 'probe', error: String(error && error.message || error) };
+            setStatus(payload); report(payload);
+          }
+        }, 2400);
+      });
+    </script>
+  </body>
+</html>

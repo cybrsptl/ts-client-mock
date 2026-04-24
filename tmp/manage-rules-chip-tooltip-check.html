@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+  <head><meta charset="utf-8" /><title>Manage Rules Chip Tooltip Check</title></head>
+  <body>
+    <pre id="status">Loading…</pre>
+    <iframe id="viewer" src="../viewer/viewer.html?manageRulesChipTooltipCheck=1" style="width:1440px;height:1100px;border:0"></iframe>
+    <script>
+      const statusEl = document.getElementById('status');
+      const frame = document.getElementById('viewer');
+      let reported = false;
+      function setStatus(data) { statusEl.textContent = JSON.stringify(data, null, 2); }
+      function reportStatus(data) {
+        if (reported) return;
+        reported = true;
+        const params = new URLSearchParams();
+        Object.entries(data).forEach(([key, value]) => params.set(key, String(value)));
+        (new Image()).src = `/__codex_chip_tooltip_status__?${params.toString()}`;
+      }
+      frame.addEventListener('load', () => {
+        const win = frame.contentWindow;
+        const doc = win.document;
+        try {
+          if (typeof win.initAlertsFeature === 'function') win.initAlertsFeature();
+          if (typeof win.openManageModal === 'function') win.openManageModal(null, false);
+        } catch (error) {
+          const payload = { ok: false, phase: 'open', error: String(error && error.message || error) };
+          setStatus(payload); reportStatus(payload); return;
+        }
+        setTimeout(() => {
+          try {
+            const host = doc.getElementById('alertingInlineRoot');
+            const shadow = host && host.shadowRoot;
+            if (!shadow) {
+              const payload = { ok: false, phase: 'shadow', error: 'missing shadow root' };
+              setStatus(payload); reportStatus(payload); return;
+            }
+            const defaultAlertsRow = Array.from(shadow.querySelectorAll('.alerting-sidebar .side-row.sidebar-item-row.sidebar-item'))
+              .find((row) => /Default Alerts/i.test(row.textContent || ''));
+            const variablesRow = Array.from(shadow.querySelectorAll('.alerting-sidebar .side-quick-row.sidebar-item-row.sidebar-item'))
+              .find((row) => /Variables/i.test(row.textContent || ''));
+            defaultAlertsRow?.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, composed: true }));
+            setTimeout(() => {
+              const projectChip = shadow.querySelector('#rulesTableBody tr td.col-projects .rule-project-chip');
+              if (!projectChip) {
+                const payload = { ok: false, phase: 'project-chip', error: 'missing project chip' };
+                setStatus(payload); reportStatus(payload); return;
+              }
+              projectChip.dispatchEvent(new MouseEvent('mouseover', { bubbles: true, cancelable: true, composed: true }));
+              setTimeout(() => {
+                const tooltipEl = shadow.getElementById('alertingGlobalTooltip');
+                const projectTooltip = projectChip.getAttribute('data-tooltip') || '';
+                const visibleProjectTooltip = tooltipEl && !tooltipEl.classList.contains('hidden') ? tooltipEl.textContent.trim() : '';
+                variablesRow?.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, composed: true }));
+                setTimeout(() => {
+                  const variableRefChip = shadow.querySelector('#rulesTableBody tr td.col-var-references .variable-chip');
+                  const variableValueChip = shadow.querySelector('#rulesTableBody tr td.col-var-values .variable-chip');
+                  const payload = {
+                    ok:
+                      !!projectTooltip &&
+                      visibleProjectTooltip === projectTooltip &&
+                      !!variableRefChip?.getAttribute('data-tooltip') &&
+                      !!variableValueChip?.getAttribute('data-tooltip'),
+                    projectTooltip,
+                    visibleProjectTooltip,
+                    variableRefTooltip: variableRefChip?.getAttribute('data-tooltip') || '',
+                    variableValueTooltip: variableValueChip?.getAttribute('data-tooltip') || ''
+                  };
+                  setStatus(payload);
+                  reportStatus(payload);
+                }, 500);
+              }, 300);
+            }, 500);
+          } catch (error) {
+            const payload = { ok: false, phase: 'probe', error: String(error && error.message || error) };
+            setStatus(payload); reportStatus(payload);
+          }
+        }, 1800);
+      });
+    </script>
+  </body>
+</html>

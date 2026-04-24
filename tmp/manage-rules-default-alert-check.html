@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+  <head><meta charset="utf-8" /><title>Manage Rules Default Alert Anchor Check</title></head>
+  <body>
+    <pre id="status">Loading…</pre>
+    <iframe id="viewer" src="../viewer/viewer.html?manageRulesDefaultAlertCheck=3" style="width:1440px;height:1100px;border:0"></iframe>
+    <script>
+      const statusEl = document.getElementById('status');
+      const frame = document.getElementById('viewer');
+      let reported = false;
+      function setStatus(data) { statusEl.textContent = JSON.stringify(data, null, 2); }
+      function reportStatus(data) {
+        if (reported) return;
+        reported = true;
+        const params = new URLSearchParams();
+        Object.entries(data).forEach(([key, value]) => params.set(key, String(value)));
+        (new Image()).src = `/__codex_manage_rules_status__?${params.toString()}`;
+      }
+      frame.addEventListener('load', () => {
+        const win = frame.contentWindow;
+        const doc = win.document;
+        try {
+          if (typeof win.initAlertsFeature === 'function') win.initAlertsFeature();
+          if (typeof win.openManageModal === 'function') win.openManageModal(null, false);
+        } catch (error) {
+          const payload = { ok: false, phase: 'open', error: String(error && error.message || error) };
+          setStatus(payload); reportStatus(payload); return;
+        }
+        setTimeout(() => {
+          try {
+            const host = doc.getElementById('alertingInlineRoot');
+            const shadow = host && host.shadowRoot;
+            if (!shadow) {
+              const payload = { ok: false, phase: 'shadow', error: 'missing shadow root' };
+              setStatus(payload); reportStatus(payload); return;
+            }
+            const defaultAlertsRow = Array.from(shadow.querySelectorAll('.alerting-sidebar .side-row.sidebar-item-row.sidebar-item'))
+              .find((row) => /Default Alerts/i.test(row.textContent || ''));
+            defaultAlertsRow?.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, composed: true }));
+            setTimeout(() => {
+              const tbody = shadow.getElementById('rulesTableBody');
+              const firstRow = tbody && tbody.querySelector('tr');
+              firstRow?.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, composed: true }));
+              setTimeout(() => {
+                const api = win.__alertingInlineApi;
+                api?.toggleEditMode?.();
+                setTimeout(() => {
+                  try {
+                    const chipbox = shadow.querySelector('[data-default-filter-field="protocols"] .default-alert-filter-chipbox');
+                    const input = shadow.querySelector('[data-default-filter-input="protocols"]');
+                    const anchor = shadow.querySelector('[data-default-filter-suggestions="protocols"]');
+                    const summaryMenu = shadow.querySelector('.suri-menu[data-menu-key="default-alert:protocols"]');
+                    if (!chipbox || !input || !anchor) {
+                      const payload = { ok: false, phase: 'locate', error: 'missing protocols chipbox/input/anchor' };
+                      setStatus(payload); reportStatus(payload); return;
+                    }
+                    input.focus();
+                    input.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, composed: true }));
+                    input.value = 'D';
+                    input.dispatchEvent(new Event('input', { bubbles: true, composed: true }));
+                    setTimeout(() => {
+                      try {
+                        const nextInput = shadow.querySelector('[data-default-filter-input="protocols"]');
+                        const nextAnchor = shadow.querySelector('[data-default-filter-suggestions="protocols"]');
+                        const nextChipbox = shadow.querySelector('[data-default-filter-field="protocols"] .default-alert-filter-chipbox');
+                        const nextSummaryMenu = shadow.querySelector('.suri-menu[data-menu-key="default-alert:protocols"]');
+                        const anchorTop = parseFloat(nextAnchor?.style.getPropertyValue('--suri-scope-suggestion-top') || '0');
+                        const anchorLeft = parseFloat(nextAnchor?.style.getPropertyValue('--suri-scope-suggestion-left') || '0');
+                        const shellRect = shadow.querySelector('[data-default-filter-shell="protocols"]')?.getBoundingClientRect();
+                        const inputRect = nextInput?.getBoundingClientRect();
+                        const chipboxRect = nextChipbox?.getBoundingClientRect();
+                        const expectedTop = shellRect && inputRect ? Math.round(inputRect.bottom - shellRect.top + 6) : 0;
+                        const expectedLeft = shellRect && inputRect ? Math.round(inputRect.left - shellRect.left) : 0;
+                        const payload = {
+                          ok: Boolean(nextAnchor && nextInput && nextChipbox && Math.abs(anchorTop - expectedTop) <= 2 && Math.abs(anchorLeft - expectedLeft) <= 2 && !(nextSummaryMenu && nextSummaryMenu.classList.contains('is-open'))),
+                          phase: 'done',
+                          chipboxOpen: nextAnchor?.classList.contains('is-stable-open') || false,
+                          rowMenuOpen: nextSummaryMenu?.classList.contains('is-open') || false,
+                          anchorTop,
+                          expectedTop,
+                          anchorLeft,
+                          expectedLeft,
+                          chipboxBottom: chipboxRect ? Math.round(chipboxRect.bottom) : 0,
+                          inputBottom: inputRect ? Math.round(inputRect.bottom) : 0,
+                          inputValue: nextInput?.value || ''
+                        };
+                        setStatus(payload); reportStatus(payload);
+                      } catch (error) {
+                        const payload = { ok: false, phase: 'final', error: String(error && error.message || error) };
+                        setStatus(payload); reportStatus(payload);
+                      }
+                    }, 600);
+                  } catch (error) {
+                    const payload = { ok: false, phase: 'edit', error: String(error && error.message || error) };
+                    setStatus(payload); reportStatus(payload);
+                  }
+                }, 700);
+              }, 500);
+            }, 500);
+          } catch (error) {
+            const payload = { ok: false, phase: 'probe', error: String(error && error.message || error) };
+            setStatus(payload); reportStatus(payload); }
+        }, 1800);
+      });
+    </script>
+  </body>
+</html>

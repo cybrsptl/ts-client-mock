@@ -1,0 +1,1167 @@
+/*
+ * Shared UI source of truth for drawer-aligned controls and inline data primitives.
+ * Canonical Figma references:
+ * - Drawer row shell: GHKqpRz85mBBev827PCgSN / 5873:160201
+ * - Drawer dropdown panel: GHKqpRz85mBBev827PCgSN / 5889:160791
+ * - Right-side element matrix: e5FcbA4LEgrIssUL3558uC / 16107:503755
+ * - Chips and tags: e5FcbA4LEgrIssUL3558uC / 5257:9141
+ * - Badges: e5FcbA4LEgrIssUL3558uC / 7431:41514
+ * - Status badges: e5FcbA4LEgrIssUL3558uC / 12944:22869
+ */
+
+.card,
+.card-accordion,
+.ui-card,
+.suri-card {
+  background: var(--card-bg);
+  box-shadow: var(--card-outline-shadow);
+  border-radius: var(--card-radius);
+  overflow: visible;
+}
+
+.card-accordion > summary,
+details.suri-card > summary {
+  list-style: none;
+}
+
+.card-accordion > summary::-webkit-details-marker,
+details.suri-card > summary::-webkit-details-marker {
+  display: none;
+}
+
+.card-header,
+.ui-card-header,
+.card-accordion-header,
+.suri-card-header {
+  min-height: 44px;
+  padding: 8px 8px 8px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.card-header:hover,
+.ui-card-header:hover,
+.card-accordion-header:hover,
+.suri-card-header:hover {
+  background: var(--material-thin-black);
+}
+
+.card-accordion > .card-accordion-header,
+.card-accordion > .suri-card-header,
+details.suri-card > .card-accordion-header,
+details.suri-card > .suri-card-header,
+.card-accordion-header[role="button"],
+.suri-card.is-collapsible > .card-accordion-header,
+.suri-card.is-collapsible > .suri-card-header {
+  cursor: pointer;
+}
+
+.card-accordion[open] > .card-accordion-header,
+.card-accordion[open] > .suri-card-header,
+details.suri-card[open] > .card-accordion-header,
+details.suri-card[open] > .suri-card-header,
+.card-accordion.is-collapsible:not(.is-collapsed) > .card-accordion-header,
+.card-accordion.is-collapsible:not(.is-collapsed) > .suri-card-header,
+.suri-card.is-collapsible:not(.is-collapsed) > .card-accordion-header,
+.suri-card.is-collapsible:not(.is-collapsed) > .suri-card-header {
+  box-shadow: var(--card-header-expanded-divider-shadow);
+}
+
+.card-title,
+.ui-card-title,
+.suri-card-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  color: var(--text-primary);
+  font-size: 13px;
+  line-height: 16px;
+  font-weight: var(--font-weight-medium, 500);
+}
+
+.card-actions,
+.ui-card-actions,
+.card-header-chevron,
+.suri-card-actions {
+  min-height: 28px;
+  min-width: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+.card-header-tail {
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+.card-header-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex: 0 0 auto;
+}
+
+.card-header-chevron-icon,
+.suri-card-chevron-icon {
+  width: 10px;
+  height: 10px;
+  display: block;
+  opacity: 0.64;
+  transition:
+    transform var(--motion-accordion-duration, 280ms)
+      var(--motion-accordion-ease, cubic-bezier(0.22, 0.74, 0.18, 1)),
+    opacity var(--motion-fade-duration, 180ms) ease;
+}
+
+.card-header-chevron-icon.is-expanded,
+.suri-card-chevron-icon.is-expanded,
+details.suri-card[open] > .card-accordion-header .card-header-chevron-icon,
+details.suri-card[open] > .card-accordion-header .suri-card-chevron-icon,
+details.suri-card[open] > .suri-card-header .card-header-chevron-icon,
+details.suri-card[open] > .suri-card-header .suri-card-chevron-icon {
+  transform: rotate(180deg);
+  opacity: 0.88;
+}
+
+.card-body,
+.ui-card-body,
+.suri-card-body {
+  display: flex;
+  flex-direction: column;
+  max-height: 2000px;
+  opacity: 1;
+  overflow: visible;
+  transition:
+    max-height var(--motion-accordion-duration, 280ms)
+      var(--motion-accordion-ease, cubic-bezier(0.22, 0.74, 0.18, 1)),
+    opacity var(--motion-fade-duration, 180ms) ease;
+}
+
+.card.is-collapsed > .card-body,
+.card-accordion.is-collapsed > .card-body,
+.card-accordion.is-collapsed > .suri-card-body,
+.ui-card.is-collapsed > .ui-card-body,
+.suri-card.is-collapsed > .suri-card-body {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.card-row,
+.ui-card-row,
+.suri-row:not(.suri-row-expansion),
+.card-item {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 8px 8px 14px;
+  border-bottom: 0.5px solid var(--fill-menu-item-active);
+}
+
+.card-row:last-child,
+.ui-card-row:last-child,
+.suri-row:not(.suri-row-expansion):last-child,
+.card-item:last-child {
+  border-bottom: none;
+}
+
+.card-label,
+.ui-card-label,
+.suri-row-label,
+.card-item .field-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  color: var(--text-primary);
+  font-size: 13px;
+  line-height: 16px;
+}
+
+.card-value,
+.ui-card-value,
+.suri-row-value,
+.card-item .field-value {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding-left: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 16px;
+}
+
+.static-field,
+.ui-static-field,
+.suri-static-field {
+  max-width: 280px;
+  min-height: 28px;
+  padding: 5px 6px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 16px;
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ui-card-value > *:not(.teletext-list):not(.suri-token-list) {
+  flex-shrink: 0;
+}
+
+.ui-field,
+.suri-input-field,
+.launcher-drawer-input,
+.launcher-feed-drawer .suri-row-value select,
+.launcher-drawer-textarea,
+.suri-reference-name,
+.suri-reference-url,
+.threshold-input,
+.suri-count-input,
+input.edit-control,
+select.edit-control,
+textarea.edit-control,
+.combobox-trigger {
+  border: 1px solid var(--material-medium-white);
+  border-radius: 4px;
+  background: var(--material-thin-black);
+  box-shadow: var(--shadow-input-depth);
+  color: var(--text-primary);
+  font-size: 13px;
+  line-height: 16px;
+}
+
+.ui-field:focus,
+.suri-input-field:focus,
+.launcher-drawer-input:focus,
+.launcher-feed-drawer .suri-row-value select:focus,
+.launcher-drawer-textarea:focus,
+.suri-reference-name:focus,
+.suri-reference-url:focus,
+.threshold-input:focus,
+.suri-count-input:focus,
+input.edit-control:focus,
+select.edit-control:focus,
+textarea.edit-control:focus,
+.combobox-trigger:focus-within,
+.combobox-trigger:focus,
+.suri-menu-trigger:focus-visible {
+  outline: none;
+  border-color: var(--stroke-active);
+  box-shadow: var(--shadow-input-depth), var(--focus-ring-shadow);
+}
+
+.dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--material-ultra-thick-black);
+  /* Note: rgba(0,0,0,0.7) is a one-off dialog scrim — not repeated enough to token */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 300;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity var(--motion-fade-duration) ease,
+    visibility var(--motion-fade-duration) ease;
+}
+
+.dialog-overlay.open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.dialog {
+  background: var(--modal-shell-bg);
+  border: 0;
+  border-radius: var(--modal-shell-radius);
+  box-shadow: var(--modal-shell-shadow);
+  backdrop-filter: var(--modal-shell-backdrop-filter);
+  -webkit-backdrop-filter: var(--modal-shell-backdrop-filter);
+  padding: 24px;
+  max-width: 400px;
+  width: 90%;
+}
+
+.dialog-icon {
+  width: 48px;
+  height: 48px;
+  background: var(--tag-chip-label-yellow-alpha-fill);
+  /* Note: rgba(234,179,8,0.15) is the warning-yellow icon background — one-off */
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.dialog-icon svg {
+  color: var(--text-highlight);
+}
+
+.dialog-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.dialog-description {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+
+.dialog-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+select.edit-control,
+.launcher-feed-drawer .suri-row-value select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  padding-right: 28px;
+  background-image: url("../../../icons/icon_arrow_head_outline_down.svg");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 10px 10px;
+}
+
+.menu-shell,
+.menu-list,
+.suri-menu-panel,
+.combobox-dropdown,
+.dropdown-menu,
+.popover,
+.suri-scope-suggestion-panel {
+  border-radius: 6px;
+  background: var(--surface-popover);
+  box-shadow: var(--ui-menu-shadow);
+  backdrop-filter: blur(38px);
+}
+
+.menu-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 6px;
+  max-height: 224px;
+  overflow: auto;
+}
+
+.combobox-dropdown,
+.dropdown-menu,
+.popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  margin-top: 0;
+  z-index: 100;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(4px) scale(0.98);
+  transform-origin: top right;
+  pointer-events: none;
+  transition:
+    opacity var(--motion-fade-duration) ease,
+    transform var(--motion-expand-duration, 180ms) ease,
+    visibility var(--motion-fade-duration) ease;
+}
+
+.combobox-dropdown.open,
+.dropdown-menu.open,
+.popover.open {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+.suri-menu {
+  position: relative;
+  display: inline-flex;
+  max-width: 280px;
+}
+
+.menu-trigger,
+.suri-menu-trigger,
+.combobox-trigger {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  min-height: 28px;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: 4px;
+  background: var(--material-thin-white);
+  box-shadow: var(--shadow-btn-default);
+  color: var(--text-primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.suri-select,
+.suri-dropdown {
+  --menu-variant: unified;
+}
+
+.menu-trigger:hover,
+.suri-menu-trigger:hover,
+.combobox-trigger:hover {
+  background: var(--material-medium-white);
+}
+
+.menu-value,
+.suri-menu-value,
+.combobox-trigger > span:first-child {
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+}
+
+.suri-menu-trigger-icon {
+  width: 10px;
+  height: 10px;
+  flex: 0 0 10px;
+  opacity: 0.72;
+}
+
+.suri-menu .menu-list,
+.suri-menu-panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: var(--menu-list-left, auto);
+  right: var(--menu-list-right, 0);
+  min-width: max(100%, 116px);
+  max-width: max-content;
+  max-height: var(--menu-list-max-height, 224px);
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 6px;
+  z-index: 40;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(4px) scale(0.98);
+  transform-origin: top right;
+  pointer-events: none;
+  transition:
+    opacity 160ms ease,
+    transform 180ms ease,
+    visibility 160ms ease;
+}
+
+.suri-menu.is-open .menu-list,
+.suri-menu.is-open .suri-menu-panel {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+.menu-panel-option,
+.suri-menu-option,
+.suri-picker-option,
+.dropdown-item,
+.combobox-option,
+.popover-item,
+.suri-scope-suggestion-item {
+  min-height: 32px;
+  width: 100%;
+  padding: var(--menu-row-padding-text-only, 8px 8px 8px 12px);
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 16px;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.menu-panel-option:has(.svg-icon),
+.suri-menu-option:has(.suri-menu-value-content.has-leading-icon),
+.suri-picker-option:has(.value > .suri-scope-suggestion-icon),
+.dropdown-item:has(.svg-icon),
+.combobox-option:has(.svg-icon),
+.popover-item:has(.svg-icon),
+.suri-scope-suggestion-item:has(.value > .suri-scope-suggestion-icon) {
+  padding: var(--menu-row-padding-icon, 8px);
+}
+
+.suri-menu-option > span {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.menu-panel-option:hover,
+.suri-menu-option:hover,
+.suri-picker-option:hover,
+.dropdown-item:hover,
+.combobox-option:hover,
+.popover-item:hover,
+.suri-scope-suggestion-item:hover {
+  background: var(--fill-menu-item-hover);
+  color: var(--text-primary);
+}
+
+.menu-panel-option.is-selected,
+.suri-menu-option.is-selected,
+.suri-picker-option.is-selected,
+.combobox-option.selected {
+  background: var(--fill-menu-item-active);
+  color: var(--text-primary);
+}
+
+.dropdown-item svg {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 14px;
+  opacity: 0.78;
+}
+
+.dropdown-divider {
+  height: 1px;
+  background: var(--material-medium-white);
+  margin: 2px 0;
+}
+
+/* ── Global Menu Item Components ─────────────────────────────────
+ * Canonical semantics:
+ * - menu-item: base menu row
+ * - menu-item-check: row with a leading check indicator
+ * - menu-item-toggle: row with a trailing switch
+ * - menu-item-cta: row with far-right CTA buttons/actions
+ * - menu-item-checkbox: row with checkbox controls
+ * Legacy aliases such as menu-item-standard and suri-menu-option remain for
+ * compatibility, but new markup should include the canonical menu-item class.
+ */
+
+.alerting-modal-app .dropdown-menu > .menu-item,
+.menu-item-check,
+.menu-item-standard,
+.menu-item-toggle,
+.menu-item-checkbox {
+  height: 32px;
+  min-height: 32px;
+  width: 100%;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 16px;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.alerting-modal-app .dropdown-menu > .menu-item:hover,
+.menu-item-check:hover,
+.menu-item-standard:hover,
+.menu-item-toggle:hover,
+.menu-item-checkbox:hover {
+  background: var(--fill-menu-item-hover);
+  color: var(--text-primary);
+}
+
+/* menu-item-check: no bg fill on active — only text becomes text-primary */
+.menu-item-check.is-active {
+  color: var(--text-primary);
+}
+
+/* menu-item: selection highlight fill on active */
+.alerting-modal-app .dropdown-menu > .menu-item.is-active,
+.menu-item-standard.is-active {
+  background: var(--ui-menu-option-active, var(--fill-menu-item-active));
+  color: var(--text-primary);
+}
+
+.alerting-modal-app .dropdown-menu > .menu-item.is-destructive {
+  color: var(--text-error);
+}
+
+.alerting-modal-app .dropdown-menu > .menu-item.is-destructive:hover,
+.alerting-modal-app .dropdown-menu > .menu-item.is-destructive.is-active {
+  color: var(--text-error);
+}
+
+/* Disabled state — applies to all menu item types */
+.alerting-modal-app .dropdown-menu > .menu-item:disabled,
+.alerting-modal-app .dropdown-menu > .menu-item.is-disabled,
+.menu-item-check:disabled,
+.menu-item-check.is-disabled,
+.menu-item-standard:disabled,
+.menu-item-standard.is-disabled,
+.menu-item-toggle:disabled,
+.menu-item-toggle.is-disabled,
+.menu-item-checkbox:disabled,
+.menu-item-checkbox.is-disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* menu-item-toggle: pushes trailing control to the far right */
+.menu-item-toggle {
+  justify-content: space-between;
+}
+
+.menu-item-cta:not(.suri-picker-option):not(.suri-scope-suggestion-item) {
+  justify-content: space-between;
+}
+
+/* Shared inner structure ─────────────────────────────── */
+
+/*
+ * Check indicator slot — always 16×16, reserved for the checkmark.
+ * The img is only rendered in JS when the item is active, so the slot
+ * stays empty (but occupies space) when not active.
+ */
+.menu-item-check-indicator {
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 16px;
+}
+
+.menu-item-check-indicator img,
+.menu-item-check-indicator .svg-icon {
+  width: 12px;
+  height: 12px;
+  display: block;
+}
+
+/*
+ * Item icon slot — the item's own icon (sort direction, block, etc.).
+ * Independent from the check indicator; both slots can coexist.
+ * Only rendered in markup when iconSrc is provided.
+ */
+.menu-item-icon {
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 16px;
+}
+
+.menu-item-icon img,
+.menu-item-icon svg,
+.menu-item-icon .svg-icon {
+  width: 16px;
+  height: 16px;
+  display: block;
+}
+
+/* Text label — grows, clips overflow */
+.menu-item-label {
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Trailing slot — right-aligned meta text, toggles, badges, etc. */
+.menu-item-trailing {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+/* Muted meta/subtext in the trailing slot */
+.menu-item-meta {
+  color: var(--text-tertiary);
+  font-size: 12px;
+  line-height: 14px;
+  white-space: nowrap;
+}
+
+.segmented-control,
+.suri-segmented,
+.hosts-segmented-control,
+.launcher-segmented,
+.timeline-scope-toggle {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px;
+  border-radius: 4px;
+  background: var(--material-thin-white);
+  box-shadow:
+    0 0.5px 1.5px var(--material-xtra-thick-black),
+    inset 0 1px 0.5px var(--material-semi-thin-white),
+    inset 0 0 0 0.5px var(--material-xtra-thin-white);
+}
+
+.segmented-control-button,
+.suri-segment,
+.hosts-segment,
+.launcher-segment,
+.timeline-scope-button {
+  min-width: 44px;
+  height: 24px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.segmented-control-button:hover,
+.suri-segment:hover,
+.hosts-segment:hover,
+.launcher-segment:hover,
+.timeline-scope-button:hover:not(.disabled) {
+  color: var(--text-primary);
+}
+
+.segmented-control-button.is-active,
+.suri-segment.is-active,
+.hosts-segment.active,
+.launcher-segment.active,
+.timeline-scope-button.active {
+  background: var(--material-thick-white);
+  color: var(--text-primary);
+  box-shadow: inset 0 2px 4px var(--material-semi-thin-black);
+}
+
+.segmented-control-button:disabled,
+.suri-segment:disabled,
+.hosts-segment:disabled,
+.launcher-segment:disabled,
+.timeline-scope-button.disabled {
+  opacity: 0.38;
+  cursor: default;
+  pointer-events: none;
+}
+
+.toggle-switch-pill,
+.suri-toggle,
+.toggle {
+  width: 28px;
+  height: 16px;
+  padding: 2px;
+  border: none;
+  border-radius: 999px;
+  background: var(--secondary);
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    opacity 0.15s ease;
+}
+
+.toggle-switch-thumb,
+.suri-toggle-thumb,
+.toggle::after {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--toggle-thumb-white, var(--text-primary));
+  box-shadow: var(--shadow-toggle-thumb);
+  transform: translateX(0);
+  transition: transform 0.15s ease;
+}
+
+.toggle.is-on,
+.toggle.active,
+.suri-toggle.is-on {
+  background: var(--primary);
+}
+
+.toggle.is-on .toggle-switch-thumb,
+.suri-toggle.is-on .suri-toggle-thumb {
+  transform: translateX(12px);
+}
+
+.toggle.active::after {
+  transform: translateX(12px);
+}
+
+.toggle.is-disabled,
+.suri-toggle.is-disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.btn-tertiary,
+.alerts-tertiary-button {
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 16px;
+  font-weight: 400;
+}
+
+.btn-tertiary,
+.alerts-tertiary-button {
+  border: 0;
+  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.btn-tertiary--info,
+.alerts-tertiary-button,
+.launcher-mono {
+  color: var(--text-secondary);
+  text-decoration-line: underline;
+  text-decoration-style: dotted;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--text-quaternary);
+}
+
+.btn-tertiary--info:hover,
+.btn-tertiary--info:focus-visible,
+.alerts-tertiary-button:hover,
+.alerts-tertiary-button:focus-visible,
+.launcher-mono:hover,
+.launcher-mono:focus-visible {
+  color: var(--text-primary);
+  text-decoration-color: var(--text-tertiary);
+  text-decoration-style: solid;
+  outline: none;
+}
+
+.btn-tertiary--link,
+.launcher-link {
+  color: var(--text-link);
+  text-decoration: none;
+}
+
+.btn-tertiary--link:hover,
+.btn-tertiary--link:focus-visible,
+.launcher-link:hover,
+.launcher-link:focus-visible {
+  color: var(--text-hover);
+  text-decoration: none;
+  outline: none;
+}
+
+.status-badge {
+  --status-badge-icon-mask: url("../../../icons/status/icon_status_gray.svg");
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 24px;
+  padding: 4px 8px 4px 4px;
+  border-radius: 4px;
+  background: var(--tag-chip-label-gray-alpha-fill);
+  color: var(--text-primary);
+  font-size: 12px;
+  line-height: 14px;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.status-badge-icon {
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 16px;
+  color: var(--text-secondary);
+  background-color: currentColor;
+  -webkit-mask-image: var(--status-badge-icon-mask);
+  mask-image: var(--status-badge-icon-mask);
+  -webkit-mask-position: center;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-size: contain;
+  mask-position: center;
+  mask-repeat: no-repeat;
+  mask-size: contain;
+}
+
+.status-badge-label {
+  color: inherit;
+  line-height: 14px;
+}
+
+.status-badge.status-online,
+.status-badge.status-enabled,
+.status-badge.status-active,
+.status-badge.status-synced {
+  --status-badge-icon-mask: url("../../../icons/status/icon_status_green.svg");
+}
+
+.status-badge.status-ready,
+.status-badge.status-syncing,
+.status-badge.status-uploading {
+  --status-badge-icon-mask: url("../../../icons/status/icon_status_blue.svg");
+}
+
+.status-badge.status-paused {
+  --status-badge-icon-mask: url("../../../icons/status/icon_status_purple.svg");
+}
+
+.status-badge.status-offline,
+.status-badge.status-disabled,
+.status-badge.status-initializing,
+.status-badge.status-restricted,
+.status-badge.status-read-only,
+.status-badge.status-readonly {
+  --status-badge-icon-mask: url("../../../icons/status/icon_status_gray.svg");
+}
+
+.status-badge.status-warning,
+.status-badge.status-behind,
+.status-badge.status-queued {
+  --status-badge-icon-mask: url("../../../icons/status/icon_status_yellow.svg");
+}
+
+.status-badge.status-error {
+  --status-badge-icon-mask: url("../../../icons/status/icon_status_red.svg");
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 24px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background: var(--cyber-black-250);
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 16px;
+  white-space: nowrap;
+}
+
+.badge--xs {
+  min-height: 16px;
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-size: 11px;
+  line-height: 14px;
+}
+
+.badge--s {
+  min-height: 20px;
+  padding: 3px 6px;
+  font-size: 11px;
+  line-height: 14px;
+}
+
+.badge--outline {
+  background: transparent;
+  box-shadow: inset 0 0 0 0.5px var(--tag-chip-label-gray-outline-strong);
+}
+
+.badge--green {
+}
+
+.badge--teal {
+}
+
+.badge--cyan {
+}
+
+.badge--purple {
+}
+
+.badge--blue {
+}
+
+.badge--brown {
+}
+
+.badge--pink {
+}
+
+.badge--yellow {
+}
+
+.chip,
+.ui-chip,
+.alerts-chip,
+.suri-subnet-chip {
+  --chip-outline: var(--tag-chip-label-gray-outline-strong);
+  --chip-hover-fill: var(--tag-chip-label-gray-alpha-fill-hover);
+  --chip-text: var(--text-secondary);
+  min-height: 24px;
+  padding: 4px 6px;
+  border: 0.5px solid var(--chip-outline);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--chip-text);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  line-height: 16px;
+  font-weight: var(--font-weight-medium, 500);
+}
+
+.chip--rounded,
+.chip.is-rounded {
+  border-radius: 20px;
+}
+
+.chip--gray,
+.alerts-chip.manual,
+.suri-subnet-chip.manual {
+  --chip-outline: var(--tag-chip-label-gray-outline-strong);
+  --chip-hover-fill: var(--tag-chip-label-gray-alpha-fill-hover);
+}
+
+.chip--orange,
+.alerts-chip.project.exclude,
+.suri-subnet-chip.project.exclude {
+  --chip-outline: var(--tag-chip-label-orange-outline-strong);
+  --chip-hover-fill: var(--tag-chip-label-orange-alpha-fill-hover);
+}
+
+.chip--pink {
+  --chip-outline: var(--tag-chip-label-pink-outline-strong);
+  --chip-hover-fill: var(--tag-chip-label-pink-alpha-fill-hover);
+}
+
+.chip--yellow {
+  --chip-outline: var(--tag-chip-label-yellow-outline-strong);
+  --chip-hover-fill: var(--tag-chip-label-yellow-alpha-fill-hover);
+}
+
+.chip--teal {
+  --chip-outline: var(--tag-chip-label-teal-outline-strong);
+  --chip-hover-fill: var(--tag-chip-label-teal-alpha-fill-hover);
+}
+
+.chip--blue,
+.alerts-chip.project.include,
+.suri-subnet-chip.project.include {
+  --chip-outline: var(--tag-chip-label-blue-outline-strong);
+  --chip-hover-fill: var(--tag-chip-label-blue-alpha-fill-hover);
+}
+
+.chip:hover,
+.ui-chip:hover,
+.alerts-chip:hover,
+.suri-subnet-chip:hover {
+  background: var(--chip-hover-fill);
+  color: var(--text-primary);
+}
+
+.chip-remove,
+.alerts-chip-remove,
+.suri-subnet-chip-remove {
+  width: 14px;
+  height: 14px;
+  border: 0;
+  background: transparent;
+  color: var(--text-secondary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition: color var(--motion-fade-duration) ease;
+}
+
+.chip-remove:hover,
+.chip-remove:focus-visible,
+.alerts-chip-remove:hover,
+.alerts-chip-remove:focus-visible,
+.suri-subnet-chip-remove:hover {
+  color: var(--text-primary);
+}
+
+.suri-subnet-chip-remove:focus-visible {
+  color: var(--text-primary);
+}
+
+.chip-remove .svg-icon,
+.alerts-chip-remove .svg-icon,
+.suri-subnet-chip-remove .svg-icon,
+.suri-subnet-chip-remove img {
+  width: 12px;
+  height: 12px;
+}
+
+.teletext-list,
+.suri-token-list {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: 4px;
+  min-width: 0;
+}
+
+.teletext,
+.suri-token {
+  height: 16px;
+  max-width: 100%;
+  padding: 1px 4px;
+  border-radius: 4px;
+  border: 1px solid var(--border-teletext);
+  background: var(--fill-teletext-default);
+  color: var(--text-secondary);
+  font-family: var(--font-family-geist-mono, "Geist Mono", monospace);
+  font-size: 12px;
+  line-height: 14px;
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

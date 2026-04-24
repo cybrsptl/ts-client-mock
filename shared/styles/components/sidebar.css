@@ -1,0 +1,468 @@
+/*
+ * Source of truth for sidebar section headers and sidebar items.
+ * Figma references:
+ * - Design-System-2026 item states: 29721:32121, 29721:32236, 29721:31712
+ * - Design-System-2026 section states: 12470:24871, 12470:24880, 12470:24891
+ */
+
+:is(.tree, .launcher-sidebar, .alerting-sidebar) .sidebar-item-row {
+  color: var(--text-secondary);
+}
+
+:is(.tree, .launcher-sidebar, .alerting-sidebar)
+  .sidebar-item-row
+  .row-content {
+  display: flex;
+  align-items: center;
+  min-height: 32px;
+  width: 100%;
+}
+
+:is(.tree, .launcher-sidebar, .alerting-sidebar)
+  .sidebar-item-row
+  .row-content
+  > .row-main {
+  color: var(--text-secondary);
+}
+
+:is(.tree, .launcher-sidebar, .alerting-sidebar) .sidebar-item-row .row-main {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+:is(.tree, .launcher-sidebar, .alerting-sidebar) .sidebar-item-row .row-label,
+:is(.tree, .launcher-sidebar, .alerting-sidebar) .sidebar-item-row .svg-icon,
+:is(.tree, .launcher-sidebar, .alerting-sidebar)
+  .sidebar-item-row
+  .launcher-svg-icon,
+:is(.tree, .launcher-sidebar, .alerting-sidebar) .sidebar-item-row .side-icon,
+:is(.tree, .launcher-sidebar, .alerting-sidebar)
+  .sidebar-item-row
+  .side-sub-icon,
+:is(.tree, .launcher-sidebar, .alerting-sidebar)
+  .sidebar-item-row
+  .side-subicon,
+:is(.tree, .launcher-sidebar, .alerting-sidebar)
+  .sidebar-item-row
+  .side-image-icon-wrap,
+:is(.tree, .launcher-sidebar, .alerting-sidebar)
+  .sidebar-item-row
+  .collection-label-wrap,
+:is(.tree, .launcher-sidebar, .alerting-sidebar)
+  .sidebar-item-row
+  .item-label-group {
+  color: currentColor;
+}
+
+:is(.tree, .launcher-sidebar, .alerting-sidebar)
+  .sidebar-item-row
+  .collection-label-wrap {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  color: currentColor;
+}
+
+:is(.tree, .launcher-sidebar, .alerting-sidebar)
+  .sidebar-item-row
+  .item-label-group {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+:is(.tree, .launcher-sidebar, .alerting-sidebar)
+  .sidebar-item-row
+  .item-label-group.with-gap {
+  gap: 4px;
+  padding-right: 4px;
+}
+
+:is(.tree, .launcher-sidebar, .alerting-sidebar) .sidebar-item-row .row-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+:is(.tree, .launcher-sidebar, .alerting-sidebar) .sidebar-item-row .tree-icon {
+  display: inline-flex;
+  width: 24px;
+  height: 24px;
+  justify-content: center;
+  align-items: center;
+  flex: 0 0 24px;
+  color: currentColor;
+}
+
+:is(.tree, .launcher-sidebar, .alerting-sidebar)
+  .sidebar-item-row.sidebar-item
+  .row-label {
+  font-size: 13px;
+  line-height: 16px;
+  font-weight: var(--font-weight-regular);
+}
+
+:is(.tree, .launcher-sidebar, .alerting-sidebar)
+  .sidebar-item-row.sidebar-item {
+  background: transparent;
+  transition:
+    background 120ms ease,
+    color 120ms ease;
+}
+
+:is(.tree, .launcher-sidebar, .alerting-sidebar)
+  .sidebar-item-row.sidebar-item:hover,
+:is(.tree, .launcher-sidebar, .alerting-sidebar)
+  .sidebar-item-row.sidebar-item.active,
+:is(.tree, .launcher-sidebar, .alerting-sidebar)
+  .sidebar-item-row.sidebar-item.is-active {
+  background: var(--fill-menu-item-hover);
+}
+
+:is(.tree, .launcher-sidebar, .alerting-sidebar)
+  .sidebar-item-row.sidebar-item.active,
+:is(.tree, .launcher-sidebar, .alerting-sidebar)
+  .sidebar-item-row.sidebar-item.is-active {
+  background: var(--fill-menu-item-active);
+}
+
+:is(.tree, .launcher-sidebar, .alerting-sidebar)
+  .sidebar-item-row.sidebar-item:focus-visible {
+  background: var(--fill-menu-item-active);
+  outline: none;
+}
+
+:is(.tree, .launcher-sidebar, .alerting-sidebar)
+  .sidebar-item-row.sidebar-section-header {
+}
+
+:is(.tree, .launcher-sidebar, .alerting-sidebar)
+  .sidebar-item-row.sidebar-section-header
+  .row-label {
+  font-size: 12px;
+  line-height: 14px;
+  font-weight: var(--font-weight-semibold);
+}
+
+:is(.tree, .launcher-sidebar, .alerting-sidebar)
+  .sidebar-item-row.sidebar-section-header:hover,
+:is(.tree, .launcher-sidebar, .alerting-sidebar)
+  .sidebar-item-row.sidebar-section-header.active,
+:is(.tree, .launcher-sidebar, .alerting-sidebar)
+  .sidebar-item-row.sidebar-section-header.is-active {
+}
+
+:is(.tree, .launcher-sidebar, .alerting-sidebar)
+  .sidebar-item-row.sidebar-section-header
+  .row-content {
+  padding-left: 10px;
+  gap: 14px;
+}
+
+:is(.tree, .launcher-sidebar, .alerting-sidebar)
+  .sidebar-item-row.sidebar-item[data-sidebar-level="item"]
+  .row-content,
+:is(.tree, .launcher-sidebar, .alerting-sidebar)
+  .sidebar-item-row.sidebar-item[data-sidebar-level="sub-item"]
+  .row-content,
+:is(.tree, .launcher-sidebar, .alerting-sidebar)
+  .sidebar-item-row.sidebar-item[data-sidebar-level="subsub-item"]
+  .row-content,
+:is(.tree, .launcher-sidebar, .alerting-sidebar)
+  .sidebar-item-row.sidebar-item[data-sidebar-level="subsubsub-item"]
+  .row-content {
+  padding-left: 6px;
+  gap: 14px;
+}
+
+:is(.tree, .launcher-sidebar, .alerting-sidebar) .count-container {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  align-self: stretch;
+  padding: 0 10px;
+  flex: 0 0 auto;
+}
+
+:is(.tree, .launcher-sidebar, .alerting-sidebar) .count-container .count {
+  min-width: 8px;
+  margin-left: 0;
+  padding-right: 0;
+  font-family: var(--font-family-base);
+  font-size: 12px;
+  line-height: 14px;
+  font-weight: var(--font-weight-medium);
+  text-align: right;
+  color: var(--text-tertiary);
+}
+
+:is(.tree, .launcher-sidebar, .alerting-sidebar) .sidebar-item-row:hover .count,
+:is(.tree, .launcher-sidebar, .alerting-sidebar)
+  .sidebar-item-row.context-open
+  .count {
+  opacity: 1;
+}
+
+:is(.tree, .launcher-sidebar, .alerting-sidebar)
+  .sidebar-item-row.has-hover-cta:hover
+  .count,
+:is(.tree, .launcher-sidebar, .alerting-sidebar)
+  .sidebar-item-row.has-hover-cta.context-open
+  .count {
+  opacity: 0;
+}
+
+:is(.tree, .launcher-sidebar, .alerting-sidebar)
+  .sidebar-item-row.sidebar-section-header.active
+  .count-container
+  .count,
+:is(.tree, .launcher-sidebar, .alerting-sidebar)
+  .sidebar-item-row.sidebar-section-header.is-active
+  .count-container
+  .count {
+  color: var(--text-secondary);
+}
+
+:is(.tree, .launcher-sidebar, .alerting-sidebar) .cta-container {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+}
+
+:is(.tree, .launcher-sidebar, .alerting-sidebar)
+  .cta-container
+  .btn-secondary-icon,
+:is(.tree, .launcher-sidebar, .alerting-sidebar)
+  .cta-container
+  .sidebar-action-button {
+  width: 24px;
+  min-width: 24px;
+  height: 24px;
+  min-height: 24px;
+}
+
+:is(.tree, .launcher-sidebar, .alerting-sidebar) .cta-container .svg-icon,
+:is(.tree, .launcher-sidebar, .alerting-sidebar)
+  .cta-container
+  .launcher-svg-icon {
+  color: currentColor;
+}
+
+:is(.tree, .launcher-sidebar, .alerting-sidebar) .collection-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  margin-left: 4px;
+  flex: 0 0 auto;
+  color: inherit;
+  opacity: 0;
+  transition:
+    transform var(--motion-accordion-duration) var(--motion-accordion-ease),
+    opacity var(--motion-fade-duration) ease;
+}
+
+:is(.tree, .launcher-sidebar, .alerting-sidebar) .collection-arrow .svg-icon,
+:is(.tree, .launcher-sidebar, .alerting-sidebar)
+  .collection-arrow
+  .launcher-svg-icon {
+  width: 12px;
+  height: 12px;
+}
+
+:is(.tree, .launcher-sidebar, .alerting-sidebar)
+  .sidebar-item-row.sidebar-section-header:hover
+  .collection-arrow,
+.launcher-favorites-head:hover .collection-arrow {
+  opacity: 0.9;
+}
+
+:is(.tree, .launcher-sidebar, .alerting-sidebar)
+  .sidebar-item-row.sidebar-section-header.is-expanded
+  .collection-arrow,
+.launcher-favorites-head:not(.collapsed) .collection-arrow {
+  transform: rotate(90deg);
+}
+
+/*
+ * Alerting modal sidebar adoption of the same SOT semantics.
+ * Timeline sidebar is intentionally excluded.
+ */
+.alerting-sidebar .side-action-row,
+.alerting-sidebar .side-quick-row,
+.alerting-sidebar .side-row {
+  width: 100%;
+  min-height: 32px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  display: block;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+}
+
+.alerting-sidebar .side-icon,
+.alerting-sidebar .side-sub-icon,
+.alerting-sidebar .side-subicon,
+.alerting-sidebar .side-image-icon-wrap {
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 16px;
+  color: currentColor;
+}
+
+.alerting-sidebar .side-image-icon {
+  width: 16px;
+  height: 16px;
+  display: block;
+  object-fit: contain;
+}
+
+.alerting-sidebar .side-section {
+  margin-top: 8px;
+}
+
+.alerting-sidebar .side-section-header {
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.alerting-sidebar .side-section-toggle {
+  min-height: 32px;
+  min-width: 0;
+  flex: 1;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: inherit;
+  display: inline-flex;
+  align-items: stretch;
+  text-align: left;
+  cursor: pointer;
+  padding: 0;
+}
+
+.alerting-sidebar .side-section-toggle:focus-visible {
+  border-radius: 4px;
+  box-shadow: 0 0 0 1px var(--stroke-active);
+}
+
+.alerting-sidebar .side-kebab {
+  flex: 0 0 auto;
+}
+
+.alerting-sidebar .side-section-body {
+  display: grid;
+  align-content: start;
+  gap: 2px;
+  max-height: 1200px;
+  opacity: 1;
+  overflow: hidden;
+  transition:
+    max-height var(--motion-accordion-duration) var(--motion-accordion-ease),
+    opacity var(--motion-fade-duration) ease;
+}
+
+.alerting-sidebar .side-section-body.is-collapsed {
+  max-height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.alerting-sidebar .cta-container .btn-secondary-icon,
+.alerting-sidebar .cta-container .sidebar-action-button,
+.alerting-sidebar .cta-container .side-kebab {
+  width: 24px;
+  min-width: 24px;
+  height: 24px;
+  min-height: 24px;
+}
+
+.alerting-sidebar .sidebar-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 6px 8px 18px;
+}
+
+.alerting-sidebar .side-quick-list {
+  display: grid;
+  gap: 2px;
+  margin-bottom: 12px;
+}
+
+.alerting-sidebar .side-actions-list {
+  display: grid;
+  gap: 2px;
+  margin-bottom: 8px;
+}
+
+.alerting-sidebar .side-actions-divider {
+  height: 1px;
+  margin: 6px 10px;
+  background: var(--material-thin-white);
+}
+
+.alerting-sidebar .side-icon-import {
+  --icon-url: url("../../../icons/icon_import_file.svg");
+}
+
+.alerting-sidebar .side-icon-rule-variables {
+  --icon-url: url("../../../icons/icon_programming_variable.svg");
+}
+
+.alerting-sidebar .side-icon-alert {
+  --icon-url: url("../../../icons/icon_alert.svg");
+}
+
+.alerting-sidebar .side-icon-layout {
+  --icon-url: url("../../../icons/ui_core/collection/icon_layout.svg");
+}
+
+.alerting-sidebar .side-icon-teleseer {
+  --icon-url: url("../../../icons/icon_teleseer_logo.svg");
+}
+
+.alerting-sidebar .side-icon-rule {
+  --icon-url: url("../../../icons/icon_rule.svg");
+}
+
+.alerting-sidebar .side-icon-attack {
+  --icon-url: url("../../../icons/icon_mitre_attack.svg");
+}
+
+.alerting-sidebar .side-icon-hosts {
+  --icon-url: url("../../../icons/icon_host.svg");
+}
+
+.alerting-sidebar .side-icon-apps {
+  --icon-url: url("../../../icons/icon_apps.svg");
+}
+
+.alerting-sidebar .side-icon-protocols {
+  --icon-url: url("../../../icons/icon_protocols.svg");
+}
+
+.alerting-sidebar .side-icon-command {
+  --icon-url: url("../../../icons/icon_command.svg");
+}
+
+.alerting-sidebar .side-icon-credentials {
+  --icon-url: url("../../../icons/icon_credentials.svg");
+}
+
+.alerting-sidebar .side-icon-arrow-right {
+  --icon-url: url("../../../icons/icon_arrow_head_right.svg");
+}

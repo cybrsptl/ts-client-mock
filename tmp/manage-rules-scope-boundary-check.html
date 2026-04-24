@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+  <head><meta charset="utf-8" /><title>Manage Rules Scope Boundary Check</title></head>
+  <body>
+    <pre id="status">Loading…</pre>
+    <iframe id="viewer" src="../viewer/viewer.html?manageRulesScopeBoundaryCheck=1" style="width:1440px;height:1100px;border:0"></iframe>
+    <script>
+      const statusEl = document.getElementById('status');
+      const frame = document.getElementById('viewer');
+      let reported = false;
+      function setStatus(data) { statusEl.textContent = JSON.stringify(data, null, 2); }
+      function reportStatus(data) {
+        if (reported) return;
+        reported = true;
+        const params = new URLSearchParams();
+        Object.entries(data).forEach(([key, value]) => params.set(key, String(value)));
+        (new Image()).src = `/__codex_scope_boundary_status__?${params.toString()}`;
+      }
+      function click(el) {
+        el?.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, composed: true }));
+      }
+      function wait(ms) {
+        return new Promise((resolve) => setTimeout(resolve, ms));
+      }
+      function getDefaultProtocolsMetrics(shadow) {
+        const input = shadow.querySelector('[data-default-filter-input="protocols"]');
+        const anchor = shadow.querySelector('[data-default-filter-suggestions="protocols"]');
+        const panel = anchor?.querySelector('.suri-scope-suggestion-panel');
+        const metaEls = panel ? Array.from(panel.querySelectorAll('.default-alert-filter-option .meta')).filter((el) => (el.textContent || '').trim()) : [];
+        const panelRect = panel?.getBoundingClientRect();
+        return {
+          input,
+          anchor,
+          panel,
+          metaEls,
+          panelRect,
+          open: anchor?.classList.contains('is-stable-open') || false,
+          rowMenuOpen: shadow.querySelector('.suri-menu[data-menu-key="default-alert:protocols"]')?.classList.contains('is-open') || false,
+        };
+      }
+      function getSuricataSourcePortsMetrics(shadow) {
+        const input = shadow.querySelector('[data-suri-scope-input="sourcePorts"]');
+        const anchor = shadow.querySelector('[data-suri-scope-suggestions="sourcePorts"]');
+        const panel = anchor?.querySelector('.suri-scope-suggestion-panel');
+        const panelRect = panel?.getBoundingClientRect();
+        return {
+          input,
+          anchor,
+          panel,
+          panelRect,
+          open: anchor?.classList.contains('is-stable-open') || false,
+          rowMenuOpen: shadow.querySelector('.suri-menu[data-menu-key="scope:port:sourcePorts:picker"]')?.classList.contains('is-open') || false,
+        };
+      }
+      frame.addEventListener('load', async () => {
+        const win = frame.contentWindow;
+        const doc = win.document;
+        try {
+          if (typeof win.initAlertsFeature === 'function') win.initAlertsFeature();
+          if (typeof win.openManageModal === 'function') win.openManageModal(null, false);
+          await wait(1800);
+          const host = doc.getElementById('alertingInlineRoot');
+          const shadow = host?.shadowRoot;
+          if (!shadow) throw new Error('missing shadow root');
+
+          const defaultAlertsRow = Array.from(shadow.querySelectorAll('.alerting-sidebar .side-row.sidebar-item-row.sidebar-item'))
+            .find((row) => /Default Alerts/i.test(row.textContent || ''));
+          click(defaultAlertsRow);
+          await wait(500);
+          click(shadow.querySelector('#rulesTableBody tr'));
+          await wait(500);
+          win.__alertingInlineApi?.toggleEditMode?.();
+          await wait(700);
+
+          let defaultMetrics = getDefaultProtocolsMetrics(shadow);
+          if (!defaultMetrics.input || !defaultMetrics.anchor || !defaultMetrics.panel) {
+            throw new Error('missing default protocols metrics');
+          }
+          defaultMetrics.input.focus();
+          click(defaultMetrics.input);
+          defaultMetrics.input.value = 'D';
+          defaultMetrics.input.dispatchEvent(new Event('input', { bubbles: true, composed: true }));
+          await wait(700);
+          defaultMetrics = getDefaultProtocolsMetrics(shadow);
+
+          const suricataRow = Array.from(shadow.querySelectorAll('.alerting-sidebar .side-row.sidebar-item-row.sidebar-item'))
+            .find((row) => /Emerging Threats PRO/i.test(row.textContent || ''));
+          click(suricataRow);
+          await wait(500);
+          click(shadow.querySelector('#rulesTableBody tr'));
+          await wait(500);
+          win.__alertingInlineApi?.toggleEditMode?.();
+          await wait(700);
+          if (typeof win.toggleSuricataRowAccordion === 'function') {
+            win.toggleSuricataRowAccordion('ruleScopeSourcePorts');
+          } else {
+            click(shadow.getElementById('suriDisclosureRow-ruleScopeSourcePorts'));
+          }
+          await wait(300);
+
+          let suriMetrics = getSuricataSourcePortsMetrics(shadow);
+          if (!suriMetrics.input || !suriMetrics.anchor || !suriMetrics.panel) {
+            throw new Error('missing suricata source ports metrics');
+          }
+          suriMetrics.input.focus();
+          click(suriMetrics.input);
+          suriMetrics.input.value = '3';
+          suriMetrics.input.dispatchEvent(new Event('input', { bubbles: true, composed: true }));
+          await wait(700);
+          suriMetrics = getSuricataSourcePortsMetrics(shadow);
+
+          const viewportWidth = win.innerWidth;
+          const viewportHeight = win.innerHeight;
+          const defaultPanelRect = defaultMetrics.panelRect;
+          const suriPanelRect = suriMetrics.panelRect;
+          const payload = {
+            ok: Boolean(
+              defaultMetrics.open &&
+              !defaultMetrics.rowMenuOpen &&
+              defaultMetrics.metaEls.length === 0 &&
+              defaultPanelRect &&
+              defaultPanelRect.left >= 0 &&
+              defaultPanelRect.right <= viewportWidth - 1 &&
+              defaultPanelRect.top >= 0 &&
+              defaultPanelRect.bottom <= viewportHeight - 1 &&
+              suriMetrics.open &&
+              !suriMetrics.rowMenuOpen &&
+              suriPanelRect &&
+              suriPanelRect.left >= 0 &&
+              suriPanelRect.right <= viewportWidth - 1 &&
+              suriPanelRect.top >= 0 &&
+              suriPanelRect.bottom <= viewportHeight - 1
+            ),
+            defaultOpen: defaultMetrics.open,
+            defaultRowMenuOpen: defaultMetrics.rowMenuOpen,
+            defaultProtocolMetaCount: defaultMetrics.metaEls.length,
+            defaultPanelLeft: defaultPanelRect ? Math.round(defaultPanelRect.left) : -1,
+            defaultPanelRight: defaultPanelRect ? Math.round(defaultPanelRect.right) : -1,
+            defaultPanelTop: defaultPanelRect ? Math.round(defaultPanelRect.top) : -1,
+            defaultPanelBottom: defaultPanelRect ? Math.round(defaultPanelRect.bottom) : -1,
+            suriOpen: suriMetrics.open,
+            suriRowMenuOpen: suriMetrics.rowMenuOpen,
+            suriPanelLeft: suriPanelRect ? Math.round(suriPanelRect.left) : -1,
+            suriPanelRight: suriPanelRect ? Math.round(suriPanelRect.right) : -1,
+            suriPanelTop: suriPanelRect ? Math.round(suriPanelRect.top) : -1,
+            suriPanelBottom: suriPanelRect ? Math.round(suriPanelRect.bottom) : -1,
+            viewportWidth,
+            viewportHeight,
+          };
+          setStatus(payload);
+          reportStatus(payload);
+        } catch (error) {
+          const payload = { ok: false, error: String(error && error.message || error) };
+          setStatus(payload);
+          reportStatus(payload);
+        }
+      });
+    </script>
+  </body>
+</html>

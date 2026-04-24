@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+  <body>
+    <pre id="status">Loading…</pre>
+    <iframe id="viewer" src="../viewer/viewer.html?manageRulesParamRewriteCheck=1" style="width:1440px;height:1200px;border:0"></iframe>
+    <script>
+      const statusEl = document.getElementById('status');
+      const frame = document.getElementById('viewer');
+      let reported = false;
+      function setStatus(data) { statusEl.textContent = JSON.stringify(data, null, 2); }
+      function reportStatus(data) {
+        if (reported) return;
+        reported = true;
+        const params = new URLSearchParams();
+        Object.entries(data).forEach(([key, value]) => params.set(key, String(value)));
+        (new Image()).src = `/__codex_param_rewrite_status__?${params.toString()}`;
+      }
+      function click(el) {
+        if (!el) return false;
+        el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, composed: true }));
+        return true;
+      }
+      frame.addEventListener('load', () => {
+        const win = frame.contentWindow;
+        const doc = win.document;
+        try {
+          if (typeof win.initAlertsFeature === 'function') win.initAlertsFeature();
+          if (typeof win.openManageModal === 'function') win.openManageModal(null, false);
+        } catch (error) {
+          const payload = { ok: false, phase: 'open', error: String(error && error.message || error) };
+          setStatus(payload); reportStatus(payload); return;
+        }
+        setTimeout(() => {
+          try {
+            const host = doc.getElementById('alertingInlineRoot');
+            const shadow = host && host.shadowRoot;
+            if (!shadow) {
+              const payload = { ok: false, phase: 'shadow', error: 'missing shadow root' };
+              setStatus(payload); reportStatus(payload); return;
+            }
+            const defaultAlertsRow = Array.from(shadow.querySelectorAll('.alerting-sidebar .side-row.sidebar-item-row.sidebar-item')).find((row) => /Default Alerts/i.test(row.textContent || ''));
+            click(defaultAlertsRow);
+            setTimeout(() => {
+              const defaultRuleRow = shadow.querySelector('#rulesTableBody tr');
+              click(defaultRuleRow);
+              setTimeout(() => {
+                click(shadow.getElementById('editBtn'));
+                setTimeout(() => {
+                  const alertFiltersCard = shadow.getElementById('suriCard-alertFilters');
+                  const defaultChipboxes = alertFiltersCard ? alertFiltersCard.querySelectorAll('.default-alert-filter-combobox .default-alert-filter-chipbox').length : 0;
+                  const defaultSummaryTriggers = alertFiltersCard ? alertFiltersCard.querySelectorAll('.default-alert-filter-summary-trigger').length : 0;
+                  const defaultModeToggles = shadow.querySelectorAll('.suri-param-mode-toggle').length;
+                  const configEditable = shadow.querySelector('.suri-rule-config-code[contenteditable="true"]') ? 'true' : 'false';
+                  const configPreviewTitle = Array.from(shadow.querySelectorAll('.suri-card-title')).some((el) => /Config Preview/i.test(el.textContent || ''));
+
+                  const suricataRow = Array.from(shadow.querySelectorAll('.alerting-sidebar .side-row.sidebar-item-row.sidebar-item')).find((row) => /Emerging Threats PRO/i.test(row.textContent || ''));
+                  click(suricataRow);
+                  setTimeout(() => {
+                    const suriRuleRow = shadow.querySelector('#rulesTableBody tr');
+                    click(suriRuleRow);
+                    setTimeout(() => {
+                      click(shadow.getElementById('editBtn'));
+                      setTimeout(() => {
+                        const ruleScopeCard = shadow.getElementById('suriCard-ruleScope');
+                        const suriChipboxes = ruleScopeCard ? ruleScopeCard.querySelectorAll('.suri-scope-chipbox').length : 0;
+                        const suriScopeTriggers = ruleScopeCard ? ruleScopeCard.querySelectorAll('.suri-scope-picker-trigger').length : 0;
+                        const payload = {
+                          ok:
+                            defaultChipboxes > 0 &&
+                            defaultSummaryTriggers === 0 &&
+                            defaultModeToggles > 0 &&
+                            configEditable === 'false' &&
+                            configPreviewTitle &&
+                            suriChipboxes > 0 &&
+                            suriScopeTriggers === 0,
+                          defaultChipboxes,
+                          defaultSummaryTriggers,
+                          defaultModeToggles,
+                          configEditable,
+                          configPreviewTitle,
+                          suriChipboxes,
+                          suriScopeTriggers
+                        };
+                        setStatus(payload);
+                        reportStatus(payload);
+                      }, 900);
+                    }, 600);
+                  }, 700);
+                }, 900);
+              }, 600);
+            }, 700);
+          } catch (error) {
+            const payload = { ok: false, phase: 'probe', error: String(error && error.message || error) };
+            setStatus(payload); reportStatus(payload);
+          }
+        }, 1800);
+      });
+    </script>
+  </body>
+</html>

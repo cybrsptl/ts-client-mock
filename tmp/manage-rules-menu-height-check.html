@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Manage Rules Menu Height Check</title>
+  </head>
+  <body>
+    <pre id="status">Loading...</pre>
+    <iframe
+      id="viewer"
+      src="../viewer/viewer.html?manageRulesMenuHeightCheck=1"
+      style="width:1440px;height:1200px;border:0"
+    ></iframe>
+    <script>
+      const statusEl = document.getElementById("status");
+      const frame = document.getElementById("viewer");
+      let reported = false;
+      const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+      function setStatus(data) {
+        statusEl.textContent = JSON.stringify(data, null, 2);
+      }
+      function reportStatus(data) {
+        if (reported) return;
+        reported = true;
+        const params = new URLSearchParams();
+        Object.entries(data).forEach(([key, value]) =>
+          params.set(key, String(value)),
+        );
+        new Image().src = `/__codex_menu_height_status__?${params.toString()}`;
+      }
+      async function getModalRoot(doc) {
+        const host = doc.getElementById("alertingInlineRoot");
+        if (!host) return null;
+        for (let index = 0; index < 20; index += 1) {
+          const iframe = host.querySelector("iframe.alerting-inline-frame");
+          const modalDoc = iframe?.contentDocument;
+          if (modalDoc?.body) return modalDoc;
+          await sleep(250);
+        }
+        return null;
+      }
+      function measureMinHeight(root, className) {
+        const el = root.createElement("div");
+        el.className = className;
+        el.style.position = "absolute";
+        el.style.visibility = "hidden";
+        el.textContent = className;
+        root.body.appendChild(el);
+        const value = getComputedStyle(el).minHeight;
+        el.remove();
+        return value;
+      }
+      function measureHeight(root, className) {
+        const el = root.createElement("div");
+        el.className = className;
+        el.style.position = "absolute";
+        el.style.visibility = "hidden";
+        el.textContent = className;
+        root.body.appendChild(el);
+        const value = Math.round(el.getBoundingClientRect().height);
+        el.remove();
+        return value;
+      }
+      function measurePadding(root, className, innerHTML) {
+        const el = root.createElement("div");
+        el.className = className;
+        el.style.position = "absolute";
+        el.style.visibility = "hidden";
+        el.style.left = "-9999px";
+        el.style.top = "0";
+        el.innerHTML = innerHTML;
+        root.body.appendChild(el);
+        const style = getComputedStyle(el);
+        const value = `${style.paddingTop} ${style.paddingRight} ${style.paddingBottom} ${style.paddingLeft}`;
+        el.remove();
+        return value;
+      }
+      function buildSelectionShell(root) {
+        const shell = root.createElement("div");
+        shell.className = "suri-simple-menu-selection";
+        shell.style.position = "absolute";
+        shell.style.visibility = "hidden";
+        shell.style.left = "-9999px";
+        shell.style.top = "0";
+        shell.style.width = "240px";
+        for (let index = 0; index < 18; index += 1) {
+          const chip = root.createElement("span");
+          chip.className = "suri-subnet-chip manual";
+          chip.textContent = `Chip ${index + 1}`;
+          shell.appendChild(chip);
+        }
+        root.body.appendChild(shell);
+        return shell;
+      }
+      function hasCssSelector(root, needle) {
+        const walk = (rules) => {
+          for (const rule of rules) {
+            if (rule.selectorText && rule.selectorText.includes(needle)) {
+              return true;
+            }
+            if (rule.cssRules && walk(rule.cssRules)) {
+              return true;
+            }
+          }
+          return false;
+        };
+        try {
+          return Array.from(root.styleSheets).some((sheet) => {
+            try {
+              return walk(sheet.cssRules || []);
+            } catch {
+              return false;
+            }
+          });
+        } catch {
+          return false;
+        }
+      }
+      frame.addEventListener("load", async () => {
+        const win = frame.contentWindow;
+        const doc = win.document;
+        try {
+          if (typeof win.initAlertsFeature === "function") win.initAlertsFeature();
+          if (typeof win.openManageModal === "function") win.openManageModal(null, false);
+          await sleep(500);
+          const modalDoc = await getModalRoot(doc);
+          if (!modalDoc) {
+            const payload = { ok: false, phase: "modal-root", error: "missing modal root" };
+            setStatus(payload);
+            reportStatus(payload);
+            return;
+          }
+          const modalMenuListCount = modalDoc.querySelectorAll(".menu-list").length;
+          const modalBareMenuPanels = modalDoc.querySelectorAll(".suri-menu-panel:not(.menu-list)").length;
+          const viewerMenuItem = measureHeight(doc, "menu-item");
+          const viewerMenuCheck = measureHeight(doc, "menu-item menu-item-check");
+          const viewerMenuToggle = measureHeight(doc, "menu-item menu-item-toggle");
+          const viewerMenuCheckbox = measureHeight(doc, "menu-item menu-item-checkbox");
+          const viewerMenuCta = measureHeight(doc, "menu-item menu-item-cta");
+          const viewerPaginationOption = measureMinHeight(doc, "alerts-pagination-size-option");
+          const modalMenuOption = measureMinHeight(modalDoc, "menu-item suri-menu-option");
+          const modalPickerOption = measureMinHeight(modalDoc, "menu-item menu-item-cta suri-picker-option");
+          const modalSuggestionItem = measureMinHeight(modalDoc, "menu-item menu-item-cta suri-scope-suggestion-item");
+          const modalSubnetProjectOption = measureMinHeight(modalDoc, "suri-subnet-project-option");
+          const selectionShell = buildSelectionShell(modalDoc);
+          const selectionShellMaxHeight = getComputedStyle(selectionShell).maxHeight;
+          const selectionShellOverflowY = getComputedStyle(selectionShell).overflowY;
+          const selectionShellClientHeight = Math.round(selectionShell.getBoundingClientRect().height);
+          const selectionShellScrollHeight = Math.round(selectionShell.scrollHeight);
+          selectionShell.remove();
+          const viewerMenuTextPadding = measurePadding(doc, "menu-panel-option", "<span>Text only</span>");
+          const viewerMenuIconPadding = measurePadding(
+            doc,
+            "menu-panel-option",
+            '<span class="svg-icon"></span><span>Icon text</span>',
+          );
+          const viewerAlertsComboboxPadding = measurePadding(
+            doc,
+            "alerts-combobox-option",
+            '<span>Version label</span><span class="meta">5m</span>',
+          );
+          const viewerAlertsCanonicalComboboxPadding = measurePadding(
+            doc,
+            "menu-item menu-item-check alerts-combobox-option",
+            '<span>Version label</span><span class="meta">5m</span>',
+          );
+          const modalMenuTextPadding = measurePadding(
+            modalDoc,
+            "suri-menu-option",
+            '<span class="suri-menu-value-content"><span class="suri-menu-value-label">Text only</span></span>',
+          );
+          const modalMenuIconPadding = measurePadding(
+            modalDoc,
+            "suri-menu-option",
+            '<span class="suri-menu-value-content has-leading-icon"><img class="suri-option-leading-icon" alt="" /><span class="suri-menu-value-label">Icon text</span></span>',
+          );
+          const modalPickerTextCtaPadding = measurePadding(
+            modalDoc,
+            "suri-picker-option",
+            '<span class="value">Text only</span><span class="suri-option-tail"><span>CTA</span></span>',
+          );
+          const modalSemanticPickerTextCtaPadding = measurePadding(
+            modalDoc,
+            "menu-item menu-item-cta suri-picker-option",
+            '<span class="value">Text only</span><span class="suri-option-tail"><span>CTA</span></span>',
+          );
+          const modalPickerIconCtaPadding = measurePadding(
+            modalDoc,
+            "suri-picker-option",
+            '<span class="value"><img class="suri-scope-suggestion-icon" alt="" /><span>Icon text</span></span><span class="suri-option-tail"><span>CTA</span></span>',
+          );
+          const modalSuggestionTextPadding = measurePadding(
+            modalDoc,
+            "suri-scope-suggestion-item",
+            '<span class="value">Text only</span><span class="suri-option-tail"><span>CTA</span></span>',
+          );
+          const modalSuggestionIconPadding = measurePadding(
+            modalDoc,
+            "suri-scope-suggestion-item",
+            '<span class="value"><img class="suri-scope-suggestion-icon" alt="" /><span>Icon text</span></span><span class="suri-option-tail"><span>CTA</span></span>',
+          );
+          const hasModeActionsRules =
+            hasCssSelector(modalDoc, ".has-mode-actions:hover") &&
+            hasCssSelector(modalDoc, ".has-mode-actions.is-selected:hover") &&
+            hasCssSelector(modalDoc, ".suri-subnet-project-option:not(.has-mode-actions):hover") &&
+            hasCssSelector(modalDoc, ".suri-scope-suggestion-item:not(.has-mode-actions):hover");
+          const hasActionButtonHoverColorRules =
+            hasCssSelector(modalDoc, ".suri-item-action-button.is-include:hover") &&
+            hasCssSelector(modalDoc, ".suri-item-action-button.is-exclude:hover") &&
+            hasCssSelector(modalDoc, ".suri-item-action-button.is-active.is-include:hover") &&
+            hasCssSelector(modalDoc, ".suri-item-action-button.is-active.is-exclude:hover");
+          const wrapper = modalDoc.createElement("div");
+          wrapper.className = "suri-rule-pattern-add-results";
+          wrapper.style.position = "absolute";
+          wrapper.style.visibility = "hidden";
+          const wrappedOption = modalDoc.createElement("div");
+          wrappedOption.className = "suri-menu-option";
+          wrappedOption.textContent = "rule-pattern";
+          wrapper.appendChild(wrappedOption);
+          modalDoc.body.appendChild(wrapper);
+          const modalRulePatternAddOption = getComputedStyle(wrappedOption).minHeight;
+          wrapper.remove();
+          const payload = {
+            ok:
+              modalMenuListCount > 0 &&
+              modalBareMenuPanels === 0 &&
+              viewerMenuItem === 32 &&
+              viewerMenuCheck === 32 &&
+              viewerMenuToggle === 32 &&
+              viewerMenuCheckbox === 32 &&
+              viewerMenuCta === 32 &&
+              viewerPaginationOption === "32px" &&
+              modalMenuOption === "32px" &&
+              modalPickerOption === "32px" &&
+              modalSuggestionItem === "32px" &&
+              modalSubnetProjectOption === "32px" &&
+              modalRulePatternAddOption === "32px" &&
+              selectionShellMaxHeight === "160px" &&
+              selectionShellOverflowY === "auto" &&
+              selectionShellClientHeight <= 160 &&
+              selectionShellScrollHeight > selectionShellClientHeight &&
+              viewerMenuTextPadding === "8px 8px 8px 12px" &&
+              viewerMenuIconPadding === "8px 8px 8px 8px" &&
+              viewerAlertsComboboxPadding === "8px 8px 8px 12px" &&
+              viewerAlertsCanonicalComboboxPadding === "8px 8px 8px 12px" &&
+              modalMenuTextPadding === "8px 8px 8px 12px" &&
+              modalMenuIconPadding === "8px 8px 8px 8px" &&
+              modalPickerTextCtaPadding === "8px 8px 8px 12px" &&
+              modalSemanticPickerTextCtaPadding === "8px 8px 8px 12px" &&
+              modalPickerIconCtaPadding === "8px 8px 8px 8px" &&
+              modalSuggestionTextPadding === "8px 8px 8px 12px" &&
+              modalSuggestionIconPadding === "8px 8px 8px 8px" &&
+              hasModeActionsRules &&
+              hasActionButtonHoverColorRules,
+            viewerMenuItem,
+            modalMenuListCount,
+            modalBareMenuPanels,
+            viewerMenuCheck,
+            viewerMenuToggle,
+            viewerMenuCheckbox,
+            viewerMenuCta,
+            viewerPaginationOption,
+            modalMenuOption,
+            modalPickerOption,
+            modalSuggestionItem,
+            modalSubnetProjectOption,
+            modalRulePatternAddOption,
+            selectionShellMaxHeight,
+            selectionShellOverflowY,
+            selectionShellClientHeight,
+            selectionShellScrollHeight,
+            viewerMenuTextPadding,
+            viewerMenuIconPadding,
+            viewerAlertsComboboxPadding,
+            viewerAlertsCanonicalComboboxPadding,
+            modalMenuTextPadding,
+            modalMenuIconPadding,
+            modalPickerTextCtaPadding,
+            modalSemanticPickerTextCtaPadding,
+            modalPickerIconCtaPadding,
+            modalSuggestionTextPadding,
+            modalSuggestionIconPadding,
+            hasModeActionsRules,
+            hasActionButtonHoverColorRules,
+          };
+          setStatus(payload);
+          reportStatus(payload);
+        } catch (error) {
+          const payload = { ok: false, phase: "probe", error: String((error && error.message) || error) };
+          setStatus(payload);
+          reportStatus(payload);
+        }
+      });
+    </script>
+  </body>
+</html>

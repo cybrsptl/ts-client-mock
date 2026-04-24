@@ -1,0 +1,62 @@
+/* Source of truth checkbox primitive */
+.sot-checkbox {
+  --sot-checkbox-check-url: url("../../../icons/icon_check.svg");
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  border: 0;
+  background:
+    linear-gradient(180deg, transparent 0%, var(--material-ultra-thin-black) 100%),
+    linear-gradient(90deg, var(--material-thin-white) 0%, var(--material-thin-white) 100%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  position: relative;
+  box-shadow:
+    0 1px 2.5px 0 var(--material-thin-black),
+    inset 0 1px 0.5px 0 var(--material-xtra-thin-white),
+    inset 0 0 0 0 var(--material-thin-white);
+  transition:
+    box-shadow 140ms ease,
+    background-color 140ms ease;
+}
+
+.sot-checkbox::after {
+  content: "";
+  width: 13px;
+  height: 13px;
+  background-color: var(--note-editor-text, var(--text-primary));
+  -webkit-mask-image: var(--sot-checkbox-check-url);
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  -webkit-mask-size: contain;
+  mask-image: var(--sot-checkbox-check-url);
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
+  opacity: 0;
+}
+
+.sot-checkbox.is-checked,
+.sot-checkbox.is-mixed {
+  background:
+    linear-gradient(180deg, transparent 0%, var(--material-ultra-thin-black) 100%),
+    linear-gradient(90deg, var(--accent-blue) 0%, var(--accent-blue) 100%);
+}
+/* Note: rgba(0,0,0,0) and rgba(0,0,0,0.05) are transparent overlays — intentionally not tokenized */
+
+.sot-checkbox.is-checked::after {
+  opacity: 1;
+}
+
+.sot-checkbox.is-mixed::after {
+  width: 8px;
+  height: 2px;
+  border-radius: 999px;
+  -webkit-mask-image: none;
+  mask-image: none;
+  background-color: var(--note-editor-text, var(--text-primary));
+  opacity: 1;
+}

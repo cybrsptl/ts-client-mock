@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+  <body>
+    <pre id="status">Loading…</pre>
+    <iframe id="viewer" src="../viewer/viewer.html?verboseDefaultStateCheck=1" style="width:1440px;height:1800px;border:0"></iframe>
+    <script>
+      const statusEl = document.getElementById("status");
+      const frame = document.getElementById("viewer");
+      let reported = false;
+      const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+      function setStatus(data) { statusEl.textContent = JSON.stringify(data, null, 2); }
+      function reportStatus(data) {
+        if (reported) return;
+        reported = true;
+        const params = new URLSearchParams();
+        Object.entries(data).forEach(([key, value]) => params.set(key, String(value)));
+        (new Image()).src = `/__codex_verbose_default_state__?${params.toString()}`;
+      }
+      function click(el) {
+        if (!el) return false;
+        el.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, composed: true }));
+        return true;
+      }
+      function inputText(el, value) {
+        if (!el) return false;
+        el.focus();
+        el.value = value;
+        el.dispatchEvent(new InputEvent("input", { bubbles: true, cancelable: true, composed: true, data: value }));
+        return true;
+      }
+      function findSidebarRow(shadow, pattern) {
+        return Array.from(shadow.querySelectorAll(".alerting-sidebar .side-row.sidebar-item-row.sidebar-item")).find((row) => pattern.test(row.textContent || ""));
+      }
+      function findRuleRow(shadow, pattern = null) {
+        const rows = Array.from(shadow.querySelectorAll("#rulesTableBody tr"));
+        if (!pattern) return rows[0] || null;
+        return rows.find((row) => pattern.test(row.textContent || "")) || null;
+      }
+      frame.addEventListener("load", async () => {
+        const win = frame.contentWindow;
+        const doc = win.document;
+        try {
+          if (typeof win.initAlertsFeature === "function") win.initAlertsFeature();
+          if (typeof win.openManageModal === "function") win.openManageModal(null, false);
+          await sleep(1800);
+          const host = doc.getElementById("alertingInlineRoot");
+          const shadow = host && host.shadowRoot;
+          if (!shadow) {
+            const payload = { ok: false, phase: "shadow", error: "missing shadow root" };
+            setStatus(payload); reportStatus(payload); return;
+          }
+
+          click(findSidebarRow(shadow, /Emerging Threats PRO/i));
+          await sleep(700);
+          click(findRuleRow(shadow, /Apache Log4j|Microsoft Exchange|Spring4Shell/i));
+          await sleep(700);
+          click(shadow.getElementById("editBtn"));
+          await sleep(900);
+          const ruleConfigCard = shadow.getElementById("suriCard-ruleScope");
+          const modeButtons = Array.from(ruleConfigCard?.querySelectorAll(".suri-param-mode-toggle .suri-segment") || []);
+          click(modeButtons[1]);
+          await sleep(900);
+
+          const input = ruleConfigCard?.querySelector(".suri-scope-chipbox .suri-subnet-chip-input");
+          inputText(input, "1");
+          await sleep(600);
+
+          const firstRow = ruleConfigCard?.querySelector(".suri-scope-suggestion-anchor.is-stable-open .suri-scope-suggestion-item");
+          const checkboxCount = firstRow ? firstRow.querySelectorAll(".suri-subnet-checkbox-wrap").length : 0;
+          const activeIncludeCount = firstRow ? firstRow.querySelectorAll(".suri-item-mode-button.is-active.is-include").length : 0;
+          const activeExcludeCount = firstRow ? firstRow.querySelectorAll(".suri-item-mode-button.is-active.is-exclude").length : 0;
+
+          const payload = {
+            ok: checkboxCount === 1 && activeIncludeCount === 1 && activeExcludeCount === 0,
+            checkboxCount,
+            activeIncludeCount,
+            activeExcludeCount
+          };
+          setStatus(payload);
+          reportStatus(payload);
+        } catch (error) {
+          const payload = { ok: false, phase: "probe", error: String(error && error.message || error) };
+          setStatus(payload);
+          reportStatus(payload);
+        }
+      });
+    </script>
+  </body>
+</html>

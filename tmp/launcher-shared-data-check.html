@@ -1,0 +1,32 @@
+<!doctype html>
+<html>
+<body>
+<iframe id="app" src="/launcher/launcher.html?sharedDataCheck=2" style="width:1600px;height:1100px;border:0"></iframe>
+<script>
+const frame = document.getElementById('app');
+function send(status) {
+  fetch('/__codex_launcher_shared_status__?' + new URLSearchParams(status)).catch(() => {});
+}
+frame.addEventListener('load', () => {
+  setTimeout(() => {
+    try {
+      const win = frame.contentWindow;
+      const doc = frame.contentDocument;
+      const shared = win.TeleseerAppData || {};
+      const catalog = shared.projects && shared.projects.catalog || [];
+      const favorites = shared.projects && shared.projects.favorites || [];
+      send({
+        ok: 'true',
+        hasShared: String(Boolean(win.TeleseerAppData)),
+        catalogCount: String(catalog.length),
+        favoriteCount: String(favorites.length),
+        bodyHasPowerPlant: String(doc.body.textContent.includes('Power Plant')),
+      });
+    } catch (error) {
+      send({ ok: 'false', error: String(error && error.message || error) });
+    }
+  }, 1500);
+});
+</script>
+</body>
+</html>

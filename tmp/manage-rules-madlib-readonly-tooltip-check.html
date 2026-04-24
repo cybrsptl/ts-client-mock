@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Manage Rules Madlib Readonly Tooltip Check</title>
+  </head>
+  <body>
+    <pre id="status">Loading...</pre>
+    <iframe
+      id="viewer"
+      src="../viewer/viewer.html?manageRulesMadlibReadonlyTooltipCheck=1"
+      style="width:1440px;height:1400px;border:0"
+    ></iframe>
+    <script>
+      const statusEl = document.getElementById("status");
+      const frame = document.getElementById("viewer");
+      let reported = false;
+      const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+      function setStatus(data) {
+        statusEl.textContent = JSON.stringify(data, null, 2);
+      }
+      function reportStatus(data) {
+        if (reported) return;
+        reported = true;
+        const params = new URLSearchParams();
+        Object.entries(data).forEach(([key, value]) =>
+          params.set(key, String(value)),
+        );
+        new Image().src = `/__codex_madlib_readonly_tooltip_status__?${params.toString()}`;
+      }
+      function click(el) {
+        if (!el) return false;
+        el.dispatchEvent(
+          new MouseEvent("click", {
+            bubbles: true,
+            cancelable: true,
+            composed: true,
+          }),
+        );
+        return true;
+      }
+      function findSidebarRow(shadow, pattern) {
+        return Array.from(
+          shadow.querySelectorAll(
+            ".alerting-sidebar .side-row.sidebar-item-row.sidebar-item",
+          ),
+        ).find((row) => pattern.test(row.textContent || ""));
+      }
+      function findRuleRow(shadow, pattern = null) {
+        const rows = Array.from(shadow.querySelectorAll("#rulesTableBody tr"));
+        if (!pattern) return rows[0] || null;
+        return rows.find((row) => pattern.test(row.textContent || "")) || null;
+      }
+      async function getModalRoot(doc) {
+        const host = doc.getElementById("alertingInlineRoot");
+        if (!host) return null;
+        if (host.shadowRoot) return host.shadowRoot;
+        for (let index = 0; index < 20; index += 1) {
+          const iframe = host.querySelector("iframe.alerting-inline-frame");
+          const modalDoc = iframe?.contentDocument;
+          if (modalDoc?.querySelector(".alerting-sidebar")) return modalDoc;
+          await sleep(250);
+        }
+        return null;
+      }
+      function triggerSnapshot(trigger) {
+        const labelEl = trigger?.querySelector(".suri-madlib-trigger-label");
+        const triggerStyle = trigger ? getComputedStyle(trigger) : null;
+        const labelStyle = labelEl ? getComputedStyle(labelEl) : null;
+        return {
+          label: (
+            labelEl?.textContent || ""
+          )
+            .trim()
+            .replace(/\s+/g, " "),
+          hasPopover: Boolean(trigger?.classList.contains("has-popover")),
+          hasTooltip: Boolean(trigger?.getAttribute("data-tooltip")),
+          triggerDecorationColor: triggerStyle?.textDecorationColor || "",
+          labelColor: labelStyle?.color || "",
+          labelDecorationColor: labelStyle?.textDecorationColor || "",
+          labelDecorationLine: labelStyle?.textDecorationLine || "",
+          labelDecorationStyle: labelStyle?.textDecorationStyle || "",
+          popoverItems: trigger
+            ? trigger.querySelectorAll(".suri-madlib-readonly-popover-item")
+                .length
+            : 0,
+          excludedMarks: trigger
+            ? Array.from(
+                trigger.querySelectorAll(
+                  ".suri-madlib-readonly-popover-item.is-excluded .suri-madlib-readonly-popover-bang",
+                ),
+              ).filter((el) => (el.textContent || "").trim() === "!").length
+            : 0,
+        };
+      }
+      function resolveCssColor(root, tokenName) {
+        const probe = root.createElement("span");
+        probe.style.color = `var(${tokenName})`;
+        root.body.appendChild(probe);
+        const color = getComputedStyle(probe).color;
+        probe.remove();
+        return color;
+      }
+
+      frame.addEventListener("load", async () => {
+        const win = frame.contentWindow;
+        const doc = win.document;
+        try {
+          if (typeof win.initAlertsFeature === "function") {
+            win.initAlertsFeature();
+          }
+          if (typeof win.openManageModal === "function") {
+            win.openManageModal(null, false);
+          }
+          await sleep(500);
+          const shadow = await getModalRoot(doc);
+          if (!shadow) {
+            const payload = {
+              ok: false,
+              phase: "modal-root",
+              error: "missing modal root",
+            };
+            setStatus(payload);
+            reportStatus(payload);
+            return;
+          }
+
+          click(findSidebarRow(shadow, /Default Alerts/i));
+          await sleep(700);
+          click(findRuleRow(shadow));
+          await sleep(700);
+          const defaultCard = shadow.getElementById("suriCard-alertFilters");
+          const defaultTriggers = Array.from(
+            defaultCard.querySelectorAll(".suri-madlib-trigger.is-readonly"),
+          );
+          const defaultProtocols = triggerSnapshot(defaultTriggers[0]);
+          const defaultSourceHosts = triggerSnapshot(defaultTriggers[2]);
+          const defaultSubnets = triggerSnapshot(defaultTriggers[9]);
+
+          click(findSidebarRow(shadow, /Emerging Threats PRO/i));
+          await sleep(700);
+          click(findRuleRow(shadow, /Apache Log4j|Microsoft Exchange|Spring4Shell/i));
+          await sleep(700);
+          const suriCard = shadow.getElementById("suriCard-ruleScope");
+          const expectedPrimary = resolveCssColor(shadow, "--text-primary");
+          const expectedSecondary = resolveCssColor(shadow, "--text-secondary");
+          const suriTriggers = Array.from(
+            suriCard.querySelectorAll(".suri-madlib-trigger.is-readonly"),
+          );
+          const suriAction = triggerSnapshot(suriTriggers[0]);
+          const suriSourceSubnets = triggerSnapshot(suriTriggers[5]);
+          const suriDestinationSubnets = triggerSnapshot(suriTriggers[7]);
+          const formatReadonly =
+            shadow.defaultView?.formatRuleConfigReadonlyMadlib;
+          const syntheticTwoItemLabel =
+            typeof formatReadonly === "function"
+              ? formatReadonly(
+                  [
+                    {
+                      value: "HOME_NET",
+                      mode: "include",
+                      categorySingular: "Variable",
+                      categoryPlural: "Variables",
+                    },
+                    {
+                      value: "192.168.10",
+                      mode: "exclude",
+                      categorySingular: "Subnet",
+                      categoryPlural: "Subnets",
+                    },
+                  ],
+                  "Any Subnets",
+                ).label
+              : "";
+
+          const payload = {
+            ok:
+              defaultProtocols.label === "4 Protocols" &&
+              defaultProtocols.hasPopover &&
+              !defaultProtocols.hasTooltip &&
+              defaultProtocols.labelColor === expectedPrimary &&
+              defaultProtocols.labelDecorationColor === expectedSecondary &&
+              defaultProtocols.labelDecorationLine.includes("underline") &&
+              defaultProtocols.labelDecorationStyle === "dotted" &&
+              defaultProtocols.popoverItems === 4 &&
+              defaultSourceHosts.label === "Select Hosts" &&
+              !defaultSourceHosts.hasPopover &&
+              !defaultSourceHosts.hasTooltip &&
+              !defaultSourceHosts.labelDecorationLine.includes("underline") &&
+              defaultSubnets.label === "6 Subnets" &&
+              defaultSubnets.hasPopover &&
+              defaultSubnets.popoverItems === 6 &&
+              suriAction.label === "alert" &&
+              !suriAction.hasPopover &&
+              !suriAction.hasTooltip &&
+              suriSourceSubnets.label === "2 Variables and 4 Subnets" &&
+              suriSourceSubnets.hasPopover &&
+              suriSourceSubnets.popoverItems === 6 &&
+              suriDestinationSubnets.label === "1 Variable and 4 Subnets" &&
+              suriDestinationSubnets.hasPopover &&
+              suriDestinationSubnets.popoverItems === 5 &&
+              suriDestinationSubnets.excludedMarks === 5 &&
+              syntheticTwoItemLabel === "HOME_NET and 192.168.10",
+            defaultProtocols: JSON.stringify(defaultProtocols),
+            defaultSourceHosts: JSON.stringify(defaultSourceHosts),
+            defaultSubnets: JSON.stringify(defaultSubnets),
+            suriAction: JSON.stringify(suriAction),
+            suriSourceSubnets: JSON.stringify(suriSourceSubnets),
+            suriDestinationSubnets: JSON.stringify(suriDestinationSubnets),
+            syntheticTwoItemLabel,
+            expectedPrimary,
+            expectedSecondary,
+          };
+          setStatus(payload);
+          reportStatus(payload);
+        } catch (error) {
+          const payload = {
+            ok: false,
+            phase: "probe",
+            error: String((error && error.message) || error),
+          };
+          setStatus(payload);
+          reportStatus(payload);
+        }
+      });
+    </script>
+  </body>
+</html>

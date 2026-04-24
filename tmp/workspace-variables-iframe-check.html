@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head><meta charset="utf-8" /><title>Workspace Variables Iframe Check</title></head>
+  <body>
+    <pre id="status">Loading…</pre>
+    <iframe id="viewer" src="../viewer/viewer.html?workspaceVariablesIframeCheck=1" style="width:1600px;height:1200px;border:0"></iframe>
+    <script>
+      const statusEl = document.getElementById('status');
+      const frame = document.getElementById('viewer');
+      let reported = false;
+      function setStatus(data){ statusEl.textContent = JSON.stringify(data, null, 2); }
+      function reportStatus(data){ if (reported) return; reported = true; const params = new URLSearchParams(); Object.entries(data).forEach(([k,v]) => params.set(k, String(v))); (new Image()).src = `/__codex_workspace_iframe_status__?${params.toString()}`; }
+      frame.addEventListener('load', () => {
+        const win = frame.contentWindow;
+        const doc = win.document;
+        try {
+          if (typeof win.initAlertsFeature === 'function') win.initAlertsFeature();
+          if (typeof win.openWorkspaceVariablesModal === 'function') win.openWorkspaceVariablesModal();
+        } catch (error) {
+          const payload = { ok:false, phase:'open', error:String(error && error.message || error) }; setStatus(payload); reportStatus(payload); return;
+        }
+        setTimeout(() => {
+          try {
+            const host = doc.getElementById('alertingInlineRoot');
+            const modalFrame = host?.querySelector('iframe.alerting-inline-frame');
+            const modalDoc = modalFrame?.contentDocument;
+            const payload = {
+              ok: !!modalFrame && modalDoc?.querySelector('.modal.is-workspace-variables') && modalDoc?.querySelector('.modal-title')?.textContent?.trim() === 'Variables',
+              hasIframe: !!modalFrame,
+              iframeSrc: modalFrame?.getAttribute('src') || '',
+              modalTitle: modalDoc?.querySelector('.modal-title')?.textContent?.trim() || '',
+              workspaceClass: modalDoc?.querySelector('.modal')?.className || ''
+            };
+            setStatus(payload); reportStatus(payload);
+          } catch (error) {
+            const payload = { ok:false, phase:'probe', error:String(error && error.message || error) }; setStatus(payload); reportStatus(payload);
+          }
+        }, 1800);
+      });
+    </script>
+  </body>
+</html>

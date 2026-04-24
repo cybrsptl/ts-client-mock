@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+  <body>
+    <pre id="status">Loading…</pre>
+    <iframe id="viewer" src="../viewer/viewer.html?manageRulesPatternInputCheck=1" style="width:1440px;height:1400px;border:0"></iframe>
+    <script>
+      const statusEl = document.getElementById('status');
+      const frame = document.getElementById('viewer');
+      let reported = false;
+      const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+      function setStatus(data) { statusEl.textContent = JSON.stringify(data, null, 2); }
+      function reportStatus(data) {
+        if (reported) return;
+        reported = true;
+        const params = new URLSearchParams();
+        Object.entries(data).forEach(([key, value]) => params.set(key, String(value)));
+        (new Image()).src = `/__codex_pattern_input_status__?${params.toString()}`;
+      }
+      function click(el) {
+        if (!el) return false;
+        el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, composed: true }));
+        return true;
+      }
+      function findSidebarRow(shadow, pattern) {
+        return Array.from(shadow.querySelectorAll('.alerting-sidebar .side-row.sidebar-item-row.sidebar-item')).find((row) => pattern.test(row.textContent || '')) || null;
+      }
+      function findRuleRow(shadow, pattern) {
+        return Array.from(shadow.querySelectorAll('#rulesTableBody tr')).find((row) => pattern.test(row.textContent || '')) || null;
+      }
+      frame.addEventListener('load', async () => {
+        const win = frame.contentWindow;
+        const doc = win.document;
+        try {
+          if (typeof win.initAlertsFeature === 'function') win.initAlertsFeature();
+          if (typeof win.openManageModal === 'function') win.openManageModal(null, false);
+          await sleep(1800);
+          const host = doc.getElementById('alertingInlineRoot');
+          const shadow = host && host.shadowRoot;
+          if (!shadow) {
+            const payload = { ok: false, phase: 'shadow', error: 'missing shadow root' };
+            setStatus(payload); reportStatus(payload); return;
+          }
+          click(findSidebarRow(shadow, /Emerging Threats PRO/i));
+          await sleep(700);
+          click(findRuleRow(shadow, /Apache Log4j|Microsoft Exchange|Spring4Shell/i));
+          await sleep(700);
+          click(shadow.getElementById('editBtn'));
+          await sleep(900);
+          const patternInput = shadow.querySelector('#suriCard-rulePatterns .suri-rule-pattern-input');
+          const styles = patternInput ? win.getComputedStyle(patternInput) : null;
+          const payload = {
+            ok: Boolean(patternInput) && /suri-input-field/.test(patternInput.className) && styles && styles.maxWidth === 'none',
+            className: patternInput ? patternInput.className : '',
+            maxWidth: styles ? styles.maxWidth : '',
+            width: styles ? styles.width : ''
+          };
+          setStatus(payload);
+          reportStatus(payload);
+        } catch (error) {
+          const payload = { ok: false, phase: 'probe', error: String(error && error.message || error) };
+          setStatus(payload);
+          reportStatus(payload);
+        }
+      });
+    </script>
+  </body>
+</html>

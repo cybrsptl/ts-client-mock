@@ -1,0 +1,499 @@
+# Rename map: old CSS variable → new figma-aligned CSS variable
+
+# === RENAMED (379) ===
+--accent -> --accent-blue
+--accent-alpha-10 -> --tag-chip-label-ultra-alpha-fill
+--accent-alpha-20 -> --tag-chip-label-ultra-alpha-fill-hover
+--accent-alpha-24 -> --fill-menu-item-hover
+--accent-alpha-26 -> --fill-menu-item-hover
+--accent-alpha-36 -> --fill-menu-item-hover
+--accent-alpha-38 -> --fill-menu-item-hover
+--accent-alpha-48 -> --fill-table-active
+--accent-blue -> --stroke-active
+--accent-blue-36 -> --fill-menu-item-hover
+--accent-blue-42 -> --fill-menu-item-hover
+--accent-blue-58 -> --fill-table-active
+--accent-cyan-blue -> --cyber-cyan-200
+--accent-focus -> --fill-table-active
+--accent-glow-34 -> --fill-menu-item-hover
+--accent-glow-40 -> --fill-menu-item-hover
+--accent-glow-44 -> --fill-menu-item-hover
+--accent-glow-58 -> --fill-table-active
+--accent-glow-90 -> --stroke-active
+--accent-glow-92 -> --stroke-active
+--accent-indigo -> --cyber-indigo-300
+--accent-item-18 -> --fill-menu-item-hover
+--accent-item-28 -> --fill-menu-item-hover
+--accent-item-32 -> --fill-menu-item-hover
+--accent-item-8 -> --tag-chip-label-ultra-alpha-fill
+--accent-navy-12 -> --tag-chip-label-ultra-alpha-fill
+--accent-navy-14 -> --tag-chip-label-ultra-alpha-fill-hover
+--accent-navy-20 -> --fill-table-active
+--accent-navy-96 -> --primary
+--accent-navy-96s -> --tag-chip-label-ultra-alpha-fill
+--accent-navy-solid -> --primary
+--accent-orange -> --cyber-orange-200
+--accent-purple -> --cyber-purple-300
+--accent-soft -> --tag-chip-label-indigo-alpha-fill-hover
+--accent-soft-12 -> --tag-chip-label-indigo-alpha-fill-hover
+--accent-soft-blue -> --tag-chip-label-ultra-alpha-fill
+--alerts-subnet-chip-exclude-fill -> --tag-chip-label-orange-alpha-fill-hover
+--alerts-subnet-chip-exclude-outline -> --tag-chip-label-orange-outline-strong
+--alerts-subnet-chip-exclude-text -> --cyber-orange-50
+--alerts-subnet-chip-fill -> --tag-chip-label-ultra-alpha-fill-hover
+--alerts-subnet-chip-include-fill -> --tag-chip-label-ultra-alpha-fill-hover
+--alerts-subnet-chip-include-outline -> --tag-chip-label-blue-outline-strong
+--alerts-subnet-chip-outline -> --tag-chip-label-blue-outline-strong
+--alerts-subnet-chip-text -> --text-active
+--app-theme-bg -> --theme-midnight
+--badge-fill -> --cyber-black-250
+--badge-text -> --text-secondary
+--bg -> --theme-midnight
+--bg-hover -> --fill-menu-item-hover
+--bg-primary -> --surface-tooltip-host-background
+--bg-selected -> --fill-table-active
+--blue-33-38 -> --fill-menu-item-hover
+--blue-33-85 -> --tag-chip-label-blue-alpha-fill-hover
+--blue-33-85b -> --stroke-active
+--blue-59-18 -> --fill-menu-item-hover
+--blue-59-85 -> --stroke-active
+--blue-dot -> --cyber-blue-100
+--blue-inset-24 -> --material-medium-black
+--blue-inset-32 -> --material-thick-black
+--blue-med-82 -> --stroke-active
+--blue-navy-dark-40 -> --material-thick-black
+--blue-navy-deep -> --cyber-blue-700
+--blue-navy-xdark -> --cyber-black-650
+--blue-vivid-32 -> --tag-chip-label-ultra-alpha-fill-hover
+--blue-vivid-82 -> --stroke-active
+--blue-xlight -> --cyber-indigo-50
+--border -> --material-thick-white
+--border-color -> --fill-table-active
+--border-search-active -> --stroke-active
+--border-search-error -> --stroke-error
+--border-search-hover -> --material-thick-white
+--border-strong -> --material-thick-white
+--border-subtle -> --stroke-faint
+--btn-primary-bg -> --primary
+--btn-primary-hover -> --primary
+--btn-warning-border -> --cyber-orange-600
+--btn-warning-fill -> --tag-chip-label-orange-alpha-fill
+--btn-warning-fill-active -> --tag-chip-label-orange-alpha-fill
+--btn-warning-fill-hover -> --tag-chip-label-orange-alpha-fill-hover
+--checkbox-mark-color -> --text-primary
+--chip-hover-fill -> --fill-menu-item-hover
+--chip-outline -> --tag-chip-label-gray-outline-strong
+--chip-text -> --text-secondary
+--chip-yellow-strong -> --text-highlight
+--chip-yellow-warn-42 -> --tag-chip-label-yellow-alpha-fill-hover
+--collection-bar-bg -> --tag-chip-label-ultra-alpha-fill
+--collection-bar-border -> --material-medium-white
+--cyan-teal-30 -> --tag-chip-label-cyan-alpha-fill-hover
+--danger -> --text-error
+--dbe7ff-light-blue -> --cyber-blue-50
+--dialog-icon-warning-bg -> --tag-chip-label-yellow-alpha-fill
+--dot-glow -> --material-ultra-thin-white
+--error -> --text-error
+--error-bright-11 -> --tag-chip-label-pink-alpha-fill
+--error-bright-24 -> --tag-chip-label-pink-alpha-fill-hover
+--error-pink-30 -> --tag-chip-label-pink-alpha-fill-hover
+--error-pink-42 -> --tag-chip-label-pink-alpha-fill-hover
+--error-pink-alt -> --text-error
+--error-pink-light -> --text-error
+--error-tint-8 -> --tag-chip-label-pink-alpha-fill
+--faint -> --text-quaternary
+--floating-lab-bg -> --surface-tooltip-host-background
+--focus-ring -> --fill-table-active
+--focus-ring-color -> --stroke-active
+--glow-w-1 -> --material-ultra-thin-white
+--glow-w-18 -> --material-thick-white
+--glow-w-2 -> --material-ultra-thin-white
+--glow-w-2-5 -> --material-ultra-thin-white
+--glow-w-3 -> --material-ultra-thin-white
+--glow-w-4 -> --material-xtra-thin-white
+--glow-w-6 -> --material-semi-thin-white
+--glow-w-8 -> --material-thin-white
+--gray-dark -> --cyber-black-300
+--gray-light -> --cyber-white-400
+--gray-light-48 -> --cyber-white-500
+--gray-mid-90 -> --cyber-black-400
+--gray-muted-18 -> --material-thin-white
+--gray-muted-48 -> --material-xtra-thick-white
+--gray-muted-90 -> --cyber-black-250
+--gray-storage-end -> --cyber-white-200
+--gray-storage-start -> --cyber-white-850
+--gray-subtle -> --cyber-white-850
+--gray-text-light -> --cyber-white-150
+--gray-timeline-16 -> --material-thick-white
+--gray-timeline-90 -> --cyber-white-500
+--gray-timeline-92 -> --cyber-white-500
+--gray-xtra-light -> --cyber-white-300
+--hosts-checkbox-border -> --material-thin-white
+--indigo-alpha-20 -> --tag-chip-label-indigo-alpha-fill
+--indigo-alt-20 -> --tag-chip-label-indigo-alpha-fill
+--indigo-soft-24 -> --tag-chip-label-indigo-alpha-fill-hover
+--inspector-panel-bg -> --material-thin-white
+--item-active-bg -> --fill-menu-item-active
+--item-hover-bg -> --fill-menu-item-hover
+--link -> --text-link
+--link-hover -> --text-hover
+--material-k-28 -> --material-medium-black
+--material-k-35 -> --material-thick-black
+--material-k-48 -> --material-xtra-thick-black
+--material-k-intense -> --material-intense-black
+--material-k-medium -> --material-medium-black
+--material-k-semi-thin -> --material-semi-thin-black
+--material-k-thick -> --material-thick-black
+--material-k-thin -> --material-thin-black
+--material-k-ultra-thick -> --material-ultra-thick-black
+--material-k-ultra-thin -> --material-ultra-thin-black
+--material-k-xtra-thick -> --material-xtra-thick-black
+--material-k-xtra-thin -> --material-xtra-thin-black
+--material-w-10 -> --material-thin-white
+--material-w-14 -> --material-thin-white
+--material-w-20 -> --material-medium-white
+--material-w-22 -> --material-thick-white
+--material-w-26 -> --material-xtra-thick-white
+--material-w-28 -> --material-xtra-thick-white
+--material-w-38 -> --material-ultra-thick-white
+--material-w-46 -> --material-ultra-thick-white
+--material-w-intense -> --material-intense-white
+--material-w-medium -> --material-medium-white
+--material-w-semi-thin -> --material-semi-thin-white
+--material-w-thick -> --material-thick-white
+--material-w-thin -> --material-thin-white
+--material-w-ultra-thick -> --material-ultra-thick-white
+--material-w-ultra-thin -> --material-ultra-thin-white
+--material-w-xtra-thick -> --material-xtra-thick-white
+--material-w-xtra-thin -> --material-xtra-thin-white
+--menu-chip-border -> --tag-chip-label-gray-outline-strong
+--modal -> --surface-modal
+--muted -> --text-tertiary
+--network-panel-bg -> --material-ultra-thin-black
+--note-editor-bg -> --surface-tooltip-host-background
+--note-editor-placeholder -> --text-quaternary
+--note-editor-text -> --text-primary
+--note-resize-handle-border -> --material-thick-white
+--orange -> --cyber-orange-200
+--orange-alpha-11 -> --tag-chip-label-orange-alpha-fill
+--orange-alpha-14 -> --tag-chip-label-orange-alpha-fill
+--orange-alpha-24 -> --tag-chip-label-orange-alpha-fill-hover
+--orange-alpha-34 -> --tag-chip-label-orange-alpha-fill-hover
+--orange-alpha-42 -> --tag-chip-label-orange-outline-strong
+--orange-alpha-46 -> --tag-chip-label-orange-outline-strong
+--orange-alpha-48 -> --tag-chip-label-orange-outline-strong
+--orange-soft -> --tag-chip-label-orange-alpha-fill
+--orange-soft-border -> --cyber-orange-800
+--orange-solid -> --cyber-orange-200
+--orange-solid-alt -> --cyber-orange-200
+--orange-warm-20 -> --tag-chip-label-brown-alpha-fill
+--orange-warm-22 -> --tag-chip-label-brown-alpha-fill
+--overlay-k-18 -> --material-thin-black
+--overlay-k-20 -> --material-thin-black
+--overlay-k-25 -> --material-medium-black
+--overlay-k-32 -> --material-thick-black
+--overlay-k-35 -> --material-thick-black
+--overlay-k-40 -> --material-thick-black
+--overlay-k-45 -> --material-xtra-thick-black
+--overlay-k-48 -> --material-xtra-thick-black
+--overlay-k-5 -> --material-ultra-thin-black
+--overlay-k-50 -> --material-xtra-thick-black
+--overlay-k-55 -> --material-xtra-thick-black
+--overlay-k-62 -> --material-ultra-thick-black
+--overlay-k-70 -> --material-ultra-thick-black
+--overlay-k-8 -> --material-xtra-thin-black
+--overlay-k-80 -> --material-intense-black
+--panel -> --theme-midnight
+--panel-2 -> --surface-navbar-launcher
+--panel-3 -> --surface-sidebar
+--purple-alpha-30 -> --tag-chip-label-indigo-alpha-fill-hover
+--red-dark-24 -> --tag-chip-label-pink-alpha-fill-hover
+--rename-input-bg -> --material-xtra-thin-white
+--rename-input-border -> --stroke-active
+--rename-input-glow -> --fill-menu-item-hover
+--row-bg -> --material-ultra-thin-white
+--row-drag-source-bg -> --material-ultra-thin-white
+--row-drag-source-border -> --material-medium-white
+--scale-black-45 -> --material-xtra-thick-black
+--scale-black-55 -> --material-ultra-thick-black
+--scale-black-62 -> --material-ultra-thick-black
+--scale-black-80 -> --material-intense-black
+--scale-deep-12 -> --material-semi-thin-black
+--scale-deep-18 -> --material-thin-black
+--scale-deep-4 -> --material-ultra-thin-black
+--scale-deep-48 -> --material-xtra-thick-black
+--scale-deep-72 -> --material-ultra-thick-black
+--scale-deep-92 -> --material-intense-black
+--scale-deep-98 -> --material-intense-black
+--scale-light-10 -> --material-thin-white
+--scale-light-12 -> --material-medium-white
+--scale-light-16 -> --material-thick-white
+--scale-light-18 -> --material-thick-white
+--scale-light-2 -> --material-ultra-thin-white
+--scale-light-24 -> --material-xtra-thick-white
+--scale-light-3 -> --material-ultra-thin-white
+--scale-light-4 -> --material-xtra-thin-white
+--scale-light-5 -> --material-xtra-thin-white
+--scale-light-6 -> --material-semi-thin-white
+--scale-light-8 -> --material-thin-white
+--scale-white-008 -> --material-ultra-thin-white
+--scale-white-015 -> --material-ultra-thin-white
+--scale-white-2 -> --material-ultra-thin-white
+--scale-white-4 -> --material-xtra-thin-white
+--scale-white-6 -> --material-semi-thin-white
+--scenario-primary-bg -> --fill-menu-item-hover
+--scenario-primary-border -> --stroke-active
+--scenario-warn-bg -> --tag-chip-label-orange-alpha-fill
+--scenario-warn-border -> --tag-chip-label-orange-outline-strong
+--secondary-icon-bg -> --material-thin-white
+--secondary-icon-hover -> --material-medium-white
+--sidebar-row-color -> --text-secondary
+--sidebar-search-border -> --stroke-active
+--sidebar-search-glow -> --fill-menu-item-hover
+--split-btn-ring -> --tag-chip-label-orange-outline-strong
+--status-badge-bg -> --tag-chip-label-gray-alpha-fill
+--status-badge-error-bg -> --tag-chip-label-pink-alpha-fill
+--status-badge-gray-bg -> --tag-chip-label-gray-alpha-fill
+--status-badge-icon-color -> --text-secondary
+--status-badge-online-bg -> --tag-chip-label-teal-alpha-fill
+--status-badge-paused-bg -> --tag-chip-label-indigo-alpha-fill
+--status-badge-ready-bg -> --tag-chip-label-blue-alpha-fill
+--status-badge-warning-bg -> --tag-chip-label-yellow-alpha-fill
+--success -> --text-positive
+--success-alpha-10 -> --tag-chip-label-teal-alpha-fill
+--success-alpha-24 -> --tag-chip-label-teal-alpha-fill-hover
+--success-bright -> --text-portal-highlight
+--surface-alerts-6-98 -> --surface-tooltip-host-background
+--surface-alerts-8-99 -> --surface-tooltip-host-background
+--surface-alerts-dark -> --surface-tooltip-host-background
+--surface-backdrop -> --surface-tooltip-host-background
+--surface-black -> --surface-tooltip-host-background
+--surface-dark -> --surface-navbar-launcher
+--surface-dark-92 -> --material-intense-black
+--surface-dark-98 -> --material-intense-black
+--surface-deep -> --surface-tooltip-host-background
+--surface-deep-overlay -> --material-ultra-thick-black
+--surface-dim -> --surface-timeline
+--surface-floating-bg -> --surface-tooltip-host-background
+--surface-menu-bg -> --surface-popover
+--surface-mid-92 -> --surface-navbar-launcher
+--surface-modal-dark -> --surface-modal
+--surface-nav-dark -> --surface-sidebar-launcher
+--surface-note-bg -> --surface-tooltip-host-background
+--surface-overlay -> --surface-tooltip
+--surface-panel-74 -> --surface-navbar-launcher
+--surface-panel-90 -> --surface-navbar-launcher
+--surface-panel-96 -> --surface-navbar-launcher
+--surface-panel-96b -> --surface-navbar-launcher
+--surface-panel-98 -> --surface-navbar-launcher
+--surface-table-header -> --surface-navbar-launcher
+--surface-timeline-92 -> --surface-timeline
+--surface-timeline-95 -> --surface-timeline
+--surface-timeline-dark -> --surface-timeline
+--surface-timeline-panel -> --surface-timeline
+--surface-toast-bg -> --fill-toast-default
+--suri-subnet-chip-fill -> --tag-chip-label-ultra-alpha-fill-hover
+--suri-subnet-chip-outline -> --tag-chip-label-blue-outline-strong
+--suri-subnet-chip-text -> --text-primary
+--tab-close-hover-bg -> --material-thin-white
+--tab-pill-active -> --fill-tab-active
+--tab-pill-hover-bg -> --material-xtra-thin-white
+--tab-strip-bg -> --material-ultra-thin-white
+--tag-agent-bg -> --tag-chip-label-blue-alpha-fill
+--tag-agent-border -> --tag-chip-label-blue-alpha-fill-hover
+--tag-alert-bg -> --tag-chip-label-pink-alpha-fill
+--tag-alert-border -> --tag-chip-label-pink-alpha-fill-hover
+--tag-benign-bg -> --tag-chip-label-teal-alpha-fill
+--tag-benign-border -> --tag-chip-label-teal-alpha-fill-hover
+--teal-alpha-20 -> --tag-chip-label-teal-alpha-fill
+--teal-alpha-36 -> --tag-chip-label-teal-alpha-fill-hover
+--teal-border-18 -> --tag-chip-label-teal-alpha-fill-hover
+--teal-border-42 -> --tag-chip-label-teal-outline-strong
+--teal-border-8 -> --tag-chip-label-teal-alpha-fill
+--teal-border-86 -> --stroke-active
+--teal-green -> --cyber-teal-300
+--teletext-bg -> --fill-teletext-default
+--teletext-border -> --border-teletext
+--text -> --text-secondary
+--text-40 -> --text-tertiary
+--text-72 -> --text-secondary
+--text-faint-12 -> --material-medium-white
+--text-faint-16 -> --stroke-disabled
+--text-faint-8 -> --text-quaternary
+--text-near-white -> --text-primary
+--text-near-white-90 -> --text-primary
+--text-solid-black -> --text-invert
+--text-solid-white -> --stroke-intense
+--text-warning-bright -> --text-highlight
+--threshold-fill -> --fill-table-active
+--timeline-scale-fill-end -> --cyber-ultra-200
+--timeline-scale-fill-start -> --greynoise-blue-alpha600
+--timeline-scale-track -> --material-semi-thin-white
+--toggle-idle -> --secondary
+--toggle-on -> --primary
+--toggle-thumb -> --text-primary
+--toggle-thumb-white -> --text-primary
+--toolbar-action-bg -> --material-ultra-thin-white
+--toolbar-action-border -> --material-thin-white
+--toolbar-search-bg -> --material-ultra-thin-white
+--toolbar-token-bg -> --material-ultra-thin-white
+--toolbar-token-border -> --material-thin-white
+--topbar-chip-border -> --material-thin-white
+--topbar-chip-hover-bg -> --material-xtra-thin-white
+--topbar-chip-hover-border -> --material-thick-white
+--topbar-divider-color -> --material-medium-white
+--tree-line -> --material-thin-white
+--ui-badge-blue-fill -> --tag-chip-label-blue-fill
+--ui-badge-brown-fill -> --tag-chip-label-brown-fill
+--ui-badge-cyan-fill -> --tag-chip-label-cyan-fill
+--ui-badge-gray-fill -> --tag-chip-label-gray-fill
+--ui-badge-green-fill -> --tag-chip-label-green-fill
+--ui-badge-pink-fill -> --tag-chip-label-pink-fill
+--ui-badge-purple-fill -> --tag-chip-label-indigo-fill
+--ui-badge-teal-fill -> --tag-chip-label-teal-fill
+--ui-badge-yellow-fill -> --tag-chip-label-yellow-fill
+--ui-card-border -> --material-medium-white
+--ui-card-divider -> --fill-menu-item-active
+--ui-chip-blue-outline -> --tag-chip-label-blue-outline-strong
+--ui-chip-gray-outline -> --tag-chip-label-gray-outline-strong
+--ui-chip-orange-outline -> --tag-chip-label-orange-outline-strong
+--ui-chip-pink-outline -> --tag-chip-label-pink-outline-strong
+--ui-chip-teal-outline -> --tag-chip-label-teal-outline-strong
+--ui-chip-yellow-outline -> --tag-chip-label-yellow-outline-strong
+--ui-control-border -> --material-medium-white
+--ui-control-fill -> --material-thin-black
+--ui-focus-ring -> --fill-table-active
+--ui-menu-fill -> --surface-popover
+--ui-menu-option-active -> --fill-menu-item-active
+--ui-menu-option-hover -> --fill-menu-item-hover
+--ui-toggle-active -> --primary
+--ui-toggle-idle -> --secondary
+--view-notes-bg -> --surface-board
+--view-notes-border -> --material-medium-white
+--view-notes-editor-border -> --material-thin-white
+--view-notes-editor-focus-border -> --material-thick-white
+--view-notes-editor-focus-glow -> --material-thin-white
+--view-notes-shadow -> --material-intense-black
+--view-notes-toolbar-bg -> --material-xtra-thin-white
+--view-notes-toolbar-border -> --material-thin-white
+--warm-brown-20 -> --tag-chip-label-brown-alpha-fill
+--warning -> --text-highlight
+--yellow-bright -> --tag-chip-label-yellow-alpha-fill
+--yellow-bright-90 -> --text-highlight
+
+# === ALREADY CORRECT (28) ===
+--border-search-default
+--fill-search-default
+--fill-search-strong
+--surface-drawer
+--text-active
+--text-active-hover
+--text-attribute
+--text-benign
+--text-conflict
+--text-description
+--text-error
+--text-exclude
+--text-highlight
+--text-hover
+--text-invert
+--text-keyword
+--text-link
+--text-portal-highlight
+--text-positive
+--text-primary
+--text-quaternary
+--text-secondary
+--text-tertiary
+--text-time
+--text-value
+--theme-cadet
+--theme-midnight
+--theme-space
+
+# === UNMAPPED / NON-COLOR (58) ===
+--alerts-subnet-accent-rgb  (value: 47, 83, 255)
+--avatar-gradient  (value: linear-gradient(135deg, #7d8fb0, #3c4455))
+--bg-card  (value: var(--ui-card-fill))
+--bg-drawer  (value: linear-gradient(
+      0deg,
+      var(--material-k-ultra-th)
+--card-status-bg  (value: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.02),
+)
+--control-width  (value: 156px)
+--drag-ghost-bg  (value: linear-gradient(
+    180deg,
+    rgba(224, 228, 240, 0.08),
+)
+--drawer-scrollbar-size  (value: 4px)
+--focus-ring-shadow  (value: 0 0 0 1px #217dff)
+--font-family-base  (value: "Geist", "Geist Sans", sans-serif)
+--font-weight-bold  (value: 700)
+--font-weight-light  (value: 300)
+--font-weight-medium  (value: 500)
+--font-weight-regular  (value: 400)
+--font-weight-semibold  (value: 600)
+--header  (value: disabled {
+  opacity: 0.48)
+--icon-url  (value: url("../../icons/icon_arrow_head_outline_down.svg"))
+--info  (value: hover,
+.btn-tertiary--info:focus-visible,
+.alerts-tertiary-b)
+--launcher-feed-menu-min-width  (value: 60px)
+--launcher-health-fill  (value: linear-gradient(90deg, #72d7b2 0%, #9edbb9 100%))
+--launcher-port-dashed-border  (value: var(--ui-badge-teal-fill))
+--launcher-port-fill  (value: var(--ui-badge-teal-fill))
+--launcher-port-fill-virtual  (value: var(--status-badge-online-bg))
+--launcher-port-ring-hover  (value: var(--ui-badge-teal-fill))
+--launcher-port-ring-selected  (value: var(--ui-chip-teal-outline))
+--launcher-sidebar-collapsed-width  (value: 52px)
+--launcher-sidebar-expanded-width  (value: 256px)
+--menu-row-padding-icon  (value: 8px)
+--menu-row-padding-text-only  (value: 8px 8px 8px 12px)
+--menu-variant  (value: unified)
+--motion-accordion-duration  (value: 280ms)
+--motion-accordion-ease  (value: cubic-bezier(0.22, 0.74, 0.18, 1))
+--motion-expand-duration  (value: 220ms)
+--motion-expand-ease  (value: cubic-bezier(0.2, 0.72, 0.18, 1))
+--motion-fade-duration  (value: 180ms)
+--panel-overlay-subtle  (value: linear-gradient(
+    180deg,
+    rgba(224, 228, 240, 0.05),
+)
+--panel-overlay-top  (value: linear-gradient(
+    180deg,
+    rgba(224, 228, 240, 0.08),
+)
+--project-thumb-gradient  (value: linear-gradient(135deg, #66c6ff, #2a5ddf))
+--radius  (value: 10px)
+--row  (value: 32px)
+--shadow  (value: 0 18px 48px rgba(0, 0, 0, 0.34))
+--shadow-btn-default  (value: 0 1px 2.5px 0.5px rgba(9, 9, 11, 0.18),
+    inset 0 1px 0.5p)
+--shadow-drag-ghost  (value: 0 18px 36px rgba(0, 0, 0, 0.34), 0 0 0 1px rgba(224, 228, 24)
+--shadow-input-depth  (value: inset 0 16px 16px -16px rgba(9, 9, 11, 0.24),
+    inset 0 12)
+--shadow-search-depth  (value: inset 0 16px 16px -16px var(--material-k-medium),
+    inset )
+--shadow-timeline-float  (value: 0 2px 10px rgba(9, 9, 11, 0.35), inset 0 1px 0 rgba(224, 228)
+--shadow-toggle-thumb  (value: 0 1px 2px rgba(0, 0, 0, 0.35))
+--sidebar-width  (value: 300px)
+--sot-checkbox-check-url  (value: url("../../../icons/icon_check.svg"))
+--status-badge-icon-mask  (value: url("../../../icons/status/icon_status_gray.svg"))
+--surface-tab-overflow-bg  (value: linear-gradient(
+    90deg,
+    rgba(9, 9, 11, 0.72),
+    rg)
+--suri-count-fill  (value: 0%)
+--suri-simple-menu-selection-max-height  (value: 160px)
+--suri-subnet-accent-rgb  (value: 47, 83, 255)
+--ui-card-fill  (value: linear-gradient(
+      0deg,
+      var(--material-w-xtra-thi)
+--ui-menu-shadow  (value: 0 0 0 1px var(--border), 0 0 0 1.5px var(--material-k-intens)
+--view-notes-width  (value: 368px)
+--viewer-toolbar-bg  (value: linear-gradient(
+      0deg,
+      rgba(224, 228, 240, 0.02))

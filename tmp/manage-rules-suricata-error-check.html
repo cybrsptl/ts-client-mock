@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en"><body><pre id="status">Loading…</pre><iframe id="viewer" src="../viewer/viewer.html?manageRulesSuricataErrorCheck=1" style="width:1440px;height:1200px;border:0"></iframe><script>
+const statusEl = document.getElementById('status');
+const frame = document.getElementById('viewer');
+let reported = false;
+function setStatus(data){ statusEl.textContent = JSON.stringify(data,null,2); }
+function reportStatus(data){ if(reported) return; reported = true; const params = new URLSearchParams(); Object.entries(data).forEach(([k,v])=>params.set(k, typeof v === 'string' ? v : JSON.stringify(v))); (new Image()).src = `/__codex_suri_error_status__?${params.toString()}`; }
+function click(el){ if(!el) return false; el.dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true,composed:true})); return true; }
+frame.addEventListener('load',()=>{
+ const win = frame.contentWindow; const doc = win.document; const errors=[];
+ win.addEventListener('error',(event)=>{ errors.push({message:event.message, filename:event.filename, lineno:event.lineno, colno:event.colno}); });
+ win.addEventListener('unhandledrejection',(event)=>{ errors.push({message:'unhandledrejection', reason:String(event.reason)}); });
+ try { if (typeof win.initAlertsFeature === 'function') win.initAlertsFeature(); if (typeof win.openManageModal === 'function') win.openManageModal(null, false); } catch (error) { const payload = { ok:false, phase:'open', error:String(error && error.message || error), errors }; setStatus(payload); reportStatus(payload); return; }
+ setTimeout(()=>{ try {
+   const host = doc.getElementById('alertingInlineRoot'); const shadow = host && host.shadowRoot;
+   if(!shadow){ const payload={ok:false, phase:'shadow', error:'missing shadow root', errors}; setStatus(payload); reportStatus(payload); return; }
+   const suricataRow = Array.from(shadow.querySelectorAll('.alerting-sidebar .side-row.sidebar-item-row.sidebar-item')).find((row)=>/Emerging Threats PRO/i.test(row.textContent||''));
+   click(suricataRow);
+   setTimeout(()=>{
+     const suriRuleRow = Array.from(shadow.querySelectorAll('#rulesTableBody tr')).find((row)=>/Apache Log4j|Microsoft Exchange|Spring4Shell/i.test(row.textContent||''));
+     click(suriRuleRow);
+     setTimeout(()=>{
+       click(shadow.getElementById('editBtn'));
+       setTimeout(()=>{
+         const payload = {
+           ok: errors.length === 0,
+           errors,
+           editBtnClass: shadow.getElementById('editBtn')?.className || '',
+           saveBtnClass: shadow.getElementById('saveBtn')?.className || '',
+           drawerSnippet: (shadow.getElementById('drawerContent')?.innerHTML || '').slice(0,1800)
+         };
+         setStatus(payload); reportStatus(payload);
+       }, 1500);
+     }, 900);
+   }, 1200);
+ } catch(error){ const payload={ok:false, phase:'probe', error:String(error && error.message || error), errors}; setStatus(payload); reportStatus(payload);} }, 1800);
+});
+</script></body></html>

@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+  <body>
+    <pre id="status">Loading…</pre>
+    <iframe id="viewer" src="../viewer/viewer.html?manageRulesRulePatternsCheck=1" style="width:1440px;height:1500px;border:0"></iframe>
+    <script>
+      const statusEl = document.getElementById('status');
+      const frame = document.getElementById('viewer');
+      let reported = false;
+      const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+      function setStatus(data) { statusEl.textContent = JSON.stringify(data, null, 2); }
+      function reportStatus(data) {
+        if (reported) return;
+        reported = true;
+        const params = new URLSearchParams();
+        Object.entries(data).forEach(([key, value]) => params.set(key, String(value)));
+        (new Image()).src = `/__codex_rule_patterns_status__?${params.toString()}`;
+      }
+      function click(el) {
+        if (!el) return false;
+        el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, composed: true }));
+        return true;
+      }
+      function drag(el, type, dataTransfer) {
+        if (!el) return false;
+        const event = new Event(type, { bubbles: true, cancelable: true, composed: true });
+        Object.defineProperty(event, 'dataTransfer', {
+          value: dataTransfer,
+          configurable: true,
+        });
+        el.dispatchEvent(event);
+        return true;
+      }
+      function findSidebarRow(shadow, pattern) {
+        return Array.from(shadow.querySelectorAll('.alerting-sidebar .side-row.sidebar-item-row.sidebar-item')).find((row) => pattern.test(row.textContent || ''));
+      }
+      function findRuleRow(shadow, pattern) {
+        return Array.from(shadow.querySelectorAll('#rulesTableBody tr')).find((row) => pattern.test(row.textContent || '')) || null;
+      }
+      function getPatternIds(card) {
+        return Array.from(card.querySelectorAll('[data-rule-pattern-id]')).map((el) => el.getAttribute('data-rule-pattern-id'));
+      }
+      async function getModalRoot(doc) {
+        const host = doc.getElementById('alertingInlineRoot');
+        if (!host) return null;
+        for (let index = 0; index < 20; index += 1) {
+          const iframe = host.querySelector('iframe.alerting-inline-frame');
+          const modalDoc = iframe && iframe.contentDocument;
+          if (modalDoc && modalDoc.body) return modalDoc;
+          await sleep(250);
+        }
+        return null;
+      }
+      frame.addEventListener('load', async () => {
+        const win = frame.contentWindow;
+        const doc = win.document;
+        try {
+          if (typeof win.initAlertsFeature === 'function') win.initAlertsFeature();
+          if (typeof win.openManageModal === 'function') win.openManageModal(null, false);
+          await sleep(1800);
+          const shadow = await getModalRoot(doc);
+          if (!shadow) {
+            const payload = { ok: false, phase: 'modal-root', error: 'missing modal root' };
+            setStatus(payload); reportStatus(payload); return;
+          }
+
+          click(findSidebarRow(shadow, /My Custom Detections/i));
+          await sleep(700);
+          click(findRuleRow(shadow, /Rare TXT-answer burst|Beacon callback|Outbound remote admin/i));
+          await sleep(700);
+          click(shadow.getElementById('editBtn'));
+          await sleep(900);
+
+          const card = shadow.getElementById('suriCard-rulePatterns');
+          const addButton = card && card.querySelector('.suri-rule-pattern-add-button');
+          const initialIds = card ? getPatternIds(card) : [];
+          const initialCount = initialIds.length;
+
+          click(addButton);
+          await sleep(300);
+          const addMenuOption = Array.from(card.querySelectorAll('.suri-rule-pattern-add-panel .suri-menu-option')).find((el) => /DNS[\s\S]*Query/i.test(el.textContent || ''));
+          click(addMenuOption);
+          await sleep(700);
+
+          const afterAddCard = shadow.getElementById('suriCard-rulePatterns');
+          const afterAddIds = getPatternIds(afterAddCard);
+          const addedId = afterAddIds.find((id) => !initialIds.includes(id)) || afterAddIds[afterAddIds.length - 1] || '';
+          const addedInput = addedId ? afterAddCard.querySelector(`[data-rule-pattern-input="${addedId}"]`) : null;
+
+          const firstRelationTrigger = afterAddCard.querySelector('.suri-rule-pattern-relation-trigger');
+          click(firstRelationTrigger);
+          await sleep(300);
+          const firstPatternId = afterAddIds[0] || '';
+          const firstMenu = firstPatternId ? afterAddCard.querySelector(`.suri-menu[data-menu-key="rule-pattern:${firstPatternId}"]`) : null;
+          const excludeToggle = firstMenu && firstMenu.querySelector('.suri-rule-pattern-menu-utility .suri-toggle');
+          click(excludeToggle);
+          await sleep(500);
+
+          const excludeLabel = shadow.getElementById('suriCard-rulePatterns')?.querySelector('[data-rule-pattern-id] .suri-rule-pattern-exclude')?.textContent?.trim() || '';
+          const reopenedMenuTrigger = shadow.getElementById('suriCard-rulePatterns')?.querySelector('.suri-rule-pattern-relation-trigger');
+          click(reopenedMenuTrigger);
+          await sleep(300);
+          const updatedMenu = firstPatternId ? shadow.getElementById('suriCard-rulePatterns')?.querySelector(`.suri-menu[data-menu-key="rule-pattern:${firstPatternId}"]`) : null;
+          const negatedOptionText = updatedMenu ? (updatedMenu.querySelector('.suri-rule-pattern-menu-option .suri-rule-pattern-menu-label')?.textContent || '').trim() : '';
+
+          const reorderCard = shadow.getElementById('suriCard-rulePatterns');
+          const idsBeforeReorder = getPatternIds(reorderCard);
+          const dragSourceId = idsBeforeReorder[1] || '';
+          const dragTargetId = idsBeforeReorder[0] || '';
+          const dragSourceHandle = dragSourceId ? reorderCard.querySelector(`[data-rule-pattern-id="${dragSourceId}"] .suri-rule-pattern-grab`) : null;
+          const dragTargetItem = dragTargetId ? reorderCard.querySelector(`[data-rule-pattern-id="${dragTargetId}"]`) : null;
+          const api = shadow.defaultView || {};
+          const hasArmDrag = typeof api.armRulePatternDrag === 'function';
+          const hasPointerEnter = typeof api.onRulePatternPointerEnter === 'function';
+          const hasFinishPointerDrag = typeof api.finishRulePatternPointerDrag === 'function';
+          const hasMoveRulePattern = typeof api.moveRulePattern === 'function';
+          if (dragSourceHandle && dragTargetItem && dragSourceId !== dragTargetId) {
+            if (hasArmDrag && hasPointerEnter) {
+              api.armRulePatternDrag({ preventDefault() {}, stopPropagation() {} }, dragSourceId);
+              api.onRulePatternPointerEnter({ preventDefault() {} }, dragTargetId);
+              if (hasFinishPointerDrag) {
+                api.finishRulePatternPointerDrag();
+              }
+            }
+            await sleep(700);
+          }
+          const idsAfterReorder = getPatternIds(shadow.getElementById('suriCard-rulePatterns'));
+          const reordered = idsBeforeReorder.length >= 2 ? idsAfterReorder[0] === idsBeforeReorder[1] : false;
+          let idsAfterDirectMove = idsAfterReorder;
+          let directMoveWorked = false;
+          if (!reordered && hasMoveRulePattern && dragSourceId && dragTargetId) {
+            api.moveRulePattern(dragSourceId, dragTargetId);
+            await sleep(700);
+            idsAfterDirectMove = getPatternIds(shadow.getElementById('suriCard-rulePatterns'));
+            directMoveWorked = idsAfterDirectMove[0] === idsBeforeReorder[1];
+          }
+
+          if (addedId) {
+            const removeButton = shadow.getElementById('suriCard-rulePatterns')?.querySelector(`[data-rule-pattern-id="${addedId}"] .suri-rule-pattern-remove`);
+            click(removeButton);
+            await sleep(700);
+          }
+          const finalIds = getPatternIds(shadow.getElementById('suriCard-rulePatterns'));
+          const removeWorked = addedId ? !finalIds.includes(addedId) : false;
+
+          const payload = {
+            ok:
+              initialCount >= 4 &&
+              afterAddIds.length === initialCount + 1 &&
+              Boolean(addedInput) &&
+              excludeLabel === 'does not' &&
+              /does not/i.test(negatedOptionText) &&
+              (reordered || directMoveWorked) &&
+              removeWorked,
+            initialCount,
+            afterAddCount: afterAddIds.length,
+            addedId,
+            addedInputPresent: Boolean(addedInput),
+            excludeLabel,
+            negatedOptionText,
+            reordered,
+            directMoveWorked,
+            hasArmDrag,
+            hasPointerEnter,
+            hasFinishPointerDrag,
+            hasMoveRulePattern,
+            removeWorked,
+            finalCount: finalIds.length,
+          };
+          setStatus(payload);
+          reportStatus(payload);
+        } catch (error) {
+          const payload = { ok: false, phase: 'probe', error: String(error && error.message || error) };
+          setStatus(payload);
+          reportStatus(payload);
+        }
+      });
+    </script>
+  </body>
+</html>

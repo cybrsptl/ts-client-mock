@@ -1,0 +1,2690 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Teleseer Viewer</title>
+
+    <link
+      rel="stylesheet"
+      href="../shared/styles/base.css?v=20260425-card-semantics-1"
+    />
+    <link
+      rel="stylesheet"
+      href="../shared/styles/components/buttons.css?v=20260406-topbar-button-state-v1"
+    />
+    <link
+      rel="stylesheet"
+      href="../shared/styles/components/sidebar.css?v=20260406-sidebar-unify-2"
+    />
+    <link rel="stylesheet" href="./styles/hosts.css" />
+    <link
+      rel="stylesheet"
+      href="./styles/alerts.css?v=20260417-panel-scroll-5"
+    />
+    <link rel="stylesheet" href="../timeline/timeline.css" />
+    <link
+      rel="stylesheet"
+      href="../shared/styles/components/ui-primitives.css?v=20260425-card-semantics-1"
+    />
+  </head>
+  <body>
+    <div class="app">
+      <div class="chrome">
+        <div class="chrome-sidebar-slot" id="chromeSidebarSlot">
+          <div class="sidebar-header">
+            <button
+              class="btn-reset btn-secondary size-m style-ghost prominent project-dropdown"
+              type="button"
+            >
+              <div class="thumb" aria-hidden="true"></div>
+              <span class="btn-secondary-labelgroup">
+                <span class="btn-label label">HULA Base</span>
+                <span
+                  class="btn-chevron-slot svg-icon svg-icon-chevron-down"
+                  aria-hidden="true"
+                ></span>
+              </span>
+            </button>
+            <button
+              class="btn-reset btn-secondary-icon size-m style-ghost chrome-toggle"
+              id="toggleSidebarSide"
+              type="button"
+              aria-label="Toggle sidebar"
+            >
+              <span
+                class="btn-icon-slot svg-icon svg-icon-sidebar"
+                aria-hidden="true"
+              ></span>
+            </button>
+          </div>
+        </div>
+        <div class="topbar" id="topbar">
+          <div class="topbar-left">
+            <button
+              class="btn-reset btn-secondary-icon size-m style-ghost chrome-toggle"
+              id="toggleSidebarTop"
+              type="button"
+              aria-label="Toggle sidebar"
+            >
+              <span
+                class="btn-icon-slot svg-icon svg-icon-sidebar"
+                aria-hidden="true"
+              ></span>
+            </button>
+            <div class="search-shell">
+              <button
+                class="btn-reset btn-secondary-icon size-s style-ghost search-shell-type-btn"
+                type="button"
+                aria-label="Search type"
+              >
+                <span
+                  class="btn-icon-slot svg-icon svg-icon-search"
+                  aria-hidden="true"
+                ></span>
+                <span
+                  class="btn-chevron-slot svg-icon svg-icon-chevron-down"
+                  aria-hidden="true"
+                ></span>
+              </button>
+              <input
+                class="search-shell-input"
+                placeholder="Search..."
+                aria-label="Global search"
+              />
+              <button
+                class="btn-reset btn-secondary-icon size-s style-ghost search-shell-kebab"
+                type="button"
+                aria-label="Search options"
+              >
+                <span
+                  class="btn-icon-slot svg-icon svg-icon-meatball"
+                  aria-hidden="true"
+                ></span>
+              </button>
+            </div>
+          </div>
+          <div class="topbar-right">
+            <button
+              class="btn-reset btn-secondary size-m btn-secondary-colored save-menu-button menu-anchor-button"
+              id="saveMenuButton"
+              type="button"
+              aria-label="Save view options"
+              hidden
+            >
+              <span class="btn-secondary-labelgroup">
+                <span class="btn-label">Save</span>
+                <span
+                  class="btn-chevron-slot svg-icon save-button-chevron"
+                  aria-hidden="true"
+                ></span>
+              </span>
+            </button>
+            <button
+              class="btn-reset btn-secondary-icon size-m style-ghost menu-anchor-button"
+              id="viewNotesButton"
+              type="button"
+              aria-haspopup="dialog"
+              aria-expanded="false"
+              aria-label="View notes"
+            >
+              <span
+                class="btn-icon-slot svg-icon svg-icon-notes"
+                aria-hidden="true"
+              ></span>
+            </button>
+            <button
+              class="btn-reset btn-secondary-icon size-m style-ghost menu-anchor-button"
+              id="panelSettingsButton"
+              type="button"
+              aria-label="Panel settings"
+            >
+              <span
+                class="btn-icon-slot svg-icon svg-icon-view-settings"
+                aria-hidden="true"
+              ></span>
+            </button>
+            <button
+              class="btn-reset btn-secondary-icon size-m style-ghost menu-anchor-button"
+              id="workspaceVariablesButton"
+              type="button"
+              aria-haspopup="dialog"
+              aria-expanded="false"
+              aria-label="Workspace variables"
+            >
+              <span
+                class="btn-icon-slot svg-icon svg-icon-programming-variable"
+                aria-hidden="true"
+              ></span>
+            </button>
+            <div class="topbar-divider" aria-hidden="true"></div>
+            <button
+              class="btn-reset btn-secondary size-m style-ghost topbar-live-button"
+              id="subscribeFeedBtn"
+              type="button"
+              aria-label="Manage project feed subscriptions"
+            >
+              <span class="btn-secondary-labelgroup">
+                <span
+                  class="btn-icon-slot svg-icon svg-icon-live-feed"
+                  aria-hidden="true"
+                ></span>
+                <span
+                  class="btn-chevron-slot svg-icon"
+                  style="
+                    --icon-url: url(&quot;../icons/icon_arrow_head_outline_down.svg&quot;);
+                  "
+                  aria-hidden="true"
+                ></span>
+              </span>
+              <span
+                class="subscribe-feed-count"
+                id="subscribeFeedCount"
+                aria-live="polite"
+                hidden
+              ></span>
+            </button>
+            <button
+              class="btn-reset btn-secondary-icon size-m style-ghost"
+              type="button"
+              aria-label="Notifications"
+            >
+              <span
+                class="btn-icon-slot svg-icon svg-icon-notification"
+                aria-hidden="true"
+              ></span>
+            </button>
+            <button
+              class="btn-reset btn-secondary size-m style-ghost user-settings-button menu-anchor-button"
+              id="userSettingsButton"
+              type="button"
+              aria-haspopup="menu"
+              aria-expanded="false"
+              aria-label="User settings"
+            >
+              <span class="user-avatar">RT</span>
+              <span class="btn-secondary-labelgroup">
+                <span class="btn-label">Ricky Tan</span>
+                <span
+                  class="btn-chevron-slot svg-icon svg-icon-chevron-down"
+                  aria-hidden="true"
+                ></span>
+              </span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="layout" id="appLayout">
+        <aside class="sidebar-shell" id="sidebarShell">
+          <div class="sidebar" id="viewerSidebar">
+            <div class="sidebar-search">
+              <div class="search-field">
+                <span
+                  class="inline-icon svg-icon svg-icon-search"
+                  aria-hidden="true"
+                ></span>
+                <input
+                  id="filterViewsInput"
+                  value=""
+                  placeholder="Filter views"
+                  aria-label="Filter views"
+                />
+                <button
+                  class="btn-reset btn-secondary-icon size-s style-ghost"
+                  id="clearFilterButton"
+                  type="button"
+                  aria-label="Clear filter"
+                >
+                  <span
+                    class="inline-icon svg-icon svg-icon-close-small"
+                    aria-hidden="true"
+                  ></span>
+                </button>
+              </div>
+            </div>
+            <div class="tree" id="tree"></div>
+            <div class="sidebar-footer">
+              <button
+                class="btn-reset btn-secondary size-m style-ghost sidebar-lab-button"
+                id="labToggle"
+                type="button"
+                aria-controls="labPanel"
+                aria-expanded="false"
+              >
+                <span
+                  class="btn-icon-slot svg-icon"
+                  style="--icon-url: url(&quot;../icons/icon_labs.svg&quot;)"
+                  aria-hidden="true"
+                ></span>
+                <span class="btn-secondary-labelgroup">
+                  <span class="btn-label">Lab</span>
+                </span>
+              </button>
+            </div>
+          </div>
+        </aside>
+        <div
+          class="sidebar-flyout"
+          id="sidebarFlyout"
+          aria-hidden="true"
+        >
+          <div class="sidebar-flyout-panel" id="sidebarFlyoutPanel">
+            <div class="sidebar-header sidebar-flyout-header">
+              <button
+                class="btn-reset btn-secondary size-m style-ghost prominent project-dropdown"
+                type="button"
+              >
+                <div class="thumb" aria-hidden="true"></div>
+                <span class="btn-secondary-labelgroup">
+                  <span class="btn-label label">HULA Base</span>
+                  <span
+                    class="btn-chevron-slot svg-icon svg-icon-chevron-down"
+                    aria-hidden="true"
+                  ></span>
+                </span>
+              </button>
+              <button
+                class="btn-reset btn-secondary-icon size-m style-ghost chrome-toggle"
+                type="button"
+                aria-label="Toggle sidebar"
+                tabindex="-1"
+                aria-hidden="true"
+              >
+                <span
+                  class="btn-icon-slot svg-icon svg-icon-sidebar"
+                  aria-hidden="true"
+                ></span>
+              </button>
+            </div>
+            <div class="sidebar-flyout-content" id="sidebarFlyoutContent"></div>
+          </div>
+        </div>
+
+        <main class="main">
+          <div class="surface-grid">
+            <section class="viewer-shell">
+              <div class="viewer-canvas balanced" id="viewerCanvas">
+                <div class="viewer-top-region" id="viewerTopRegion">
+                  <section
+                    class="tab-surface workspace-surface"
+                    data-surface="workspace"
+                  >
+                    <div class="tab-strip" data-tab-strip="main">
+                      <div class="tab-pill active" data-panel-tab="network">
+                        <div class="tab-pill-main">
+                          <span
+                            class="tab-icon svg-icon"
+                            style="
+                              --icon-url: url(&quot;../icons/icon_network.svg&quot;);
+                            "
+                            aria-hidden="true"
+                          ></span>
+                          <span class="tab-label">Network Map</span>
+                        </div>
+                        <div class="tab-close-wrapper">
+                          <button
+                            class="btn-reset btn-secondary-icon size-s style-ghost tab-close"
+                            type="button"
+                            aria-label="Close tab"
+                          >
+                            <span
+                              class="btn-icon-slot svg-icon svg-icon-close-small"
+                              aria-hidden="true"
+                            ></span>
+                          </button>
+                        </div>
+                      </div>
+                      <div class="tab-pill" data-panel-tab="world">
+                        <div class="tab-pill-main">
+                          <span
+                            class="tab-icon svg-icon"
+                            style="
+                              --icon-url: url(&quot;../icons/icon_world.svg&quot;);
+                            "
+                            aria-hidden="true"
+                          ></span>
+                          <span class="tab-label">World</span>
+                        </div>
+                        <div class="tab-close-wrapper">
+                          <button
+                            class="btn-reset btn-secondary-icon size-s style-ghost tab-close"
+                            type="button"
+                            aria-label="Close tab"
+                          >
+                            <span
+                              class="btn-icon-slot svg-icon svg-icon-close-small"
+                              aria-hidden="true"
+                            ></span>
+                          </button>
+                        </div>
+                      </div>
+                      <div class="tab-pill" data-panel-tab="hosts">
+                        <div class="tab-pill-main">
+                          <span
+                            class="tab-icon svg-icon"
+                            style="
+                              --icon-url: url(&quot;../icons/icon_host.svg&quot;);
+                            "
+                            aria-hidden="true"
+                          ></span>
+                          <span class="tab-label">Hosts</span>
+                        </div>
+                        <div class="tab-close-wrapper">
+                          <button
+                            class="btn-reset btn-secondary-icon size-s style-ghost tab-close"
+                            type="button"
+                            aria-label="Close tab"
+                          >
+                            <span
+                              class="btn-icon-slot svg-icon svg-icon-close-small"
+                              aria-hidden="true"
+                            ></span>
+                          </button>
+                        </div>
+                      </div>
+                      <div class="tab-pill" data-panel-tab="flow">
+                        <div class="tab-pill-main">
+                          <span
+                            class="tab-icon svg-icon"
+                            style="
+                              --icon-url: url(&quot;../icons/icon_connection.svg&quot;);
+                            "
+                            aria-hidden="true"
+                          ></span>
+                          <span class="tab-label">Flows</span>
+                        </div>
+                        <div class="tab-close-wrapper">
+                          <button
+                            class="btn-reset btn-secondary-icon size-s style-ghost tab-close"
+                            type="button"
+                            aria-label="Close tab"
+                          >
+                            <span
+                              class="btn-icon-slot svg-icon svg-icon-close-small"
+                              aria-hidden="true"
+                            ></span>
+                          </button>
+                        </div>
+                      </div>
+                      <div class="tab-pill" data-panel-tab="artifacts">
+                        <div class="tab-pill-main">
+                          <span
+                            class="tab-icon svg-icon"
+                            style="
+                              --icon-url: url(&quot;../icons/icon_artifact.svg&quot;);
+                            "
+                            aria-hidden="true"
+                          ></span>
+                          <span class="tab-label">Artifacts</span>
+                        </div>
+                        <div class="tab-close-wrapper">
+                          <button
+                            class="btn-reset btn-secondary-icon size-s style-ghost tab-close"
+                            type="button"
+                            aria-label="Close tab"
+                          >
+                            <span
+                              class="btn-icon-slot svg-icon svg-icon-close-small"
+                              aria-hidden="true"
+                            ></span>
+                          </button>
+                        </div>
+                      </div>
+                      <div class="tab-pill" data-panel-tab="dashboard">
+                        <div class="tab-pill-main">
+                          <span
+                            class="tab-icon svg-icon"
+                            style="
+                              --icon-url: url(&quot;../icons/icon_dashboard.svg&quot;);
+                            "
+                            aria-hidden="true"
+                          ></span>
+                          <span class="tab-label">Dashboard</span>
+                        </div>
+                        <div class="tab-close-wrapper">
+                          <button
+                            class="btn-reset btn-secondary-icon size-s style-ghost tab-close"
+                            type="button"
+                            aria-label="Close tab"
+                          >
+                            <span
+                              class="btn-icon-slot svg-icon svg-icon-close-small"
+                              aria-hidden="true"
+                            ></span>
+                          </button>
+                        </div>
+                      </div>
+                      <div class="tab-pill" data-panel-tab="alerts">
+                        <div class="tab-pill-main">
+                          <span
+                            class="tab-icon svg-icon"
+                            style="
+                              --icon-url: url(&quot;../icons/icon_alert.svg&quot;);
+                            "
+                            aria-hidden="true"
+                          ></span>
+                          <span class="tab-label">Alerts</span>
+                        </div>
+                        <div class="tab-close-wrapper">
+                          <button
+                            class="btn-reset btn-secondary-icon size-s style-ghost tab-close"
+                            type="button"
+                            aria-label="Close tab"
+                          >
+                            <span
+                              class="btn-icon-slot svg-icon svg-icon-close-small"
+                              aria-hidden="true"
+                            ></span>
+                          </button>
+                        </div>
+                      </div>
+                      <div class="tab-pill" data-panel-tab="roles">
+                        <div class="tab-pill-main">
+                          <span
+                            class="tab-icon svg-icon"
+                            style="
+                              --icon-url: url(&quot;../icons/icon_users.svg&quot;);
+                            "
+                            aria-hidden="true"
+                          ></span>
+                          <span class="tab-label">Roles</span>
+                        </div>
+                        <div class="tab-close-wrapper">
+                          <button
+                            class="btn-reset btn-secondary-icon size-s style-ghost tab-close"
+                            type="button"
+                            aria-label="Close tab"
+                          >
+                            <span
+                              class="btn-icon-slot svg-icon svg-icon-close-small"
+                              aria-hidden="true"
+                            ></span>
+                          </button>
+                        </div>
+                      </div>
+                      <button
+                        class="tab-overflow-button hidden"
+                        data-tab-overflow="main"
+                        type="button"
+                        aria-label="More tabs"
+                      >
+                        <span class="tab-overflow-label">+0</span>
+                      </button>
+                    </div>
+                    <div class="workspace-panel" data-workspace-panel="default">
+                      <div class="tab-toolbar">
+                        <div class="toolbar-search">
+                          <button
+                            class="btn-reset btn-secondary-icon size-s style-ghost"
+                            type="button"
+                            aria-label="Search"
+                          >
+                            <span
+                              class="btn-icon-slot svg-icon svg-icon-search"
+                              aria-hidden="true"
+                            ></span>
+                          </button>
+                          <input
+                            type="text"
+                            placeholder="Search..."
+                            aria-label="Search"
+                          />
+                        </div>
+                        <div class="toolbar-actions">
+                          <span class="toolbar-action">+</span>
+                          <span class="toolbar-action">o</span>
+                          <span class="toolbar-action">T</span>
+                          <span class="toolbar-action">[]</span>
+                        </div>
+                      </div>
+                      <div class="network-panel">
+                        <h3>Network Map</h3>
+                        <div class="meta" id="networkMeta">
+                          Pinned filter: 192.168.2.0/24
+                        </div>
+                        <div class="data-list">
+                          <div class="data-row">
+                            <strong>Visible Hosts</strong
+                            ><span id="hostCount">187</span>
+                          </div>
+                          <div class="data-row">
+                            <strong>Active Flows</strong
+                            ><span id="flowCount">18.4k in 60m</span>
+                          </div>
+                          <div class="data-row">
+                            <strong>Selection</strong
+                            ><span id="selectionState"
+                              >Subnet 192.168.2.0/24</span
+                            >
+                          </div>
+                          <div class="data-row">
+                            <strong>Layout Mode</strong
+                            ><span id="layoutModeLabel">Balanced triage</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div
+                      class="workspace-panel hosts-workspace-panel hidden"
+                      data-workspace-panel="hosts"
+                    >
+                      <div class="tab-toolbar hosts-toolbar">
+                        <div class="toolbar-search hosts-toolbar-search">
+                          <button
+                            class="btn-reset btn-secondary-icon size-s style-ghost"
+                            type="button"
+                            aria-label="Search hosts"
+                          >
+                            <span
+                              class="btn-icon-slot svg-icon svg-icon-search"
+                              aria-hidden="true"
+                            ></span>
+                          </button>
+                          <input
+                            type="text"
+                            placeholder="Search hosts..."
+                            aria-label="Search hosts"
+                          />
+                        </div>
+                        <div class="hosts-toolbar-right">
+                          <button
+                            class="btn-reset btn-secondary-icon size-m style-ghost hosts-toolbar-icon"
+                            type="button"
+                            aria-label="Hosts actions"
+                          >
+                            <span
+                              class="svg-icon"
+                              style="
+                                --icon-url: url(&quot;../icons/icon_kebab.svg&quot;);
+                              "
+                              aria-hidden="true"
+                            ></span>
+                          </button>
+                          <button
+                            class="btn-reset btn-secondary size-m style-ghost hosts-sort-button"
+                            type="button"
+                            aria-label="Sort hosts"
+                          >
+                            <span
+                              class="svg-icon"
+                              style="
+                                --icon-url: url(&quot;../icons/icon_sort_arrows.svg&quot;);
+                              "
+                              aria-hidden="true"
+                            ></span>
+                            <span>Sort</span>
+                          </button>
+                          <div
+                            class="hosts-segmented-control"
+                            role="tablist"
+                            aria-label="Hosts scope"
+                          >
+                            <button
+                              class="btn-reset hosts-segment"
+                              data-host-scope="internal"
+                              type="button"
+                              role="tab"
+                              aria-selected="true"
+                            >
+                              Internal
+                            </button>
+                            <button
+                              class="btn-reset hosts-segment"
+                              data-host-scope="external"
+                              type="button"
+                              role="tab"
+                              aria-selected="false"
+                            >
+                              External
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="hosts-panel">
+                        <div
+                          class="hosts-table-shell"
+                          id="hostsTableShell"
+                        ></div>
+                      </div>
+                    </div>
+                    <div
+                      class="workspace-panel alerts-workspace-panel hidden"
+                      data-workspace-panel="alerts"
+                    >
+                      <div class="tab-toolbar alerts-toolbar">
+                        <div class="toolbar-search alerts-toolbar-search">
+                          <button
+                            class="btn-reset btn-secondary-icon size-s style-ghost"
+                            type="button"
+                            aria-label="Search alerts"
+                          >
+                            <span
+                              class="btn-icon-slot svg-icon svg-icon-search"
+                              aria-hidden="true"
+                            ></span>
+                          </button>
+                          <input
+                            class="alerts-toolbar-input"
+                            id="alertsToolbarSearchInput"
+                            type="text"
+                            value=""
+                            placeholder="Search alerts, hosts, rules, hashes..."
+                            aria-label="Search alerts"
+                          />
+                        </div>
+                        <div class="alerts-toolbar-right">
+                          <button
+                            class="btn-reset btn-secondary size-m style-default alerts-toolbar-button"
+                            id="alertsManageButton"
+                            type="button"
+                            aria-label="Manage alerts"
+                          >
+                            <span
+                              class="svg-icon"
+                              style="
+                                --icon-url: url(&quot;../icons/icon_alert.svg&quot;);
+                              "
+                              aria-hidden="true"
+                            ></span>
+                            <span>Manage Alerts</span>
+                          </button>
+                        </div>
+                      </div>
+                      <div class="alerts-panel">
+                        <div
+                          class="alerts-table-shell"
+                          id="alertsTableShell"
+                        ></div>
+                      </div>
+                    </div>
+                  </section>
+                  <div
+                    class="panel-resize-handle vertical"
+                    id="workspaceInspectorResizeHandle"
+                    role="separator"
+                    aria-orientation="vertical"
+                    aria-label="Resize workspace and inspector"
+                  ></div>
+
+                  <section
+                    class="tab-surface inspector-surface"
+                    data-surface="inspector"
+                  >
+                    <div class="tab-strip" data-tab-strip="inspector">
+                      <div class="tab-pill active" data-panel-tab="inspector">
+                        <div class="tab-pill-main">
+                          <img
+                            class="tab-icon-img"
+                            src="../icons/icon_inspector.svg"
+                            alt=""
+                            aria-hidden="true"
+                          />
+                          <span class="tab-label">Inspector</span>
+                        </div>
+                        <div class="tab-close-wrapper">
+                          <button
+                            class="btn-reset btn-secondary-icon size-s style-ghost tab-close"
+                            type="button"
+                            aria-label="Close tab"
+                          >
+                            <span
+                              class="btn-icon-slot svg-icon svg-icon-close-small"
+                              aria-hidden="true"
+                            ></span>
+                          </button>
+                        </div>
+                      </div>
+                      <button
+                        class="tab-overflow-button hidden"
+                        data-tab-overflow="inspector"
+                        type="button"
+                        aria-label="More tabs"
+                      >
+                        <span class="tab-overflow-label">+0</span>
+                      </button>
+                    </div>
+                    <div class="inspector-panel">
+                      <div class="inspector-head">
+                        <div class="inspector-head-left-container">
+                          <div class="inspector-head-left-paginate">
+                            <button
+                              class="btn-reset btn-secondary-icon size-m style-ghost"
+                              type="button"
+                            >
+                              <span
+                                class="btn-icon-slot svg-icon svg-icon-chevron-back"
+                                aria-hidden="true"
+                              ></span>
+                            </button>
+                            <button
+                              class="btn-reset btn-secondary-icon size-m style-ghost"
+                              type="button"
+                            >
+                              <span
+                                class="btn-icon-slot svg-icon svg-icon-chevron-forward"
+                                aria-hidden="true"
+                              ></span>
+                            </button>
+                          </div>
+                          <button
+                            class="btn-reset btn-secondary size-m style-ghost timeline-toolbar-button"
+                            type="button"
+                          >
+                            <span class="btn-secondary-labelgroup">
+                              <span class="btn-icon-slot">
+                                <img
+                                  src="../icons/device_asset/device/desktop_computer_iso.svg"
+                                  width="16"
+                                  height="16"
+                                  alt=""
+                                  aria-hidden="true"
+                                />
+                              </span>
+                              <span class="btn-label">Project 2026</span>
+                              <span
+                                class="btn-chevron-slot svg-icon svg-icon-chevron-down"
+                                aria-hidden="true"
+                              >
+                              </span>
+                            </span>
+                          </button>
+                        </div>
+                      </div>
+                      <div class="inspector-panel-content">
+                        <h3>Inspector</h3>
+                        <div class="meta" id="inspectorMeta">
+                          Open tabs: Summary, Alerts, Metrics
+                        </div>
+                        <div class="data-list">
+                          <div class="data-row">
+                            <strong>Selected Entity</strong
+                            ><span id="selectedEntity"
+                              >core-edge-17.hula.local</span
+                            >
+                          </div>
+                          <div class="data-row">
+                            <strong>Alert Context</strong
+                            ><span>2 critical, 5 elevated</span>
+                          </div>
+                          <div class="data-row">
+                            <strong>Panel Visibility</strong
+                            ><span id="panelVisibility"
+                              >Map + Inspector + Timeline</span
+                            >
+                          </div>
+                        </div>
+                        <div class="inspector-feed-block">
+                          <div class="inspector-feed-block-head">
+                            <div>
+                              <h4>Project Feed Subscriptions</h4>
+                              <p>
+                                Viewer controls whether this project receives
+                                future output from workspace capture feeds.
+                              </p>
+                            </div>
+                            <button
+                              class="btn-reset btn-secondary size-s style-ghost"
+                              id="inspectorManageFeedsBtn"
+                              type="button"
+                            >
+                              Manage
+                            </button>
+                          </div>
+                          <div
+                            class="inspector-feed-list"
+                            id="inspectorFeedSummary"
+                          ></div>
+                          <div
+                            class="inspector-feed-note"
+                            id="inspectorFeedNote"
+                          ></div>
+                        </div>
+                      </div>
+                    </div>
+                  </section>
+                </div>
+                <div
+                  class="panel-resize-handle horizontal"
+                  id="topTimelineResizeHandle"
+                  role="separator"
+                  aria-orientation="horizontal"
+                  aria-label="Resize viewer top and timeline"
+                ></div>
+
+                <section class="timeline-surface" data-surface="timeline">
+                  <div class="tab-strip" data-tab-strip="timeline">
+                    <div class="tab-pill active" data-panel-tab="timeline">
+                      <div class="tab-pill-main">
+                        <span
+                          class="tab-icon svg-icon"
+                          style="
+                            --icon-url: url(&quot;../icons/icon_timeline.svg&quot;);
+                          "
+                          aria-hidden="true"
+                        ></span>
+                        <span class="tab-label">Timeline 1</span>
+                      </div>
+                      <div class="tab-close-wrapper">
+                        <button
+                          class="btn-reset btn-secondary-icon size-s style-ghost tab-close"
+                          type="button"
+                          aria-label="Close tab"
+                        >
+                          <span
+                            class="btn-icon-slot svg-icon svg-icon-close-small"
+                            aria-hidden="true"
+                          ></span>
+                        </button>
+                      </div>
+                    </div>
+                    <div class="tab-pill" data-panel-tab="timeline-secondary">
+                      <div class="tab-pill-main">
+                        <span
+                          class="tab-icon svg-icon"
+                          style="
+                            --icon-url: url(&quot;../icons/icon_timeline.svg&quot;);
+                          "
+                          aria-hidden="true"
+                        ></span>
+                        <span class="tab-label">Timeline 2</span>
+                      </div>
+                      <div class="tab-close-wrapper">
+                        <button
+                          class="btn-reset btn-secondary-icon size-s style-ghost tab-close"
+                          type="button"
+                          aria-label="Close tab"
+                        >
+                          <span
+                            class="btn-icon-slot svg-icon svg-icon-close-small"
+                            aria-hidden="true"
+                          ></span>
+                        </button>
+                      </div>
+                    </div>
+                    <div class="tab-pill" data-panel-tab="network-history">
+                      <div class="tab-pill-main">
+                        <span
+                          class="tab-icon svg-icon"
+                          style="
+                            --icon-url: url(&quot;../icons/icon_network_share.svg&quot;);
+                          "
+                          aria-hidden="true"
+                        ></span>
+                        <span class="tab-label">Network History</span>
+                      </div>
+                      <div class="tab-close-wrapper">
+                        <button
+                          class="btn-reset btn-secondary-icon size-s style-ghost tab-close"
+                          type="button"
+                          aria-label="Close tab"
+                        >
+                          <span
+                            class="btn-icon-slot svg-icon svg-icon-close-small"
+                            aria-hidden="true"
+                          ></span>
+                        </button>
+                      </div>
+                    </div>
+                    <button
+                      class="tab-overflow-button hidden"
+                      data-tab-overflow="timeline"
+                      type="button"
+                      aria-label="More tabs"
+                    >
+                      <span class="tab-overflow-label">+0</span>
+                    </button>
+                  </div>
+                  <div class="timeline-region">
+                    <div class="timeline-sidebar-shell">
+                      <div class="timeline-sidebar-toolbar">
+                        <div class="timeline-sidebar-toolbar-left">
+                          <button
+                            class="btn-reset btn-secondary size-m style-ghost timeline-toolbar-button"
+                            type="button"
+                            aria-label="Sort timeline"
+                          >
+                            <span
+                              class="svg-icon"
+                              style="
+                                --icon-url: url(&quot;../icons/icon_sort_rank.svg&quot;);
+                              "
+                              aria-hidden="true"
+                            ></span>
+                            <span>Sort</span>
+                            <span
+                              class="svg-icon timeline-toolbar-chevron"
+                              style="
+                                --icon-url: url(&quot;../icons/icon_arrow_head_outline_down.svg&quot;);
+                              "
+                              aria-hidden="true"
+                            ></span>
+                          </button>
+                          <button
+                            class="btn-reset btn-secondary size-m style-ghost timeline-toolbar-button"
+                            type="button"
+                            aria-label="Group timeline"
+                          >
+                            <span
+                              class="svg-icon"
+                              style="
+                                --icon-url: url(&quot;../icons/icon_group.svg&quot;);
+                              "
+                              aria-hidden="true"
+                            ></span>
+                            <span>Group</span>
+                            <span
+                              class="svg-icon timeline-toolbar-chevron"
+                              style="
+                                --icon-url: url(&quot;../icons/icon_arrow_head_outline_down.svg&quot;);
+                              "
+                              aria-hidden="true"
+                            ></span>
+                          </button>
+                        </div>
+                        <button
+                          class="btn-reset btn-secondary size-m style-ghost timeline-toolbar-button"
+                          type="button"
+                          aria-label="Timeline preset"
+                        >
+                          <span>Default</span>
+                          <span
+                            class="svg-icon timeline-toolbar-chevron"
+                            style="
+                              --icon-url: url(&quot;../icons/icon_arrow_head_outline_down.svg&quot;);
+                            "
+                            aria-hidden="true"
+                          ></span>
+                        </button>
+                      </div>
+                      <div class="timeline-sidebar-search">
+                        <div class="toolbar-search">
+                          <button
+                            class="btn-reset btn-secondary-icon size-s style-ghost timeline-sidebar"
+                            type="button"
+                            aria-label="Timeline search options"
+                          >
+                            <span
+                              class="btn-icon-slot svg-icon"
+                              style="
+                                --icon-url: url(&quot;../icons/icon_search.svg&quot;);
+                              "
+                              aria-hidden="true"
+                            ></span>
+                          </button>
+                          <input
+                            class="timeline-sidebar-search-input"
+                            type="text"
+                            value=""
+                            placeholder="Search..."
+                            aria-label="Timeline search"
+                          />
+                          <button
+                            class="btn-reset btn-secondary-icon size-s style-ghost"
+                            type="button"
+                            aria-label="Timeline search actions"
+                          >
+                            <span
+                              class="svg-icon"
+                              style="
+                                --icon-url: url(&quot;../icons/icon_kebab.svg&quot;);
+                              "
+                              aria-hidden="true"
+                            ></span>
+                          </button>
+                        </div>
+                      </div>
+                      <div
+                        class="timeline-sidebar-list"
+                        id="timelineSidebarList"
+                      >
+                        <div
+                          class="timeline-sidebar-row timeline-sidebar-group"
+                        >
+                          <div class="timeline-sidebar-group-label">
+                            <span>Protocols</span>
+                            <span
+                              class="svg-icon timeline-sidebar-group-arrow"
+                              style="
+                                --icon-url: url(&quot;../icons/icon_arrow_head_down.svg&quot;);
+                              "
+                              aria-hidden="true"
+                            ></span>
+                          </div>
+                          <span class="timeline-sidebar-size">6 MB</span>
+                        </div>
+                        <div class="timeline-sidebar-row timeline-sidebar-item">
+                          <div class="timeline-sidebar-label">
+                            <span
+                              class="svg-icon timeline-sidebar-arrow"
+                              style="
+                                --icon-url: url(&quot;../icons/icon_arrow_head_right.svg&quot;);
+                              "
+                              aria-hidden="true"
+                            ></span>
+                            <img
+                              class="timeline-protocol-icon-img"
+                              src="../icons/protocol_tag/protocol_tag_web.svg"
+                              alt=""
+                              aria-hidden="true"
+                            />
+                            <span>Web</span>
+                          </div>
+                          <span class="timeline-sidebar-size">2 MB</span>
+                        </div>
+                        <div class="timeline-sidebar-row timeline-sidebar-item">
+                          <div class="timeline-sidebar-label">
+                            <span
+                              class="svg-icon timeline-sidebar-arrow"
+                              style="
+                                --icon-url: url(&quot;../icons/icon_arrow_head_right.svg&quot;);
+                              "
+                              aria-hidden="true"
+                            ></span>
+                            <img
+                              class="timeline-protocol-icon-img"
+                              src="../icons/protocol_tag/protocol_tag_aaa.svg"
+                              alt=""
+                              aria-hidden="true"
+                            />
+                            <span>Authentication</span>
+                          </div>
+                          <span class="timeline-sidebar-size">2 MB</span>
+                        </div>
+                        <div class="timeline-sidebar-row timeline-sidebar-item">
+                          <div class="timeline-sidebar-label">
+                            <span
+                              class="svg-icon timeline-sidebar-arrow"
+                              style="
+                                --icon-url: url(&quot;../icons/icon_arrow_head_right.svg&quot;);
+                              "
+                              aria-hidden="true"
+                            ></span>
+                            <img
+                              class="timeline-protocol-icon-img"
+                              src="../icons/protocol_tag/protocol_tag_chat.svg"
+                              alt=""
+                              aria-hidden="true"
+                            />
+                            <span>Chat</span>
+                          </div>
+                          <span class="timeline-sidebar-size">2 MB</span>
+                        </div>
+                        <div class="timeline-sidebar-row timeline-sidebar-item">
+                          <div class="timeline-sidebar-label">
+                            <span
+                              class="svg-icon timeline-sidebar-arrow"
+                              style="
+                                --icon-url: url(&quot;../icons/icon_arrow_head_right.svg&quot;);
+                              "
+                              aria-hidden="true"
+                            ></span>
+                            <img
+                              class="timeline-protocol-icon-img"
+                              src="../icons/protocol_tag/protocol_tag_app_enforcing_tls.svg"
+                              alt=""
+                              aria-hidden="true"
+                            />
+                            <span>Encrypted</span>
+                          </div>
+                          <span class="timeline-sidebar-size">2 MB</span>
+                        </div>
+                        <div class="timeline-sidebar-row timeline-sidebar-item">
+                          <div class="timeline-sidebar-label">
+                            <span
+                              class="svg-icon timeline-sidebar-arrow"
+                              style="
+                                --icon-url: url(&quot;../icons/icon_arrow_head_right.svg&quot;);
+                              "
+                              aria-hidden="true"
+                            ></span>
+                            <img
+                              class="timeline-protocol-icon-img"
+                              src="../icons/protocol_tag/protocol_tag_webmails.svg"
+                              alt=""
+                              aria-hidden="true"
+                            />
+                            <span>Webmail</span>
+                          </div>
+                          <span class="timeline-sidebar-size">2 MB</span>
+                        </div>
+                        <div class="timeline-sidebar-row timeline-sidebar-item">
+                          <div class="timeline-sidebar-label">
+                            <span
+                              class="svg-icon timeline-sidebar-arrow"
+                              style="
+                                --icon-url: url(&quot;../icons/icon_arrow_head_right.svg&quot;);
+                              "
+                              aria-hidden="true"
+                            ></span>
+                            <img
+                              class="timeline-protocol-icon-img"
+                              src="../icons/protocol_tag/protocol_tag_basic_networking.svg"
+                              alt=""
+                              aria-hidden="true"
+                            />
+                            <span>Routing</span>
+                          </div>
+                          <span class="timeline-sidebar-size">2 MB</span>
+                        </div>
+                        <div
+                          class="timeline-sidebar-row timeline-sidebar-group"
+                        >
+                          <div class="timeline-sidebar-group-label">
+                            <span>Events</span>
+                            <span
+                              class="svg-icon timeline-sidebar-group-arrow"
+                              style="
+                                --icon-url: url(&quot;../icons/icon_arrow_head_right.svg&quot;);
+                              "
+                              aria-hidden="true"
+                            ></span>
+                          </div>
+                          <span class="timeline-sidebar-size">8</span>
+                        </div>
+                        <div
+                          class="timeline-sidebar-row timeline-sidebar-group"
+                        >
+                          <div class="timeline-sidebar-group-label">
+                            <span>Alerts</span>
+                            <span
+                              class="svg-icon timeline-sidebar-group-arrow"
+                              style="
+                                --icon-url: url(&quot;../icons/icon_arrow_head_right.svg&quot;);
+                              "
+                              aria-hidden="true"
+                            ></span>
+                          </div>
+                          <span class="timeline-sidebar-size">3</span>
+                        </div>
+                        <div
+                          class="timeline-sidebar-row timeline-sidebar-group"
+                        >
+                          <div class="timeline-sidebar-group-label">
+                            <span>Cases</span>
+                            <span
+                              class="svg-icon timeline-sidebar-group-arrow"
+                              style="
+                                --icon-url: url(&quot;../icons/icon_arrow_head_right.svg&quot;);
+                              "
+                              aria-hidden="true"
+                            ></span>
+                          </div>
+                          <span class="timeline-sidebar-size">1</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div
+                      class="panel-resize-handle vertical"
+                      id="timelineSidebarResizeHandle"
+                      role="separator"
+                      aria-orientation="vertical"
+                      aria-label="Resize timeline sidebar"
+                    ></div>
+                    <div class="timeline-main-shell">
+                      <div class="timeline-toolbar-shell">
+                        <div class="timeline-toolbar-left">
+                          <button
+                            class="btn-reset btn-secondary-icon size-m style-ghost timeline-toolbar-icon-button"
+                            type="button"
+                            aria-label="Play timeline"
+                          >
+                            <span
+                              class="svg-icon"
+                              style="
+                                --icon-url: url(&quot;../icons/icon_play.svg&quot;);
+                              "
+                              aria-hidden="true"
+                            ></span>
+                          </button>
+                          <button
+                            class="btn-reset btn-secondary size-m style-ghost timeline-toolbar-button"
+                            type="button"
+                            aria-label="Timeline speed"
+                          >
+                            <span>1x</span>
+                            <span
+                              class="svg-icon timeline-toolbar-chevron"
+                              style="
+                                --icon-url: url(&quot;../icons/icon_arrow_head_outline_down.svg&quot;);
+                              "
+                              aria-hidden="true"
+                            ></span>
+                          </button>
+                          <button
+                            class="btn-reset btn-secondary size-m style-ghost timeline-toolbar-button timeline-toolbar-time"
+                            type="button"
+                            aria-label="Timeline start time"
+                          >
+                            <span>00:00:00</span>
+                          </button>
+                          <span class="timeline-toolbar-slash">/</span>
+                          <button
+                            class="btn-reset btn-secondary size-m style-ghost timeline-toolbar-button timeline-toolbar-time"
+                            type="button"
+                            aria-label="Timeline duration"
+                          >
+                            <span>2y 90d 03:58:00</span>
+                          </button>
+                        </div>
+                        <div class="timeline-toolbar-center">
+                          <button
+                            class="btn-reset btn-secondary size-m style-ghost timeline-toolbar-button"
+                            type="button"
+                            aria-label="Timeline date"
+                          >
+                            <span>10:01 AM · 22 May 2022</span>
+                            <span
+                              class="svg-icon timeline-toolbar-chevron"
+                              style="
+                                --icon-url: url(&quot;../icons/icon_arrow_head_outline_down.svg&quot;);
+                              "
+                              aria-hidden="true"
+                            ></span>
+                          </button>
+                        </div>
+                        <div class="timeline-toolbar-right">
+                          <button
+                            class="btn-reset btn-secondary size-m style-outline timeline-toolbar-button timeline-toolbar-button-outline timeline-export-button"
+                            id="timelineExportButton"
+                            type="button"
+                            aria-label="Export timeline selection"
+                          >
+                            <span
+                              class="svg-icon"
+                              style="
+                                --icon-url: url(&quot;../icons/icon_export_file.svg&quot;);
+                              "
+                              aria-hidden="true"
+                            ></span>
+                            <span>Export</span>
+                            <span
+                              class="svg-icon timeline-toolbar-chevron"
+                              style="
+                                --icon-url: url(&quot;../icons/icon_arrow_head_outline_down.svg&quot;);
+                              "
+                              aria-hidden="true"
+                            ></span>
+                          </button>
+                          <button
+                            class="btn-reset btn-secondary size-m style-ghost timeline-toolbar-button"
+                            type="button"
+                            aria-label="Upload timeline data"
+                          >
+                            <span
+                              class="svg-icon"
+                              style="
+                                --icon-url: url(&quot;../icons/icon_upload_sidebar.svg&quot;);
+                              "
+                              aria-hidden="true"
+                            ></span>
+                            <span>Upload</span>
+                          </button>
+                        </div>
+                      </div>
+                      <div class="timeline-ruler">
+                        <div class="timeline-ruler-top">
+                          <div class="timeline-minimap" id="timelineMinimap">
+                            <div
+                              class="timeline-minimap-track"
+                              id="timelineMinimapTrack"
+                            >
+                              <div
+                                class="timeline-minimap-wave"
+                                aria-hidden="true"
+                              ></div>
+                              <div
+                                class="timeline-minimap-viewport"
+                                id="timelineMinimapViewport"
+                                aria-hidden="true"
+                              >
+                                <span
+                                  class="timeline-minimap-handle start"
+                                  id="timelineMinimapHandleStart"
+                                  aria-hidden="true"
+                                ></span>
+                                <span
+                                  class="timeline-minimap-handle end"
+                                  id="timelineMinimapHandleEnd"
+                                  aria-hidden="true"
+                                ></span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="timeline-ruler-bottom">
+                          <div
+                            class="timeline-ruler-inner"
+                            id="timelineRulerTicks"
+                          ></div>
+                        </div>
+                      </div>
+                      <div class="timeline-panel">
+                        <div class="timeline-interaction-shell">
+                          <div
+                            class="timeline-track-area"
+                            id="timelineTrackArea"
+                          >
+                            <div
+                              class="timeline-track-canvas"
+                              id="timelineTrackCanvas"
+                            >
+                              <div
+                                class="timeline-marquee"
+                                id="timelineMarquee"
+                              ></div>
+                              <div
+                                class="timeline-selection-boundary"
+                                id="timelineBoundaryLeft"
+                              >
+                                <div
+                                  class="timeline-selection-boundary-label"
+                                  id="timelineBoundaryLeftLabel"
+                                ></div>
+                              </div>
+                              <div
+                                class="timeline-selection-boundary"
+                                id="timelineBoundaryRight"
+                              >
+                                <div
+                                  class="timeline-selection-boundary-label"
+                                  id="timelineBoundaryRightLabel"
+                                ></div>
+                              </div>
+                              <div
+                                class="timeline-selection-jump-shell"
+                                id="timelineSelectionJumpShell"
+                                hidden
+                              >
+                                <button
+                                  class="btn-reset btn-secondary-icon size-l style-outline timeline-selection-jump"
+                                  id="timelineJumpSelectionButton"
+                                  type="button"
+                                  aria-label="Jump to selection"
+                                >
+                                  <span class="btn-icon-slot">
+                                    <span
+                                      class="svg-icon"
+                                      style="
+                                        --icon-url: url(&quot;../icons/icon_arrow_head_outline_down.svg&quot;);
+                                      "
+                                      aria-hidden="true"
+                                    ></span>
+                                  </span>
+                                </button>
+                              </div>
+                              <div
+                                class="timeline-selection-ribbon"
+                                id="timelineSelectionRibbon"
+                              >
+                                <span
+                                  class="timeline-selection-stat"
+                                  id="timelineSelectionDuration"
+                                  >2m 45s</span
+                                >
+                                <span class="timeline-selection-separator"
+                                  >·</span
+                                >
+                                <span
+                                  class="timeline-selection-stat"
+                                  id="timelineSelectionCount"
+                                  >528 Events</span
+                                >
+                                <button
+                                  class="btn-reset btn-secondary-icon size-s style-ghost timeline-selection-action timeline-selection-clear"
+                                  id="timelineSelectionClearButton"
+                                  type="button"
+                                  aria-label="Clear selection"
+                                >
+                                  <span class="btn-icon-slot">
+                                    <span
+                                      class="svg-icon svg-icon-close-small"
+                                      aria-hidden="true"
+                                    ></span>
+                                  </span>
+                                </button>
+                              </div>
+                              <div
+                                class="timeline-selection-export-shell"
+                                id="timelineSelectionExportShell"
+                                hidden
+                              >
+                                <button
+                                  class="btn-reset btn-secondary-icon size-s style-ghost timeline-selection-export"
+                                  id="timelineSelectionExportButton"
+                                  type="button"
+                                  aria-label="Export carved selection"
+                                  aria-haspopup="menu"
+                                  aria-expanded="false"
+                                >
+                                  <span class="btn-icon-slot">
+                                    <span
+                                      class="svg-icon"
+                                      style="
+                                        --icon-url: url(&quot;../icons/icon_export_file.svg&quot;);
+                                      "
+                                      aria-hidden="true"
+                                    ></span>
+                                  </span>
+                                </button>
+                              </div>
+                              <div
+                                class="timeline-track"
+                                data-track-id="0"
+                              ></div>
+                              <div
+                                class="timeline-track"
+                                data-track-id="1"
+                              ></div>
+                              <div
+                                class="timeline-track"
+                                data-track-id="2"
+                              ></div>
+                              <div
+                                class="timeline-track"
+                                data-track-id="3"
+                              ></div>
+                              <div
+                                class="timeline-track"
+                                data-track-id="4"
+                              ></div>
+                              <div
+                                class="timeline-track"
+                                data-track-id="5"
+                              ></div>
+                              <div
+                                class="timeline-track"
+                                data-track-id="6"
+                              ></div>
+                              <div
+                                class="timeline-track"
+                                data-track-id="7"
+                              ></div>
+                              <div
+                                class="timeline-track"
+                                data-track-id="8"
+                              ></div>
+                              <div
+                                class="timeline-track"
+                                data-track-id="9"
+                              ></div>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="timeline-meta" id="timelineMeta" hidden>
+                          Zoom: 400%, grouped by host cluster, subnet focus.
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+              </div>
+            </section>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <div
+      class="alerts-modal-overlay hidden"
+      id="alertsManageModal"
+      aria-hidden="true"
+    >
+      <div
+        class="alerting-modal-host"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Manage Alerts"
+      >
+        <div class="alerting-inline-root" id="alertingInlineRoot"></div>
+      </div>
+    </div>
+
+    <!-- Project Feed Subscription Modal -->
+    <div
+      class="feed-subscribe-overlay hidden"
+      id="feedSubscribeModal"
+      aria-hidden="true"
+      role="presentation"
+    >
+      <div
+        class="feed-subscribe-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="feedSubscribeTitle"
+      >
+        <div class="feed-subscribe-header">
+          <div class="feed-subscribe-title-group">
+            <h2 class="feed-subscribe-title" id="feedSubscribeTitle">
+              Project Feed Subscriptions
+            </h2>
+            <p class="feed-subscribe-subtitle">
+              Choose which workspace capture feeds deliver future data to this
+              project. Removing a feed stops future ingest only; historical
+              project data stays available.
+            </p>
+          </div>
+          <button
+            class="btn-reset btn-secondary-icon size-m style-ghost"
+            id="feedSubscribeClose"
+            type="button"
+            aria-label="Close"
+          >
+            <span
+              class="btn-icon-slot svg-icon"
+              style="--icon-url: url(&quot;../icons/icon_close.svg&quot;)"
+              aria-hidden="true"
+            ></span>
+          </button>
+        </div>
+        <div class="feed-subscribe-body" id="feedSubscribeBody">
+          <!-- Rendered by JS -->
+        </div>
+        <div class="feed-subscribe-footer">
+          <button
+            class="btn-reset btn-secondary size-m style-ghost"
+            id="feedSubscribeCancel"
+            type="button"
+          >
+            Cancel
+          </button>
+          <button
+            class="btn-reset btn-secondary size-m style-outline"
+            id="feedSubscribeConfirm"
+            type="button"
+          >
+            Update Project Subscriptions
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <aside class="floating-lab" id="labPanel">
+      <div class="floating-lab-header">
+        <strong>Prototype Lab</strong>
+        <button
+          class="btn-reset btn-secondary-icon size-s style-ghost lab-collapse-button"
+          id="labCollapse"
+          type="button"
+          aria-label="Collapse lab"
+        >
+          <span
+            class="btn-icon-slot svg-icon svg-icon-close-small"
+            aria-hidden="true"
+          ></span>
+        </button>
+      </div>
+      <div class="floating-lab-body">
+        <section class="lab-section">
+          <h2>View State</h2>
+          <div class="surface-status">
+            <div class="lab-status-card">
+              <strong>Current View</strong>
+              <div id="currentViewName">Network Triage</div>
+            </div>
+            <div class="lab-status-card">
+              <strong>Autosave Status</strong>
+              <div id="snapshotStatus">Active View is autosaved.</div>
+            </div>
+            <div class="lab-status-card">
+              <strong>View Flags</strong>
+              <div id="dirtyReasons">None</div>
+            </div>
+            <div class="lab-status-card">
+              <strong>Notes State</strong>
+              <div id="notesState">No notes saved for this View.</div>
+            </div>
+            <div class="lab-status-card">
+              <strong>Ephemeral State</strong>
+              <div id="ephemeralState">
+                Timeline zoom 100%, sidebar groups unchanged.
+              </div>
+            </div>
+            <div class="lab-status-card">
+              <strong>Collection</strong>
+              <div id="activeCollectionLabel">Collection: Networks</div>
+            </div>
+            <div class="lab-status-card">
+              <strong>Snapshot Badge</strong>
+              <div class="status-badge status-ready" id="activeViewBadge">
+                <span class="status-badge-icon" aria-hidden="true"></span>
+                <span class="status-badge-label">Autosaved</span>
+              </div>
+            </div>
+            <div class="lab-status-card">
+              <strong>Session</strong>
+              <div class="status-badge status-online" id="sessionBadge">
+                <span class="status-badge-icon" aria-hidden="true"></span>
+                <span class="status-badge-label">0 undo steps</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="lab-section">
+          <h2>Validation Controls</h2>
+          <p>
+            These controls simulate realistic View-management decisions without
+            rebuilding the whole product.
+          </p>
+          <div class="scenario-actions">
+            <div class="scenario-grid">
+              <button
+                class="btn-reset btn-secondary size-m style-default scenario-action-button scenario-action-primary"
+                data-action="layout"
+              >
+                Change panel arrangement
+              </button>
+              <button
+                class="btn-reset btn-secondary size-m style-default scenario-action-button scenario-action-primary"
+                data-action="tabs"
+              >
+                Close inspector tab
+              </button>
+              <button
+                class="btn-reset btn-secondary size-m style-default scenario-action-button scenario-action-primary"
+                data-action="filter"
+              >
+                Pin subnet filter
+              </button>
+              <button
+                class="btn-reset btn-secondary size-m style-default scenario-action-button scenario-action-primary"
+                data-action="selection"
+              >
+                Save selected entity context
+              </button>
+              <button
+                class="btn-reset btn-secondary size-m style-outline scenario-action-button"
+                data-action="zoom"
+              >
+                Timeline zoom + 25% (ephemeral)
+              </button>
+              <button
+                class="btn-reset btn-secondary size-m style-outline scenario-action-button"
+                data-action="accordion"
+              >
+                Toggle nested tree state (ephemeral)
+              </button>
+              <button
+                class="btn-reset btn-secondary size-m style-outline scenario-action-button scenario-action-warn"
+                data-action="switchDirty"
+              >
+                Switch to Alerts Review
+              </button>
+              <button
+                class="btn-reset btn-secondary size-m style-outline scenario-action-button scenario-action-warn"
+                data-action="returnDirty"
+              >
+                Return to prior view
+              </button>
+            </div>
+            <button
+              class="btn-reset btn-secondary size-m style-outline scenario-action-button"
+              id="saveAsNewButton"
+            >
+              Duplicate active View
+            </button>
+            <button
+              class="btn-reset btn-secondary size-m style-ghost scenario-action-button scenario-action-subtle"
+              id="revertButton"
+            >
+              Undo last autosaved edit
+            </button>
+            <button
+              class="btn-reset btn-secondary size-m style-ghost scenario-action-button scenario-action-subtle"
+              id="resetButton"
+            >
+              Reset prototype state
+            </button>
+          </div>
+        </section>
+
+        <section class="lab-section">
+          <h2>Interaction Findings</h2>
+          <div class="data-list">
+            <div class="data-row">
+              <strong>Autosave Clarity</strong
+              ><span>Does Undo make immediate View updates feel safe?</span>
+            </div>
+            <div class="data-row">
+              <strong>Derived View Signal</strong
+              ><span
+                >Do duplicate or mismatched Views stand out clearly
+                enough?</span
+              >
+            </div>
+            <div class="data-row">
+              <strong>Tree Density</strong
+              ><span
+                >Can you still parse Collections, Folders, and direct Views
+                quickly?</span
+              >
+            </div>
+            <div class="data-row">
+              <strong>Drag Behavior</strong
+              ><span>Does cross-Collection movement remain legible?</span>
+            </div>
+            <div class="data-row">
+              <strong>Library vs View</strong
+              ><span
+                >Is it obvious which edits save immediately versus staying
+                session-local?</span
+              >
+            </div>
+          </div>
+        </section>
+
+        <section class="lab-section">
+          <h2>Legend</h2>
+          <div class="legend">
+            <div class="badge">
+              Topbar status badge: duplicate or mismatched View attention state
+            </div>
+            <div class="badge">
+              Blue dot: duplicate or mismatched inactive View
+            </div>
+            <div class="badge">
+              Notes icon: this View has saved operator notes
+            </div>
+          </div>
+        </section>
+
+        <section class="lab-section">
+          <h2>Activity Log</h2>
+          <div class="log" id="log"></div>
+          <p class="footer-note">
+            Recommended test: move panels, toggle tabs, open notes, duplicate a
+            View, then use Panel Settings Undo to step backward.
+          </p>
+        </section>
+      </div>
+    </aside>
+
+    <div
+      class="menu user-settings-menu hidden"
+      id="userSettingsMenu"
+      role="menu"
+      aria-label="User settings"
+    >
+      <button class="menu-item" type="button" role="menuitem">
+        <span class="user-menu-item-main">
+          <span
+            class="svg-icon svg-icon-ready user-menu-icon"
+            aria-hidden="true"
+          >
+            <svg
+              viewBox="0 0 16 16"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M5.375 7.07579C5.375 5.62678 6.551 4.45078 8 4.45078C9.449 4.45078 10.625 5.62678 10.625 7.07579C10.618 8.49679 9.505 9.64479 8.091 9.69379H7.965C6.488 9.65179 5.375 8.49679 5.375 7.07579Z"
+                fill="currentColor"
+                fill-opacity="0.64"
+              />
+              <path
+                fill-rule="evenodd"
+                clip-rule="evenodd"
+                d="M8 1C11.857 1 15 4.143 15 8C15 10.03 14.125 11.857 12.732 13.138C12.669 13.215 12.592 13.278 12.515 13.341C12.4864 13.3601 12.461 13.3824 12.4345 13.4057C12.4221 13.4167 12.4094 13.4278 12.396 13.439C12.27 13.544 12.137 13.642 11.997 13.74C11.9222 13.7953 11.8913 13.8184 11.857 13.838C11.6703 13.9531 11.577 14.0075 11.437 14.09C11.4183 14.1007 11.3997 14.1123 11.3806 14.1243C11.3497 14.1436 11.3177 14.1637 11.283 14.181C11.136 14.258 10.989 14.328 10.842 14.391C10.786 14.419 10.73 14.447 10.674 14.468C10.576 14.51 10.4718 14.5458 10.3676 14.5816C10.3154 14.5994 10.2633 14.6173 10.212 14.636C10.156 14.65 10.1 14.671 10.044 14.692C9.92527 14.7333 9.79894 14.7632 9.67341 14.7929C9.62871 14.8034 9.58411 14.814 9.54 14.825C9.51019 14.8287 9.48236 14.8364 9.45546 14.8439C9.43183 14.8504 9.40892 14.8567 9.386 14.86C9.19 14.902 8.994 14.93 8.791 14.951C8.763 14.958 8.735 14.965 8.707 14.965C8.476 14.986 8.238 15 8 15C7.762 15 7.524 14.986 7.286 14.965C7.258 14.958 7.23 14.951 7.202 14.951C6.999 14.93 6.803 14.902 6.607 14.86C6.551 14.853 6.502 14.839 6.453 14.825C6.28503 14.783 6.11697 14.741 5.949 14.692C5.89301 14.678 5.83702 14.657 5.78103 14.636C5.62703 14.587 5.473 14.531 5.319 14.468C5.26301 14.447 5.20702 14.419 5.15103 14.391C4.99703 14.328 4.85 14.258 4.71 14.181C4.6855 14.167 4.65926 14.1513 4.63302 14.1355C4.60676 14.1198 4.5805 14.104 4.556 14.09C4.409 14.013 4.269 13.929 4.136 13.838C4.11149 13.8205 4.08874 13.8047 4.06598 13.789C4.04324 13.7732 4.02049 13.7575 3.996 13.74C3.96559 13.7176 3.93482 13.6952 3.90394 13.6727C3.79972 13.5968 3.69419 13.52 3.597 13.439C3.56839 13.4199 3.54303 13.3976 3.5165 13.3743C3.50408 13.3633 3.49139 13.3522 3.478 13.341C3.44867 13.3146 3.41689 13.2894 3.38471 13.264C3.34008 13.2286 3.29467 13.1927 3.254 13.152C3.261 13.145 3.261 13.145 3.261 13.138C1.875 11.857 1 10.03 1 8C1 4.143 4.143 1 8 1ZM4.542 11.479C6.453 10.205 9.561 10.205 11.458 11.479C11.766 11.682 12.025 11.92 12.228 12.179C13.292 11.101 13.95 9.624 13.95 8C13.95 4.717 11.283 2.05 8 2.05C4.717 2.05 2.05 4.717 2.05 8C2.05 9.624 2.708 11.101 3.772 12.179C3.982 11.92 4.234 11.682 4.542 11.479Z"
+                fill="currentColor"
+                fill-opacity="0.64"
+              />
+            </svg>
+          </span>
+          <span>Account Settings</span>
+        </span>
+      </button>
+      <button
+        class="menu-item user-submenu-trigger"
+        id="userThemeTrigger"
+        type="button"
+        role="menuitem"
+        aria-haspopup="menu"
+        aria-expanded="false"
+      >
+        <span class="user-menu-item-main">
+          <span
+            class="svg-icon svg-icon-ready user-menu-icon"
+            aria-hidden="true"
+          >
+            <svg
+              viewBox="0 0 16 16"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                fill-rule="evenodd"
+                clip-rule="evenodd"
+                d="M8.59091 12.1364V14.5H7.40909V12.1364H8.59091ZM11.3427 10.507L13.014 12.1784L12.1784 13.014L10.507 11.3427L11.3427 10.507ZM4.65731 10.507L5.49299 11.3427L3.82164 13.014L2.98597 12.1784L4.65731 10.507ZM8 4.76901C9.78443 4.76901 11.231 6.21557 11.231 8C11.231 9.78443 9.78443 11.231 8 11.231C7.14259 11.2326 6.31982 10.8927 5.71353 10.2865C5.10725 9.68018 4.76737 8.85741 4.769 8C4.769 6.21557 6.21557 4.76901 8 4.76901ZM14.5 7.40909V8.59091H12.1364V7.40909H14.5ZM3.86364 7.40909V8.59091H1.5V7.40909H3.86364ZM3.82164 2.98597L5.49299 4.65731L4.65731 5.49299L2.98597 3.82164L3.82164 2.98597ZM12.1784 2.98597L13.014 3.82164L11.3427 5.49299L10.507 4.65731L12.1784 2.98597ZM8.59091 1.5V3.86364H7.40909V1.5H8.59091Z"
+                fill="currentColor"
+                fill-opacity="0.64"
+              />
+            </svg>
+          </span>
+          <span>Appearance</span>
+        </span>
+        <span class="menu-item-trailing" aria-hidden="true">
+          <span
+            class="svg-icon svg-icon-ready user-submenu-chevron"
+            aria-hidden="true"
+          >
+            <svg
+              viewBox="0 0 16 16"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M4.76802 12.8262L9.27269 8L4.76802 3.17382C4.41066 2.79096 4.41066 2.17359 4.76802 1.79073C5.12983 1.40309 5.72002 1.40309 6.08183 1.79073L11.232 7.30845C11.5893 7.69131 11.5893 8.30869 11.232 8.69155L6.08183 14.2093C5.72002 14.5969 5.12983 14.5969 4.76802 14.2093C4.41066 13.8264 4.41066 13.209 4.76802 12.8262Z"
+                fill="currentColor"
+                fill-opacity="0.64"
+              />
+            </svg>
+          </span>
+        </span>
+      </button>
+      <button class="menu-item" type="button" role="menuitem">
+        <span class="user-menu-item-main">
+          <span
+            class="svg-icon svg-icon-ready user-menu-icon"
+            aria-hidden="true"
+          >
+            <svg
+              viewBox="0 0 16 16"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M8 14.5C11.5898 14.5 14.5 11.5898 14.5 8C14.5 7.69925 14.0492 7.64952 13.8937 7.90692C13.4167 9.89583 10.7808 10.8708 9.24583 10.8708C6.9124 10.8708 5.02083 8.97927 5.02083 6.64583C5.02083 5.11083 5.5625 2.85417 8.09308 2.10629C8.35048 1.95076 8.30076 1.5 8 1.5C4.41015 1.5 1.5 4.41015 1.5 8C1.5 11.5898 4.41015 14.5 8 14.5Z"
+                fill="currentColor"
+                fill-opacity="0.64"
+              />
+            </svg>
+          </span>
+          <span>Dark Mode</span>
+        </span>
+        <span class="toggle-switch user-menu-toggle"></span>
+      </button>
+      <div class="divider"></div>
+      <div class="menu-section-label">Help &amp; Support</div>
+      <button class="menu-item" type="button" role="menuitem">
+        <span class="user-menu-item-main">
+          <span
+            class="svg-icon svg-icon-ready user-menu-icon"
+            aria-hidden="true"
+          >
+            <svg
+              viewBox="0 0 16 16"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M7.99772 4.1C7.3198 4.10086 6.6699 4.37054 6.19053 4.84991C5.71117 5.32927 5.44148 5.97918 5.44062 6.6571H6.74062C6.74062 5.96355 7.30482 5.4 7.99772 5.4C8.69062 5.4 9.25482 5.96355 9.25482 6.6571C9.25482 7.0458 8.94217 7.3279 8.46443 7.714C8.30835 7.83626 8.15845 7.96621 8.01528 8.10335C7.36658 8.7514 7.34772 9.43975 7.34772 9.51645V9.95H8.64772L8.64707 9.53855C8.64772 9.52815 8.66852 9.28765 8.93372 9.0231C9.03122 8.9256 9.15407 8.8281 9.28147 8.7254C9.78782 8.31525 10.5542 7.6958 10.5542 6.6571C10.5537 5.97919 10.2842 5.32918 9.80488 4.84976C9.32558 4.37034 8.67564 4.10069 7.99772 4.1ZM7.34772 10.6H8.64772V11.9H7.34772V10.6Z"
+                fill="currentColor"
+                fill-opacity="0.64"
+              />
+              <path
+                d="M8 1.5C4.4159 1.5 1.5 4.4159 1.5 8C1.5 11.5841 4.4159 14.5 8 14.5C11.5841 14.5 14.5 11.5841 14.5 8C14.5 4.4159 11.5841 1.5 8 1.5ZM8 13.2C5.13285 13.2 2.8 10.8671 2.8 8C2.8 5.13285 5.13285 2.8 8 2.8C10.8671 2.8 13.2 5.13285 13.2 8C13.2 10.8671 10.8671 13.2 8 13.2Z"
+                fill="currentColor"
+                fill-opacity="0.64"
+              />
+            </svg>
+          </span>
+          <span>Help Center</span>
+        </span>
+      </button>
+      <div class="divider"></div>
+      <button class="menu-item" type="button" role="menuitem">
+        <span class="user-menu-item-main">
+          <span
+            class="svg-icon svg-icon-ready user-menu-icon"
+            aria-hidden="true"
+          >
+            <svg
+              viewBox="0 0 16 16"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                fill-rule="evenodd"
+                clip-rule="evenodd"
+                d="M3.55263 2.8C3.17475 2.8 2.86842 3.09101 2.86842 3.45V12.55C2.86842 12.909 3.17475 13.2 3.55263 13.2H8.34211C8.72001 13.2 9.02632 12.909 9.02632 12.55V10.925C9.02632 10.566 9.33265 10.275 9.71053 10.275C10.0884 10.275 10.3947 10.566 10.3947 10.925V12.55C10.3947 13.627 9.47576 14.5 8.34211 14.5H3.55263C2.419 14.5 1.5 13.627 1.5 12.55V3.45C1.5 2.37304 2.41899 1.5 3.55263 1.5H8.34211C9.47577 1.5 10.3947 2.37305 10.3947 3.45V5.44062C10.3947 5.79961 10.0884 6.09062 9.71053 6.09062C9.33265 6.09062 9.02632 5.79961 9.02632 5.44062V3.45C9.02632 3.09101 8.72 2.8 8.34211 2.8H3.55263ZM11.6215 5.91538C11.8887 5.66154 12.3219 5.66154 12.5891 5.91538L14.2996 7.54038C14.5668 7.79422 14.5668 8.20578 14.2996 8.45962L12.5891 10.0846C12.3219 10.3385 11.8887 10.3385 11.6215 10.0846C11.3543 9.83078 11.3543 9.41922 11.6215 9.16538L12.164 8.65H6.97368C6.5958 8.65 6.28947 8.35899 6.28947 8C6.28947 7.64101 6.5958 7.35 6.97368 7.35H12.164L11.6215 6.83462C11.3543 6.58078 11.3543 6.16922 11.6215 5.91538Z"
+                fill="currentColor"
+                fill-opacity="0.64"
+              />
+            </svg>
+          </span>
+          <span>Log out</span>
+        </span>
+      </button>
+    </div>
+    <div
+      class="menu user-theme-menu hidden"
+      id="userThemeMenu"
+      role="menu"
+      aria-label="Appearance"
+    >
+      <div class="menu-section-label">Theme</div>
+      <button
+        class="menu-item"
+        type="button"
+        role="menuitemradio"
+        data-theme-option="space"
+      >
+        <span class="user-menu-item-main">
+          <span
+            class="svg-icon svg-icon-ready user-theme-check"
+            aria-hidden="true"
+          >
+            <svg
+              viewBox="0 0 16 16"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M13.9385 3.64758C14.0192 3.69209 14.095 3.74831 14.166 3.8139C14.6113 4.23321 14.6113 4.91255 14.166 5.33186L6.89893 12.1908L6.84999 12.2353C6.83286 12.247 6.81573 12.2611 6.79861 12.2728C6.77169 12.2915 6.75946 12.3009 6.74722 12.3103C6.69584 12.3431 6.66158 12.3641 6.62488 12.3805C6.59552 12.3946 6.58084 12.4016 6.56616 12.4063C6.51233 12.4297 6.47318 12.4414 6.43403 12.4531C6.40222 12.4625 6.38754 12.4649 6.37286 12.4695C6.3386 12.4766 6.31903 12.4813 6.29945 12.4836C6.27499 12.4883 6.25541 12.4906 6.23584 12.493C6.20403 12.4953 6.18935 12.4977 6.17467 12.4977C6.13796 12.5 6.11839 12.5 6.09881 12.5C6.08169 12.5 6.067 12.5 6.05232 12.5C5.96179 12.493 5.92754 12.4906 5.89328 12.4836C5.87126 12.4789 5.84924 12.4766 5.82722 12.4695C5.63881 12.4321 5.46019 12.3501 5.30604 12.2212L5.2571 12.1767L1.93187 9.04945C1.89761 9.02369 1.8658 8.99792 1.83399 8.96747C1.38867 8.54815 1.38867 7.86882 1.83399 7.44951C1.84867 7.43545 1.86091 7.42374 1.87559 7.41203C1.93431 7.36283 1.99548 7.32067 2.0591 7.28553C2.13985 7.24102 2.22548 7.20588 2.31357 7.18012C2.41878 7.14966 2.52889 7.13561 2.63655 7.13561C2.65368 7.13561 2.67325 7.13561 2.69038 7.13795C2.70996 7.13795 2.72953 7.14029 2.75155 7.14264C2.82251 7.14966 2.89102 7.16137 2.95953 7.18012C3.03049 7.19886 3.099 7.22697 3.16507 7.25976C3.18709 7.27147 3.20911 7.28319 3.23358 7.29724C3.2923 7.33004 3.34613 7.36986 3.39996 7.41437C3.41464 7.42608 3.42932 7.44014 3.44156 7.45185L6.07679 9.9279L12.4801 3.8912C12.5022 3.86543 12.5266 3.83967 12.5511 3.81624C12.6074 3.76471 12.6661 3.71786 12.7297 3.67803C12.7517 3.66398 12.7738 3.65226 12.7958 3.64055C12.8227 3.6265 12.8496 3.61244 12.8765 3.60073C12.9108 3.58667 12.945 3.57262 12.9793 3.56091C13.0111 3.55154 13.0429 3.54217 13.0747 3.53514C13.0967 3.53045 13.1188 3.52577 13.1383 3.52108C13.1555 3.51874 13.175 3.51406 13.1922 3.51171C13.246 3.50469 13.2998 3.5 13.3561 3.5C13.4124 3.5 13.4662 3.50469 13.52 3.51171C13.5567 3.5164 13.591 3.52343 13.6277 3.53045C13.6644 3.53748 13.6987 3.54919 13.7329 3.56091C13.7672 3.57262 13.8014 3.58433 13.8357 3.60073C13.8724 3.61244 13.9066 3.62884 13.9385 3.64758Z"
+                fill="currentColor"
+                fill-opacity="0.64"
+              />
+            </svg>
+          </span>
+          <span>Space</span>
+        </span>
+      </button>
+      <button
+        class="menu-item active"
+        type="button"
+        role="menuitemradio"
+        data-theme-option="midnight"
+      >
+        <span class="user-menu-item-main">
+          <span
+            class="svg-icon svg-icon-ready user-theme-check"
+            aria-hidden="true"
+          >
+            <svg
+              viewBox="0 0 16 16"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M13.9385 3.64758C14.0192 3.69209 14.095 3.74831 14.166 3.8139C14.6113 4.23321 14.6113 4.91255 14.166 5.33186L6.89893 12.1908L6.84999 12.2353C6.83286 12.247 6.81573 12.2611 6.79861 12.2728C6.77169 12.2915 6.75946 12.3009 6.74722 12.3103C6.69584 12.3431 6.66158 12.3641 6.62488 12.3805C6.59552 12.3946 6.58084 12.4016 6.56616 12.4063C6.51233 12.4297 6.47318 12.4414 6.43403 12.4531C6.40222 12.4625 6.38754 12.4649 6.37286 12.4695C6.3386 12.4766 6.31903 12.4813 6.29945 12.4836C6.27499 12.4883 6.25541 12.4906 6.23584 12.493C6.20403 12.4953 6.18935 12.4977 6.17467 12.4977C6.13796 12.5 6.11839 12.5 6.09881 12.5C6.08169 12.5 6.067 12.5 6.05232 12.5C5.96179 12.493 5.92754 12.4906 5.89328 12.4836C5.87126 12.4789 5.84924 12.4766 5.82722 12.4695C5.63881 12.4321 5.46019 12.3501 5.30604 12.2212L5.2571 12.1767L1.93187 9.04945C1.89761 9.02369 1.8658 8.99792 1.83399 8.96747C1.38867 8.54815 1.38867 7.86882 1.83399 7.44951C1.84867 7.43545 1.86091 7.42374 1.87559 7.41203C1.93431 7.36283 1.99548 7.32067 2.0591 7.28553C2.13985 7.24102 2.22548 7.20588 2.31357 7.18012C2.41878 7.14966 2.52889 7.13561 2.63655 7.13561C2.65368 7.13561 2.67325 7.13561 2.69038 7.13795C2.70996 7.13795 2.72953 7.14029 2.75155 7.14264C2.82251 7.14966 2.89102 7.16137 2.95953 7.18012C3.03049 7.19886 3.099 7.22697 3.16507 7.25976C3.18709 7.27147 3.20911 7.28319 3.23358 7.29724C3.2923 7.33004 3.34613 7.36986 3.39996 7.41437C3.41464 7.42608 3.42932 7.44014 3.44156 7.45185L6.07679 9.9279L12.4801 3.8912C12.5022 3.86543 12.5266 3.83967 12.5511 3.81624C12.6074 3.76471 12.6661 3.71786 12.7297 3.67803C12.7517 3.66398 12.7738 3.65226 12.7958 3.64055C12.8227 3.6265 12.8496 3.61244 12.8765 3.60073C12.9108 3.58667 12.945 3.57262 12.9793 3.56091C13.0111 3.55154 13.0429 3.54217 13.0747 3.53514C13.0967 3.53045 13.1188 3.52577 13.1383 3.52108C13.1555 3.51874 13.175 3.51406 13.1922 3.51171C13.246 3.50469 13.2998 3.5 13.3561 3.5C13.4124 3.5 13.4662 3.50469 13.52 3.51171C13.5567 3.5164 13.591 3.52343 13.6277 3.53045C13.6644 3.53748 13.6987 3.54919 13.7329 3.56091C13.7672 3.57262 13.8014 3.58433 13.8357 3.60073C13.8724 3.61244 13.9066 3.62884 13.9385 3.64758Z"
+                fill="currentColor"
+                fill-opacity="0.64"
+              />
+            </svg>
+          </span>
+          <span>Midnight</span>
+        </span>
+      </button>
+      <button
+        class="menu-item"
+        type="button"
+        role="menuitemradio"
+        data-theme-option="cadet"
+      >
+        <span class="user-menu-item-main">
+          <span
+            class="svg-icon svg-icon-ready user-theme-check"
+            aria-hidden="true"
+          >
+            <svg
+              viewBox="0 0 16 16"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M13.9385 3.64758C14.0192 3.69209 14.095 3.74831 14.166 3.8139C14.6113 4.23321 14.6113 4.91255 14.166 5.33186L6.89893 12.1908L6.84999 12.2353C6.83286 12.247 6.81573 12.2611 6.79861 12.2728C6.77169 12.2915 6.75946 12.3009 6.74722 12.3103C6.69584 12.3431 6.66158 12.3641 6.62488 12.3805C6.59552 12.3946 6.58084 12.4016 6.56616 12.4063C6.51233 12.4297 6.47318 12.4414 6.43403 12.4531C6.40222 12.4625 6.38754 12.4649 6.37286 12.4695C6.3386 12.4766 6.31903 12.4813 6.29945 12.4836C6.27499 12.4883 6.25541 12.4906 6.23584 12.493C6.20403 12.4953 6.18935 12.4977 6.17467 12.4977C6.13796 12.5 6.11839 12.5 6.09881 12.5C6.08169 12.5 6.067 12.5 6.05232 12.5C5.96179 12.493 5.92754 12.4906 5.89328 12.4836C5.87126 12.4789 5.84924 12.4766 5.82722 12.4695C5.63881 12.4321 5.46019 12.3501 5.30604 12.2212L5.2571 12.1767L1.93187 9.04945C1.89761 9.02369 1.8658 8.99792 1.83399 8.96747C1.38867 8.54815 1.38867 7.86882 1.83399 7.44951C1.84867 7.43545 1.86091 7.42374 1.87559 7.41203C1.93431 7.36283 1.99548 7.32067 2.0591 7.28553C2.13985 7.24102 2.22548 7.20588 2.31357 7.18012C2.41878 7.14966 2.52889 7.13561 2.63655 7.13561C2.65368 7.13561 2.67325 7.13561 2.69038 7.13795C2.70996 7.13795 2.72953 7.14029 2.75155 7.14264C2.82251 7.14966 2.89102 7.16137 2.95953 7.18012C3.03049 7.19886 3.099 7.22697 3.16507 7.25976C3.18709 7.27147 3.20911 7.28319 3.23358 7.29724C3.2923 7.33004 3.34613 7.36986 3.39996 7.41437C3.41464 7.42608 3.42932 7.44014 3.44156 7.45185L6.07679 9.9279L12.4801 3.8912C12.5022 3.86543 12.5266 3.83967 12.5511 3.81624C12.6074 3.76471 12.6661 3.71786 12.7297 3.67803C12.7517 3.66398 12.7738 3.65226 12.7958 3.64055C12.8227 3.6265 12.8496 3.61244 12.8765 3.60073C12.9108 3.58667 12.945 3.57262 12.9793 3.56091C13.0111 3.55154 13.0429 3.54217 13.0747 3.53514C13.0967 3.53045 13.1188 3.52577 13.1383 3.52108C13.1555 3.51874 13.175 3.51406 13.1922 3.51171C13.246 3.50469 13.2998 3.5 13.3561 3.5C13.4124 3.5 13.4662 3.50469 13.52 3.51171C13.5567 3.5164 13.591 3.52343 13.6277 3.53045C13.6644 3.53748 13.6987 3.54919 13.7329 3.56091C13.7672 3.57262 13.8014 3.58433 13.8357 3.60073C13.8724 3.61244 13.9066 3.62884 13.9385 3.64758Z"
+                fill="currentColor"
+                fill-opacity="0.64"
+              />
+            </svg>
+          </span>
+          <span>Cadet</span>
+        </span>
+      </button>
+    </div>
+    <div class="menu hidden" id="contextMenu"></div>
+    <div class="menu hidden" id="saveMenu"></div>
+    <div class="menu hidden" id="panelMenu"></div>
+    <div class="view-notes-float hidden" id="viewNotesFloat" aria-hidden="true">
+      <div class="view-notes-panel" role="dialog" aria-label="View notes panel">
+        <div class="view-notes-toolbar" id="viewNotesToolbar">
+          <button
+            class="btn-reset btn-secondary-icon size-s style-ghost view-notes-toolbar-button"
+            id="viewNotesCloseButton"
+            type="button"
+            aria-label="Close notes"
+          >
+            <span
+              class="btn-icon-slot svg-icon svg-icon-x"
+              aria-hidden="true"
+            ></span>
+          </button>
+          <button
+            class="btn-reset btn-secondary-icon size-s style-ghost view-notes-toolbar-button menu-anchor-button"
+            id="viewNotesMenuButton"
+            type="button"
+            aria-label="Export note options"
+            aria-haspopup="menu"
+            aria-expanded="false"
+          >
+            <span
+              class="btn-icon-slot svg-icon svg-icon-meatball"
+              aria-hidden="true"
+            ></span>
+          </button>
+        </div>
+        <div class="view-notes-editor-wrap" id="viewNotesEditorWrap">
+          <textarea
+            id="viewNotesEditor"
+            spellcheck="false"
+            aria-label="Edit notes for the active view"
+            placeholder="Write per-view context, presenter notes, or training cues. These notes stay attached to this View."
+          ></textarea>
+        </div>
+        <div
+          class="view-notes-resize-handle"
+          id="viewNotesResizeHandle"
+          aria-hidden="true"
+        ></div>
+      </div>
+    </div>
+    <div class="menu timeline-menu hidden" id="timelineContextMenu">
+      <div class="menu-section-label">Export As</div>
+      <button class="menu-item" type="button" data-timeline-action="pcap">
+        <span class="menu-item-inner">
+          <span class="menu-item-icon"
+            ><span
+              class="svg-icon"
+              style="--icon-url: url(&quot;../icons/icon_pcap_shark.svg&quot;)"
+              aria-hidden="true"
+            ></span
+          ></span>
+          <span class="menu-item-label">Packets</span>
+        </span>
+        <span class="menu-item-meta">.pcap</span>
+      </button>
+      <button class="menu-item" type="button" data-timeline-action="teleflow">
+        <span class="menu-item-inner">
+          <span class="menu-item-icon"
+            ><span
+              class="svg-icon"
+              style="--icon-url: url(&quot;../icons/icon_csv_file.svg&quot;)"
+              aria-hidden="true"
+            ></span
+          ></span>
+          <span class="menu-item-label">Teleflow</span>
+        </span>
+        <span class="menu-item-meta">.csv</span>
+      </button>
+      <button class="menu-item" type="button" data-timeline-action="zeek">
+        <span class="menu-item-inner">
+          <span class="menu-item-icon"
+            ><span
+              class="svg-icon"
+              style="--icon-url: url(&quot;../icons/icon_zeek_logo.svg&quot;)"
+              aria-hidden="true"
+            ></span
+          ></span>
+          <span class="menu-item-label">Zeek</span>
+        </span>
+        <span class="menu-item-meta">.json</span>
+      </button>
+    </div>
+    <div class="menu timeline-menu hidden" id="timelineExportMenu">
+      <div class="timeline-scope-toggle" id="timelineExportScopeToggle">
+        <button
+          class="btn-reset timeline-scope-button active"
+          data-scope="all"
+          type="button"
+        >
+          All Traffic
+        </button>
+        <button
+          class="btn-reset timeline-scope-button disabled"
+          data-scope="selection"
+          id="timelineExportSelectionScope"
+          type="button"
+        >
+          Selection
+        </button>
+      </div>
+      <div class="divider"></div>
+      <div class="menu-section-label">Export As</div>
+      <button class="menu-item" type="button" data-export-action="pcap">
+        <span class="menu-item-inner">
+          <span class="menu-item-icon"
+            ><span
+              class="svg-icon"
+              style="--icon-url: url(&quot;../icons/icon_pcap_shark.svg&quot;)"
+              aria-hidden="true"
+            ></span
+          ></span>
+          <span class="menu-item-label">Packets</span>
+        </span>
+        <span class="menu-item-meta">.pcap</span>
+      </button>
+      <button class="menu-item" type="button" data-export-action="teleflow">
+        <span class="menu-item-inner">
+          <span class="menu-item-icon"
+            ><span
+              class="svg-icon"
+              style="--icon-url: url(&quot;../icons/icon_csv_file.svg&quot;)"
+              aria-hidden="true"
+            ></span
+          ></span>
+          <span class="menu-item-label">Teleflow</span>
+        </span>
+        <span class="menu-item-meta">.csv</span>
+      </button>
+      <button class="menu-item" type="button" data-export-action="zeek">
+        <span class="menu-item-inner">
+          <span class="menu-item-icon"
+            ><span
+              class="svg-icon"
+              style="--icon-url: url(&quot;../icons/icon_zeek_logo.svg&quot;)"
+              aria-hidden="true"
+            ></span
+          ></span>
+          <span class="menu-item-label">Zeek</span>
+        </span>
+        <span class="menu-item-meta">.json</span>
+      </button>
+      <button class="menu-item" type="button" data-export-action="screenshot">
+        <span class="menu-item-inner">
+          <span class="menu-item-icon"
+            ><span
+              class="svg-icon"
+              style="--icon-url: url(&quot;../icons/icon_image.svg&quot;)"
+              aria-hidden="true"
+            ></span
+          ></span>
+          <span class="menu-item-label">Screenshot</span>
+        </span>
+        <span class="menu-item-meta">.png</span>
+      </button>
+    </div>
+    <div class="toast" id="toast"></div>
+
+    <script>
+      (function () {
+        var PROJECT_CONTEXT = {
+          name: "HULA Base",
+          workspace: "PHX Enterprise Workspace",
+        };
+
+        var AVAILABLE_FEEDS = [
+          {
+            id: "feed-napatech-core-spine",
+            name: "Core Spine Capture",
+            type: "Napatech",
+            tone: "syncing",
+            icon: "../icons/integration/general/integration_napatech.svg",
+            source: "NT200-PHX-01 · Tap 0",
+            health: 91,
+            uptime: "99.82%",
+            lastActivity: "4m ago",
+            note: "High-throughput core mirror; current chunk handoff is behind but capture is healthy.",
+          },
+          {
+            id: "feed-napatech-plant-east",
+            name: "Plant East Capture",
+            type: "Napatech",
+            tone: "paused",
+            icon: "../icons/integration/general/integration_napatech.svg",
+            source: "NT200-PLT-02 · Tap 1",
+            health: 74,
+            uptime: "96.41%",
+            lastActivity: "52m ago",
+            note: "Paused during mirror validation; the project keeps previously ingested evidence.",
+          },
+          {
+            id: "feed-napatech-west-error",
+            name: "West Edge Mirror",
+            type: "Napatech",
+            tone: "error",
+            icon: "../icons/integration/general/integration_napatech.svg",
+            source: "NT200-WEST-01 · Tap 3",
+            health: 38,
+            uptime: "92.18%",
+            lastActivity: "13m ago",
+            note: "Subscribed projects are blocked by an upstream mirror path issue until the feed recovers.",
+          },
+          {
+            id: "feed-generic-dmz-uplink",
+            name: "DMZ Uplink Mirror",
+            type: "Generic Interface",
+            tone: "active",
+            icon: "../icons/icon_ethernet.svg",
+            source: "snr-phx-07 · eno3",
+            health: 96,
+            uptime: "99.91%",
+            lastActivity: "1m ago",
+            note: "Generic interface capture on the DMZ sensor; output is arriving normally.",
+          },
+          {
+            id: "feed-generic-branch-empty",
+            name: "Branch Intake Mirror",
+            type: "Generic Interface",
+            tone: "active",
+            icon: "../icons/icon_ethernet.svg",
+            source: "snr-dmz-01 · enp6s0",
+            health: 88,
+            uptime: "98.74%",
+            lastActivity: "7m ago",
+            note: "Capture is live but currently has no project subscribers.",
+          },
+          {
+            id: "feed-generic-lab-init",
+            name: "Lab Aggregate Capture",
+            type: "Generic Interface",
+            tone: "initializing",
+            icon: "../icons/icon_ethernet.svg",
+            source: "snr-lab-02 · bond0",
+            health: 64,
+            uptime: "100.00%",
+            lastActivity: "Never",
+            note: "Feed exists but has not completed its first successful project handoff yet.",
+          },
+        ];
+
+        var STATUS_LABEL = {
+          active: "Active",
+          syncing: "Syncing",
+          paused: "Stopped",
+          error: "Error",
+          initializing: "Starting",
+          restricted: "Not subscribed",
+        };
+
+        var STATUS_CLASS = {
+          active: "status-active",
+          syncing: "status-syncing",
+          paused: "status-paused",
+          error: "status-error",
+          initializing: "status-initializing",
+          restricted: "status-restricted",
+        };
+
+        var subscribedIds = new Set([
+          "feed-napatech-core-spine",
+          "feed-generic-dmz-uplink",
+        ]);
+        var pendingIds = null;
+
+        function escapeHtml(value) {
+          return String(value == null ? "" : value)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;");
+        }
+
+        function renderBadge(tone, label) {
+          var badgeClass = STATUS_CLASS[tone] || "status-disabled";
+          return (
+            '<span class="status-badge ' +
+            badgeClass +
+            '">' +
+            '<span class="status-badge-icon" aria-hidden="true"></span>' +
+            '<span class="status-badge-label">' +
+            escapeHtml(label) +
+            "</span>" +
+            "</span>"
+          );
+        }
+
+        function formatList(names) {
+          if (!names.length) return "";
+          if (names.length === 1) return names[0];
+          if (names.length === 2) return names[0] + " and " + names[1];
+          return (
+            names.slice(0, -1).join(", ") + ", and " + names[names.length - 1]
+          );
+        }
+
+        function getRouteState(feed, subscribed) {
+          if (!subscribed) {
+            return {
+              tone: "restricted",
+              label: "Not subscribed",
+              copy: "This project will not receive future output from this feed until it is subscribed.",
+            };
+          }
+
+          if (feed.tone === "active") {
+            return {
+              tone: "active",
+              label: "Receiving",
+              copy: "New processed output is currently flowing into this project.",
+            };
+          }
+
+          if (feed.tone === "syncing") {
+            return {
+              tone: "syncing",
+              label: "Catching up",
+              copy: "Capture is live, but project handoff is still processing recent chunks.",
+            };
+          }
+
+          if (feed.tone === "paused") {
+            return {
+              tone: "paused",
+              label: "Stopped",
+              copy: "The project remains subscribed, but no new output arrives while the feed is manually stopped.",
+            };
+          }
+
+          if (feed.tone === "error") {
+            return {
+              tone: "error",
+              label: "Interrupted",
+              copy: "The subscription remains, but project delivery is blocked until the feed recovers.",
+            };
+          }
+
+          return {
+            tone: "initializing",
+            label: "Waiting first handoff",
+            copy: "The project is subscribed, but the feed has not completed its first successful handoff yet.",
+          };
+        }
+
+        function getFeedById(feedId) {
+          return AVAILABLE_FEEDS.find(function (feed) {
+            return feed.id === feedId;
+          });
+        }
+
+        function countDelivering(feedIds) {
+          var total = 0;
+          feedIds.forEach(function (feedId) {
+            var feed = getFeedById(feedId);
+            if (feed && (feed.tone === "active" || feed.tone === "syncing")) {
+              total += 1;
+            }
+          });
+          return total;
+        }
+
+        function countAttention(feedIds) {
+          var total = 0;
+          feedIds.forEach(function (feedId) {
+            var feed = getFeedById(feedId);
+            if (feed && feed.tone !== "active" && feed.tone !== "syncing") {
+              total += 1;
+            }
+          });
+          return total;
+        }
+
+        function updateButtonCount() {
+          var countEl = document.getElementById("subscribeFeedCount");
+          if (subscribedIds.size > 0) {
+            countEl.textContent = subscribedIds.size;
+            countEl.removeAttribute("hidden");
+          } else {
+            countEl.setAttribute("hidden", "");
+          }
+        }
+
+        function renderInspectorSummary() {
+          var summaryEl = document.getElementById("inspectorFeedSummary");
+          var noteEl = document.getElementById("inspectorFeedNote");
+          if (!summaryEl || !noteEl) return;
+
+          var subscribedFeeds = AVAILABLE_FEEDS.filter(function (feed) {
+            return subscribedIds.has(feed.id);
+          });
+
+          if (!subscribedFeeds.length) {
+            summaryEl.innerHTML =
+              '<div class="inspector-feed-empty">No feeds subscribed. This project is not receiving future capture output.</div>';
+            noteEl.textContent =
+              "Subscribe a workspace capture feed to start routing future processed data into this project. Existing evidence is unchanged.";
+            return;
+          }
+
+          summaryEl.innerHTML = subscribedFeeds
+            .map(function (feed) {
+              var route = getRouteState(feed, true);
+              return (
+                '<div class="inspector-feed-item">' +
+                '<div class="inspector-feed-item-head">' +
+                '<span class="inspector-feed-item-name">' +
+                escapeHtml(feed.name) +
+                "</span>" +
+                renderBadge(route.tone, route.label) +
+                "</div>" +
+                '<div class="inspector-feed-item-source">' +
+                escapeHtml(feed.type + " · " + feed.source) +
+                "</div>" +
+                "</div>"
+              );
+            })
+            .join("");
+
+          noteEl.textContent =
+            "Feed configuration stays in Launcher. Unsubscribing here stops future ingest only; historical project data remains available.";
+        }
+
+        function openModal() {
+          pendingIds = new Set(subscribedIds);
+          renderBody();
+          var modal = document.getElementById("feedSubscribeModal");
+          modal.classList.remove("hidden");
+          modal.removeAttribute("aria-hidden");
+        }
+
+        function closeModal() {
+          pendingIds = null;
+          var modal = document.getElementById("feedSubscribeModal");
+          modal.classList.add("hidden");
+          modal.setAttribute("aria-hidden", "true");
+        }
+
+        function confirmSubscriptions() {
+          var added = [];
+          var removed = [];
+
+          AVAILABLE_FEEDS.forEach(function (feed) {
+            var wasSubscribed = subscribedIds.has(feed.id);
+            var willBeSubscribed = pendingIds.has(feed.id);
+            if (!wasSubscribed && willBeSubscribed) {
+              added.push(feed.name);
+            }
+            if (wasSubscribed && !willBeSubscribed) {
+              removed.push(feed.name);
+            }
+          });
+
+          subscribedIds = new Set(pendingIds);
+          updateButtonCount();
+          renderInspectorSummary();
+          closeModal();
+
+          if (typeof showToast === "function") {
+            var parts = [];
+            if (added.length) {
+              parts.push(
+                "Future output will start flowing from " +
+                  formatList(added) +
+                  ".",
+              );
+            }
+            if (removed.length) {
+              parts.push(
+                "Future ingest from " +
+                  formatList(removed) +
+                  " will stop. Existing project data stays available.",
+              );
+            }
+            if (!parts.length) {
+              parts.push("No subscription changes were made.");
+            }
+            showToast("Feed subscriptions updated", parts.join(" "));
+          }
+        }
+
+        function renderBody() {
+          var body = document.getElementById("feedSubscribeBody");
+          var orderedFeeds = AVAILABLE_FEEDS.slice().sort(
+            function (left, right) {
+              var leftPriority = pendingIds.has(left.id) ? 0 : 1;
+              var rightPriority = pendingIds.has(right.id) ? 0 : 1;
+              if (leftPriority !== rightPriority) {
+                return leftPriority - rightPriority;
+              }
+              return left.name.localeCompare(right.name);
+            },
+          );
+
+          var pendingCount = pendingIds.size;
+          var deliveringCount = countDelivering(pendingIds);
+          var attentionCount = countAttention(pendingIds);
+          var summaryWarning =
+            pendingCount > 0
+              ? "Unsubscribing stops future ingest only. Historical project evidence remains available."
+              : "This project will stop receiving future capture output until at least one feed is subscribed. Historical project evidence remains available.";
+
+          body.innerHTML =
+            '<div class="feed-subscribe-summary">' +
+            '<div class="feed-subscribe-summary-grid">' +
+            '<div class="feed-subscribe-stat"><span class="feed-subscribe-stat-label">Project</span><strong>' +
+            escapeHtml(PROJECT_CONTEXT.name) +
+            "</strong></div>" +
+            '<div class="feed-subscribe-stat"><span class="feed-subscribe-stat-label">Workspace</span><strong>' +
+            escapeHtml(PROJECT_CONTEXT.workspace) +
+            "</strong></div>" +
+            '<div class="feed-subscribe-stat"><span class="feed-subscribe-stat-label">Subscribed</span><strong>' +
+            pendingCount +
+            (pendingCount === 1 ? " feed" : " feeds") +
+            "</strong></div>" +
+            '<div class="feed-subscribe-stat"><span class="feed-subscribe-stat-label">Receiving Now</span><strong>' +
+            deliveringCount +
+            "</strong></div>" +
+            '<div class="feed-subscribe-stat"><span class="feed-subscribe-stat-label">Needs Attention</span><strong>' +
+            attentionCount +
+            "</strong></div>" +
+            "</div>" +
+            '<div class="feed-subscribe-note">Feed configuration stays in Launcher. This panel only controls whether this project receives future output from each workspace capture feed.</div>' +
+            '<div class="feed-subscribe-note is-warning">' +
+            escapeHtml(summaryWarning) +
+            "</div>" +
+            "</div>" +
+            '<div class="feed-subscribe-list-title">Workspace Capture Feeds</div>' +
+            '<div class="feed-subscribe-list">' +
+            orderedFeeds
+              .map(function (feed) {
+                var checked = pendingIds.has(feed.id);
+                var route = getRouteState(feed, checked);
+                return (
+                  '<label class="feed-subscribe-item" data-feed-id="' +
+                  escapeHtml(feed.id) +
+                  '">' +
+                  '<span class="feed-subscribe-check sot-checkbox ' +
+                  (checked ? "is-checked" : "") +
+                  '" aria-hidden="true"><span class="sot-checkbox-mark"></span></span>' +
+                  '<span class="feed-subscribe-icon" style="background-color:var(--text-secondary);-webkit-mask-image:url(\'' +
+                  feed.icon +
+                  "');mask-image:url('" +
+                  feed.icon +
+                  '\');-webkit-mask-size:contain;mask-size:contain;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;width:16px;height:16px;display:inline-block;flex-shrink:0;" aria-hidden="true"></span>' +
+                  '<span class="feed-subscribe-main">' +
+                  '<span class="feed-subscribe-topline">' +
+                  '<span class="feed-subscribe-name">' +
+                  escapeHtml(feed.name) +
+                  "</span>" +
+                  '<span class="feed-subscribe-type">' +
+                  escapeHtml(feed.type) +
+                  "</span>" +
+                  "</span>" +
+                  '<span class="feed-subscribe-source">' +
+                  escapeHtml(feed.source) +
+                  "</span>" +
+                  '<span class="feed-subscribe-meta">' +
+                  renderBadge(feed.tone, STATUS_LABEL[feed.tone] || feed.tone) +
+                  renderBadge(route.tone, route.label) +
+                  '<span class="feed-subscribe-metric">Health ' +
+                  escapeHtml(feed.health + "%") +
+                  "</span>" +
+                  '<span class="feed-subscribe-metric">Uptime ' +
+                  escapeHtml(feed.uptime) +
+                  "</span>" +
+                  '<span class="feed-subscribe-metric">Last activity ' +
+                  escapeHtml(feed.lastActivity) +
+                  "</span>" +
+                  "</span>" +
+                  '<span class="feed-subscribe-footnote">' +
+                  escapeHtml(feed.note + " " + route.copy) +
+                  "</span>" +
+                  "</span>" +
+                  "</label>"
+                );
+              })
+              .join("") +
+            "</div>";
+        }
+
+        document.addEventListener("click", function (event) {
+          var openButton = event.target.closest(
+            "#subscribeFeedBtn, #inspectorManageFeedsBtn",
+          );
+          if (openButton) {
+            openModal();
+            return;
+          }
+
+          var closeButton = event.target.closest(
+            "#feedSubscribeClose, #feedSubscribeCancel",
+          );
+          if (closeButton) {
+            closeModal();
+            return;
+          }
+
+          var confirmButton = event.target.closest("#feedSubscribeConfirm");
+          if (confirmButton) {
+            confirmSubscriptions();
+            return;
+          }
+
+          var item = event.target.closest(".feed-subscribe-item");
+          if (item && pendingIds) {
+            var feedId = item.getAttribute("data-feed-id");
+            if (pendingIds.has(feedId)) {
+              pendingIds.delete(feedId);
+            } else {
+              pendingIds.add(feedId);
+            }
+            renderBody();
+            return;
+          }
+
+          var overlay = event.target.closest("#feedSubscribeModal");
+          if (overlay && !event.target.closest(".feed-subscribe-dialog")) {
+            closeModal();
+          }
+        });
+
+        document.addEventListener("DOMContentLoaded", function () {
+          updateButtonCount();
+          renderInspectorSummary();
+        });
+      })();
+    </script>
+
+    <script src="./scripts/icon-registry.js?v=20260406-manage-rules-inline-fix-1"></script>
+    <script src="./scripts/state-core.js?v=20260406-manage-rules-inline-fix-1"></script>
+    <script src="../timeline/timeline-feature.js?v=20260406-manage-rules-inline-fix-1"></script>
+    <script src="./scripts/ui-core.js?v=20260406-manage-rules-inline-fix-1"></script>
+    <script src="../shared/features/sidebar/sidebar-accordion-icons.js?v=20260406-manage-rules-inline-fix-1"></script>
+    <script src="../shared/features/sidebar/sidebar-sot.js?v=20260406-manage-rules-inline-fix-1"></script>
+    <script src="../shared/features/sidebar/sidebar-tree.js?v=20260406-manage-rules-inline-fix-1"></script>
+    <script src="../shared/features/sidebar/sidebar-actions.js?v=20260406-manage-rules-inline-fix-1"></script>
+    <script src="./scripts/viewer-hosts.js?v=20260406-manage-rules-inline-fix-1"></script>
+    <script src="./scripts/alerts-feature.js?v=20260413-inline-iframe-3"></script>
+    <script src="./scripts/app-init.js?v=20260406-manage-rules-inline-fix-1"></script>
+  </body>
+</html>

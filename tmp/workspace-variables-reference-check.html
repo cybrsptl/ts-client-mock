@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+  <head><meta charset="utf-8" /><title>Workspace Variables Reference Check</title></head>
+  <body>
+    <pre id="status">Loading…</pre>
+    <iframe id="viewer" src="../viewer/viewer.html?workspaceVariablesReferenceCheck=1" style="width:1600px;height:1200px;border:0"></iframe>
+    <script>
+      const statusEl = document.getElementById('status');
+      const frame = document.getElementById('viewer');
+      let reported = false;
+      function setStatus(data) { statusEl.textContent = JSON.stringify(data, null, 2); }
+      function reportStatus(data) {
+        if (reported) return;
+        reported = true;
+        const params = new URLSearchParams();
+        Object.entries(data).forEach(([key, value]) => params.set(key, String(value)));
+        (new Image()).src = `/__codex_variable_reference_status__?${params.toString()}`;
+      }
+      frame.addEventListener('load', () => {
+        const win = frame.contentWindow;
+        const doc = win.document;
+        try {
+          if (typeof win.initAlertsFeature === 'function') win.initAlertsFeature();
+          if (typeof win.openWorkspaceVariablesModal === 'function') {
+            win.openWorkspaceVariablesModal();
+          }
+        } catch (error) {
+          const payload = { ok: false, phase: 'open', error: String(error && error.message || error) };
+          setStatus(payload); reportStatus(payload); return;
+        }
+        setTimeout(() => {
+          try {
+            const host = doc.getElementById('alertingInlineRoot');
+            const shadow = host && host.shadowRoot;
+            const firstRow = shadow?.getElementById('rulesTableBody')?.querySelector('tr');
+            if (!shadow || !firstRow) {
+              const payload = { ok: false, phase: 'setup', error: 'missing shadow or row' };
+              setStatus(payload); reportStatus(payload); return;
+            }
+            firstRow.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, composed: true }));
+            setTimeout(() => {
+              try {
+                const chipbox = shadow.querySelector('[data-variable-values-shell] .suri-scope-chipbox');
+                chipbox?.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, composed: true }));
+                setTimeout(() => {
+                  const input = shadow.querySelector('[data-variable-value-input]');
+                  if (!input) {
+                    const payload = { ok: false, phase: 'input', error: 'missing variable input' };
+                    setStatus(payload); reportStatus(payload); return;
+                  }
+                  input.value = '$';
+                  input.dispatchEvent(new Event('input', { bubbles: true, cancelable: true, composed: true }));
+                  setTimeout(() => {
+                    try {
+                      const panel = shadow.querySelector('.variable-values-suggestion-anchor .suri-scope-suggestion-panel');
+                      const items = Array.from(shadow.querySelectorAll('.variable-values-suggestion-anchor .suri-scope-suggestion-item .value')).map((el) => el.textContent.trim()).filter(Boolean);
+                      const payload = {
+                        ok: !!panel && items.length > 0,
+                        panelPresent: !!panel,
+                        suggestionCount: items.length,
+                        suggestions: items.slice(0, 5).join(' | ')
+                      };
+                      setStatus(payload);
+                      reportStatus(payload);
+                    } catch (error) {
+                      const payload = { ok: false, phase: 'suggestions', error: String(error && error.message || error) };
+                      setStatus(payload); reportStatus(payload);
+                    }
+                  }, 500);
+                }, 250);
+              } catch (error) {
+                const payload = { ok: false, phase: 'focus', error: String(error && error.message || error) };
+                setStatus(payload); reportStatus(payload);
+              }
+            }, 900);
+          } catch (error) {
+            const payload = { ok: false, phase: 'probe', error: String(error && error.message || error) };
+            setStatus(payload); reportStatus(payload);
+          }
+        }, 1800);
+      });
+    </script>
+  </body>
+</html>

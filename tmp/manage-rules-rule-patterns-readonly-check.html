@@ -1,0 +1,92 @@
+<!doctype html>
+<html>
+  <body>
+    <pre id="status">Loading…</pre>
+    <iframe id="viewer" src="../viewer/viewer.html?manageRulesRulePatternsReadonlyCheck=1" style="width:1440px;height:1400px;border:0"></iframe>
+    <script>
+      const statusEl = document.getElementById('status');
+      const frame = document.getElementById('viewer');
+      let reported = false;
+      const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+      function setStatus(data) { statusEl.textContent = JSON.stringify(data, null, 2); }
+      function reportStatus(data) {
+        if (reported) return;
+        reported = true;
+        const params = new URLSearchParams();
+        Object.entries(data).forEach(([k, v]) => params.set(k, String(v)));
+        (new Image()).src = `/__codex_rule_patterns_readonly_status__?${params.toString()}`;
+      }
+      function click(el) {
+        if (!el) return false;
+        el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, composed: true }));
+        return true;
+      }
+      function findSidebarRow(shadow, pattern) {
+        return Array.from(shadow.querySelectorAll('.alerting-sidebar .side-row.sidebar-item-row.sidebar-item')).find((row) => pattern.test(row.textContent || '')) || null;
+      }
+      function findRuleRow(shadow, pattern) {
+        return Array.from(shadow.querySelectorAll('#rulesTableBody tr')).find((row) => pattern.test(row.textContent || '')) || null;
+      }
+      async function getModalRoot(doc) {
+        const host = doc.getElementById('alertingInlineRoot');
+        if (!host) return null;
+        for (let index = 0; index < 20; index += 1) {
+          const iframe = host.querySelector('iframe.alerting-inline-frame');
+          const modalDoc = iframe && iframe.contentDocument;
+          if (modalDoc && modalDoc.body) return modalDoc;
+          await sleep(250);
+        }
+        return null;
+      }
+      frame.addEventListener('load', async () => {
+        const win = frame.contentWindow;
+        const doc = win.document;
+        try {
+          if (typeof win.initAlertsFeature === 'function') win.initAlertsFeature();
+          if (typeof win.openManageModal === 'function') win.openManageModal(null, false);
+          await sleep(1800);
+          const shadow = await getModalRoot(doc);
+          if (!shadow) {
+            const payload = { ok: false, phase: 'modal-root', error: 'missing modal root' };
+            setStatus(payload); reportStatus(payload); return;
+          }
+          click(findSidebarRow(shadow, /Emerging Threats PRO/i));
+          await sleep(700);
+          click(findRuleRow(shadow, /Apache Log4j|Microsoft Exchange|Spring4Shell/i));
+          await sleep(700);
+          const card = shadow.getElementById('suriCard-rulePatterns');
+          const firstItem = card && card.querySelector('[data-rule-pattern-id]');
+          const grab = firstItem && firstItem.querySelector('.suri-rule-pattern-grab, .suri-rule-pattern-grab-slot');
+          const styles = firstItem ? shadow.defaultView.getComputedStyle(firstItem) : null;
+          const firstTokens = firstItem ? Array.from(firstItem.querySelectorAll('.teletext')).map((el) => (el.textContent || '').trim()) : [];
+          const headerItem = card ? Array.from(card.querySelectorAll('[data-rule-pattern-id]')).find((item) => /Header/i.test(item.textContent || '')) : null;
+          const headerText = headerItem ? (headerItem.textContent || '') : '';
+          const payload = {
+            ok:
+              Boolean(firstItem) &&
+              !grab &&
+              styles &&
+              styles.gridTemplateColumns.split(' ').length === 1 &&
+              firstTokens.includes('index.php') &&
+              firstTokens.includes('nocase') &&
+              firstTokens.includes('fast_pattern') &&
+              /user-agent/i.test(headerText) &&
+              /starts with/i.test(headerText) &&
+              /curl/i.test(headerText),
+            hasItem: Boolean(firstItem),
+            hasGrab: Boolean(grab),
+            gridTemplateColumns: styles ? styles.gridTemplateColumns : '',
+            firstTokens: firstTokens.join('|'),
+            headerText: headerText.replace(/\s+/g, ' ').trim()
+          };
+          setStatus(payload);
+          reportStatus(payload);
+        } catch (error) {
+          const payload = { ok: false, phase: 'probe', error: String(error && error.message || error) };
+          setStatus(payload);
+          reportStatus(payload);
+        }
+      });
+    </script>
+  </body>
+</html>

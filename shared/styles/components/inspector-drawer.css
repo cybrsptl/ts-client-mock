@@ -1,0 +1,150 @@
+/* Source of truth inspector drawer + cards + rows */
+.suri-drawer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(645px, calc(100vw - 20px));
+  border: 0;
+  border-radius: var(--drawer-shell-radius);
+  background: var(--drawer-shell-bg);
+  box-shadow: var(--drawer-shell-shadow);
+  backdrop-filter: var(--drawer-shell-backdrop-filter);
+  -webkit-backdrop-filter: var(--drawer-shell-backdrop-filter);
+  display: flex;
+  flex-direction: column;
+  z-index: 8;
+}
+
+.suri-drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 60px;
+  padding: 12px;
+  border-bottom: 1px solid var(--material-thin-white);
+}
+
+.suri-drawer-header-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.suri-drawer-title {
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+}
+
+.suri-drawer-title h2 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 15px;
+  line-height: 18px;
+  font-weight: var(--font-weight-semibold);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.suri-drawer-title p {
+  margin: 4px 0 0;
+  color: var(--text-tertiary);
+  font-size: 11px;
+  line-height: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.suri-drawer-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+.suri-drawer-content {
+  --drawer-scrollbar-size: 4px;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: var(--material-thick-white) transparent;
+  border-right: 3px solid transparent;
+  padding: 12px 9px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.suri-drawer-content > * {
+  flex: 0 0 auto;
+}
+
+.suri-drawer-content::-webkit-scrollbar {
+  width: var(--drawer-scrollbar-size);
+}
+
+.suri-drawer-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.suri-drawer-content::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: var(--material-thick-white);
+}
+
+.suri-row {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 8px 8px 14px;
+  border-bottom: 1px solid var(--fill-menu-item-active);
+}
+
+.suri-row:last-child {
+  border-bottom: none;
+}
+
+.suri-row.is-stack {
+  align-items: flex-start;
+}
+
+.suri-row-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-primary);
+  font-size: 13px;
+  line-height: 16px;
+  min-width: 0;
+}
+
+.suri-row-value {
+  flex: 1;
+  min-width: 0;
+  padding-left: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 16px;
+}
+
+.suri-row.is-stack .suri-row-value {
+  width: 100%;
+  padding-left: 0;
+  justify-content: flex-start;
+  display: block;
+}
