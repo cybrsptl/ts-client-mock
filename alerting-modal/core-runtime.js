@@ -19,6 +19,9 @@ function resolveIconPath(iconName) {
 const SURI_ARROW_ICON_DOWN_SRC = resolveIconPath(
   "icon_arrow_head_outline_down.svg",
 );
+const SURI_ICON_ARROW_LEFT_SRC = resolveIconPath(
+  "icon_arrow_head_outline_left.svg",
+);
 const SURI_ROW_ARROW_RIGHT_SRC = resolveIconPath("icon_arrow_head_right.svg");
 const SURI_MENU_DROPDOWN_ICON_SRC = resolveIconPath(
   "icon_arrow_head_outline_down.svg",
@@ -45,6 +48,13 @@ const SURI_ICON_SURICATA_APP_SRC = resolveIconPath("apps/app/Suricata.svg");
 const SURI_ICON_TELESEER_LOGO_SRC = resolveIconPath("icon_teleseer_logo.svg");
 const SURI_ICON_RENAME_SRC = resolveIconPath("icon_pencil.svg");
 const SURI_ICON_COPY_SRC = resolveIconPath("icon_copy.svg");
+const SURI_ICON_EXTERNAL_LINK_SRC = resolveIconPath("icon_external_link.svg");
+const SURI_ICON_MAXIMIZE_WINDOW_SRC = resolveIconPath(
+  "icon_maximize_window.svg",
+);
+const SURI_ICON_MINIMIZE_WINDOW_SRC = resolveIconPath(
+  "icon_minimize_window.svg",
+);
 const SURI_ICON_EXPORT_SRC = resolveIconPath("icon_export_file.svg");
 const SURI_ICON_DELETE_SRC = resolveIconPath("icon_delete.svg");
 
@@ -118,4 +128,14 @@ function formatTooltipItems(items, limit = 12) {
 function getTooltipAttribute(text) {
   const tooltip = String(text ?? "").trim();
   return tooltip ? ` data-tooltip="${escapeHtml(tooltip)}"` : "";
+}
+
+function getTooltipAttributes(text, options = {}) {
+  const tooltip = String(text ?? "").trim();
+  if (!tooltip) return "";
+  const attrs = [`data-tooltip="${escapeHtml(tooltip)}"`];
+  if (options.scrollable) {
+    attrs.push('data-tooltip-scrollable="true"');
+  }
+  return ` ${attrs.join(" ")}`;
 }

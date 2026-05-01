@@ -30,11 +30,62 @@ function defaultPanelSizes() {
   };
 }
 
+const SIDEBAR_WIDTH_MIN = 240;
+const SIDEBAR_WIDTH_MAX = 520;
+const SIDEBAR_WIDTH_VIEWPORT_BUFFER = 360;
+const SIDEBAR_NOTES_HEIGHT_MIN = 160;
+const SIDEBAR_NOTES_HEIGHT_DEFAULT = 280;
+const SIDEBAR_NOTES_HEIGHT_RATIO_MAX = 0.6;
+
+function clamp(value, min, max) {
+  return Math.min(Math.max(value, min), max);
+}
+
+function defaultSidebarWidth() {
+  return 300;
+}
+
+function clampSidebarWidth(width, viewportWidth = window.innerWidth) {
+  const safeViewportWidth = Number.isFinite(viewportWidth)
+    ? viewportWidth
+    : window.innerWidth;
+  const maxWidth = Math.max(
+    SIDEBAR_WIDTH_MIN,
+    Math.min(
+      SIDEBAR_WIDTH_MAX,
+      safeViewportWidth - SIDEBAR_WIDTH_VIEWPORT_BUFFER,
+    ),
+  );
+  const numericWidth = Number.isFinite(width) ? width : defaultSidebarWidth();
+  return clamp(numericWidth, SIDEBAR_WIDTH_MIN, maxWidth);
+}
+
 function defaultNotesPanelSize() {
   return {
     width: 392,
     height: 360,
   };
+}
+
+function defaultSidebarNotesHeight() {
+  return SIDEBAR_NOTES_HEIGHT_DEFAULT;
+}
+
+function clampSidebarNotesHeight(
+  height,
+  sidebarHeight = window.innerHeight - 44,
+) {
+  const safeSidebarHeight = Number.isFinite(sidebarHeight)
+    ? sidebarHeight
+    : window.innerHeight - 44;
+  const maxHeight = Math.max(
+    SIDEBAR_NOTES_HEIGHT_MIN,
+    Math.floor(safeSidebarHeight * SIDEBAR_NOTES_HEIGHT_RATIO_MAX),
+  );
+  const numericHeight = Number.isFinite(height)
+    ? height
+    : defaultSidebarNotesHeight();
+  return clamp(numericHeight, SIDEBAR_NOTES_HEIGHT_MIN, maxHeight);
 }
 
 function normalizeSnapshot(snapshot) {
@@ -87,6 +138,7 @@ function createViewMarkdownTemplate(viewName, snapshot) {
 const initialState = () => ({
   activeViewId: "view-network-triage",
   collapsedSidebar: false,
+  sidebarWidth: defaultSidebarWidth(),
   sidebarFlyout: {
     open: false,
     hover: false,
@@ -99,6 +151,10 @@ const initialState = () => ({
     open: false,
     position: null,
     size: defaultNotesPanelSize(),
+  },
+  sidebarNotes: {
+    open: false,
+    height: defaultSidebarNotesHeight(),
   },
   views: {
     "view-network-triage": {
@@ -600,6 +656,7 @@ let dragGhostEl = null;
 let menuAnchorId = null;
 let resizeDrag = null;
 
+const appEl = document.querySelector(".app");
 const treeEl = document.getElementById("tree");
 const filterViewsInputEl = document.getElementById("filterViewsInput");
 const clearFilterButtonEl = document.getElementById("clearFilterButton");
@@ -615,12 +672,15 @@ const sidebarEl = document.getElementById("viewerSidebar");
 const sidebarFlyoutEl = document.getElementById("sidebarFlyout");
 const sidebarFlyoutPanelEl = document.getElementById("sidebarFlyoutPanel");
 const sidebarFlyoutContentEl = document.getElementById("sidebarFlyoutContent");
+const sidebarResizeHandleEl = document.getElementById("sidebarResizeHandle");
+const sidebarFlyoutResizeHandleEl = document.getElementById(
+  "sidebarFlyoutResizeHandle",
+);
 const toggleSidebarTopEl = document.getElementById("toggleSidebarTop");
 const toggleSidebarSideEl = document.getElementById("toggleSidebarSide");
 const labPanelEl = document.getElementById("labPanel");
-const labToggleEl = document.getElementById("labToggle");
 const labCollapseEl = document.getElementById("labCollapse");
-const viewNotesButtonEl = document.getElementById("viewNotesButton");
+const sidebarNotesToggleEl = document.getElementById("sidebarNotesToggle");
 const panelSettingsButtonEl = document.getElementById("panelSettingsButton");
 const activeBadgeEl = document.getElementById("activeViewBadge");
 const sessionBadgeEl = document.getElementById("sessionBadge");
@@ -635,12 +695,25 @@ const saveMenuEl = document.getElementById("saveMenu");
 const panelMenuEl = document.getElementById("panelMenu");
 const viewNotesFloatEl = document.getElementById("viewNotesFloat");
 const viewNotesToolbarEl = document.getElementById("viewNotesToolbar");
+const viewNotesTitleEl = document.getElementById("viewNotesTitle");
+const viewNotesDockButtonEl = document.getElementById("viewNotesDockButton");
 const viewNotesCloseButtonEl = document.getElementById("viewNotesCloseButton");
 const viewNotesMenuButtonEl = document.getElementById("viewNotesMenuButton");
 const viewNotesEditorWrapEl = document.getElementById("viewNotesEditorWrap");
 const viewNotesEditorEl = document.getElementById("viewNotesEditor");
-const viewNotesResizeHandleEl = document.getElementById(
-  "viewNotesResizeHandle",
+const sidebarNotesTrayEl = document.getElementById("sidebarNotesTray");
+const sidebarNotesMenuButtonEl = document.getElementById(
+  "sidebarNotesMenuButton",
+);
+const sidebarNotesFloatButtonEl = document.getElementById(
+  "sidebarNotesFloatButton",
+);
+const sidebarNotesEditorWrapEl = document.getElementById(
+  "sidebarNotesEditorWrap",
+);
+const sidebarNotesEditorEl = document.getElementById("sidebarNotesEditor");
+const sidebarNotesResizeHandleEl = document.getElementById(
+  "sidebarNotesResizeHandle",
 );
 const userSettingsMenuEl = document.getElementById("userSettingsMenu");
 const userThemeMenuEl = document.getElementById("userThemeMenu");
@@ -808,6 +881,11 @@ function hydrateViews(snapshot) {
       ...(snapshot.notesPanel?.size || {}),
     },
   };
+  snapshot.sidebarNotes = {
+    open: snapshot.sidebarNotes?.open || false,
+    height: clampSidebarNotesHeight(snapshot.sidebarNotes?.height),
+  };
+  snapshot.sidebarWidth = clampSidebarWidth(snapshot.sidebarWidth);
   syncParentIds(snapshot);
   return snapshot;
 }

@@ -2,6 +2,11 @@
 
 let selectedRule = null;
 let editMode = false;
+let ruleViewState = "list";
+const RULE_VIEW_PREFERENCE_STORAGE_KEY = "teleseer.alerting.ruleViewPreference";
+let ruleViewPreference = "drawer";
+let ruleViewOverride = null;
+let drawerRenderTargetOverride = null;
 const THRESHOLD_MIN = 1;
 const THRESHOLD_MAX = 100;
 const DEFAULT_QUOTA_MIN = 1000;
@@ -73,6 +78,9 @@ const SURI_ICON_DIRECTION_BIDIRECTIONAL_SRC = resolveIconPath(
 const SURI_ICON_ERROR_FILL_SRC = resolveIconPath(
   "ui_core/collection/icon_error_fill.svg",
 );
+const SURI_DRAWER_ICON_FOLDER_SRC = resolveIconPath(
+  "ui_core/collection/icon_folder.svg",
+);
 const SURI_PROTOCOL_ICON_MAP = {
   DNS: resolveIconPath("protocols/technical/protocol_dnscrypt.svg"),
   HTTP: resolveIconPath("protocols/technical/protocol_web_http.svg"),
@@ -81,7 +89,9 @@ const SURI_PROTOCOL_ICON_MAP = {
   TLS: resolveIconPath("protocols/technical/protocol_ssl.svg"),
   SMTP: resolveIconPath("protocols/technical/protocol_smtp.svg"),
   IMAP: resolveIconPath("protocols/technical/protocol_imap.svg"),
-  JABBER: resolveIconPath("protocols/general/protocol_jabber_file_transfer.svg"),
+  JABBER: resolveIconPath(
+    "protocols/general/protocol_jabber_file_transfer.svg",
+  ),
   RDP: resolveIconPath("protocols/technical/protocol_rdp.svg"),
   SMB: resolveIconPath("protocols/technical/protocol_smb_cifs.svg"),
   SSH: resolveIconPath("protocols/technical/protocol_ssh.svg"),
@@ -103,6 +113,64 @@ const SURI_PROTOCOL_ICON_MAP = {
   QUIC: resolveIconPath("protocols/general/protocol_quic.svg"),
   UNKNOWN: resolveIconPath("protocols/technical/protocol_unknown.svg"),
 };
+
+function normalizeRuleViewPreference(value) {
+  return value === "full" ? "full" : "drawer";
+}
+
+function readStoredRuleViewPreference() {
+  try {
+    return normalizeRuleViewPreference(
+      window.localStorage.getItem(RULE_VIEW_PREFERENCE_STORAGE_KEY),
+    );
+  } catch {
+    return "drawer";
+  }
+}
+
+function persistRuleViewPreference(value) {
+  try {
+    window.localStorage.setItem(
+      RULE_VIEW_PREFERENCE_STORAGE_KEY,
+      normalizeRuleViewPreference(value),
+    );
+  } catch {
+    /* ignore storage failures in file:// or restricted contexts */
+  }
+}
+
+function getRuleViewPreference() {
+  return normalizeRuleViewPreference(ruleViewPreference);
+}
+
+function clearRuleViewOverride() {
+  ruleViewOverride = null;
+}
+
+function getEffectiveRuleViewMode() {
+  return normalizeRuleViewPreference(ruleViewOverride || ruleViewPreference);
+}
+
+function setRuleViewPreference(nextPreference) {
+  const normalized = normalizeRuleViewPreference(nextPreference);
+  ruleViewPreference = normalized;
+  persistRuleViewPreference(normalized);
+  clearRuleViewOverride();
+  if (typeof closeToolbarMenus === "function") {
+    closeToolbarMenus();
+  }
+  if (selectedRule === null) {
+    syncRuleViewChrome();
+    if (typeof updateHeaderActionState === "function") {
+      updateHeaderActionState();
+    }
+    syncDrawerHeaderActions();
+    return;
+  }
+  openRuleDetail(selectedRule);
+}
+
+ruleViewPreference = readStoredRuleViewPreference();
 const SURICATA_PROTOCOL_OPTIONS = [
   "HTTP",
   "HTTP2",
@@ -281,6 +349,7 @@ let drawerVariant = "suricata";
 let suricataOpenMenuKey = null;
 let suricataRulePatternAddSearch = "";
 let suricataProtocolSearch = "";
+let suricataFolderSearch = "";
 let defaultAlertFilterUiState = {};
 let suricataMenuScrollState = {
   menus: {},
@@ -299,7 +368,6 @@ let copyRuleDialogState = {
   targetNodeId: null,
   createMode: null,
 };
-let drawerRenameMode = false;
 const SURICATA_ACCORDION_DEFAULT_STATE = {
   ruleScope: true,
   rulePatterns: true,
@@ -386,7 +454,13 @@ const RULE_PATTERN_KRB_ERROR_OPTIONS = [
   "KDC_ERR_SERVICE_EXP",
   "KDC_ERR_CLIENT_REVOKED",
 ];
-const RULE_PATTERN_FTP_COMMAND_OPTIONS = ["USER", "PASS", "STOR", "RETR", "LIST"];
+const RULE_PATTERN_FTP_COMMAND_OPTIONS = [
+  "USER",
+  "PASS",
+  "STOR",
+  "RETR",
+  "LIST",
+];
 const RULE_PATTERN_MODBUS_FUNCTION_OPTIONS = [
   "Read Coils",
   "Read Discrete Inputs",
@@ -402,9 +476,24 @@ const RULE_PATTERN_DNP3_FUNCTION_OPTIONS = [
   "Select",
   "Operate",
 ];
-const RULE_PATTERN_DNP3_INDICATOR_OPTIONS = ["DIR", "PRM", "FCB", "FCV", "ACD", "DFC"];
-const RULE_PATTERN_DNP3_OBJECT_OPTIONS = ["Group 1 Var 1", "Group 30 Var 1", "Group 32 Var 1"];
-const RULE_PATTERN_ETHERNET_IP_COMMAND_OPTIONS = ["SendRRData", "SendUnitData", "ListIdentity"];
+const RULE_PATTERN_DNP3_INDICATOR_OPTIONS = [
+  "DIR",
+  "PRM",
+  "FCB",
+  "FCV",
+  "ACD",
+  "DFC",
+];
+const RULE_PATTERN_DNP3_OBJECT_OPTIONS = [
+  "Group 1 Var 1",
+  "Group 30 Var 1",
+  "Group 32 Var 1",
+];
+const RULE_PATTERN_ETHERNET_IP_COMMAND_OPTIONS = [
+  "SendRRData",
+  "SendUnitData",
+  "ListIdentity",
+];
 const RULE_PATTERN_HTTP_FIELD_OPTIONS = [
   { value: "httpHeader", label: "HTTP Header" },
   { value: "httpMethod", label: "HTTP Method" },
@@ -1482,7 +1571,18 @@ const RULE_PATTERN_CATALOG = [
     label: "Options",
     enabled: true,
     kind: "enumOption",
-    options: ["rr", "eol", "nop", "ts", "sec", "esec", "lsrr", "ssrr", "satid", "any"],
+    options: [
+      "rr",
+      "eol",
+      "nop",
+      "ts",
+      "sec",
+      "esec",
+      "lsrr",
+      "ssrr",
+      "satid",
+      "any",
+    ],
     defaults: {
       value: "ts",
     },
@@ -2104,13 +2204,55 @@ const RULE_PATTERN_CATALOG = [
     ],
     defaults: {},
   },
-  { type: "smbNtlmsspUser", group: "SMB", label: "NTLMSSP User", enabled: false, kind: "unsupported" },
-  { type: "smbNtlmsspDomain", group: "SMB", label: "NTLMSSP Domain", enabled: false, kind: "unsupported" },
-  { type: "mqttQos", group: "MQTT", label: "QoS", enabled: false, kind: "unsupported" },
-  { type: "mqttConnackReturnCode", group: "MQTT", label: "CONNACK Return Code", enabled: false, kind: "unsupported" },
-  { type: "mqttConnackSessionPresent", group: "MQTT", label: "CONNACK Session Present", enabled: false, kind: "unsupported" },
-  { type: "mqttReasonCode", group: "MQTT", label: "Reason Code", enabled: false, kind: "unsupported" },
-  { type: "mqttFlags", group: "MQTT", label: "Flags", enabled: false, kind: "unsupported" },
+  {
+    type: "smbNtlmsspUser",
+    group: "SMB",
+    label: "NTLMSSP User",
+    enabled: false,
+    kind: "unsupported",
+  },
+  {
+    type: "smbNtlmsspDomain",
+    group: "SMB",
+    label: "NTLMSSP Domain",
+    enabled: false,
+    kind: "unsupported",
+  },
+  {
+    type: "mqttQos",
+    group: "MQTT",
+    label: "QoS",
+    enabled: false,
+    kind: "unsupported",
+  },
+  {
+    type: "mqttConnackReturnCode",
+    group: "MQTT",
+    label: "CONNACK Return Code",
+    enabled: false,
+    kind: "unsupported",
+  },
+  {
+    type: "mqttConnackSessionPresent",
+    group: "MQTT",
+    label: "CONNACK Session Present",
+    enabled: false,
+    kind: "unsupported",
+  },
+  {
+    type: "mqttReasonCode",
+    group: "MQTT",
+    label: "Reason Code",
+    enabled: false,
+    kind: "unsupported",
+  },
+  {
+    type: "mqttFlags",
+    group: "MQTT",
+    label: "Flags",
+    enabled: false,
+    kind: "unsupported",
+  },
 ];
 const RULE_PATTERN_TYPE_OPTIONS = RULE_PATTERN_CATALOG.map((option) => ({
   type: option.type,
@@ -2288,14 +2430,20 @@ function getRulePatternKeyword(type) {
 
 function isRulePatternRegionEligible(type) {
   const meta = getRulePatternTypeMeta(type);
-  return getRulePatternFlagOptions(type).some((flag) => flag.key === "regionEnabled") &&
-    ["string", "regex", "httpHeader"].includes(meta.kind);
+  return (
+    getRulePatternFlagOptions(type).some(
+      (flag) => flag.key === "regionEnabled",
+    ) && ["string", "regex", "httpHeader"].includes(meta.kind)
+  );
 }
 
 function isRulePatternTransformEligible(type) {
   const meta = getRulePatternTypeMeta(type);
-  return getRulePatternFlagOptions(type).some((flag) => flag.key === "transformEnabled") &&
-    ["string", "regex", "httpHeader"].includes(meta.kind);
+  return (
+    getRulePatternFlagOptions(type).some(
+      (flag) => flag.key === "transformEnabled",
+    ) && ["string", "regex", "httpHeader"].includes(meta.kind)
+  );
 }
 
 function normalizeRulePatternTransforms(type, transforms = []) {
@@ -2304,9 +2452,10 @@ function normalizeRulePatternTransforms(type, transforms = []) {
     .map((transform) => {
       const kind = String(transform?.kind || "").trim();
       const meta = RULE_PATTERN_TRANSFORM_OPTION_MAP[kind];
-      const args = transform?.args && typeof transform.args === "object"
-        ? { ...transform.args }
-        : {};
+      const args =
+        transform?.args && typeof transform.args === "object"
+          ? { ...transform.args }
+          : {};
       if (!kind) return { kind: "", args: {} };
       if (!meta) return null;
       if (meta.httpHeaderOnly && type !== "httpHeader") return null;
@@ -2316,8 +2465,8 @@ function normalizeRulePatternTransforms(type, transforms = []) {
 }
 
 function getRulePatternTransformOptions(type) {
-  return RULE_PATTERN_TRANSFORM_CATALOG.filter((option) =>
-    !option.httpHeaderOnly || type === "httpHeader"
+  return RULE_PATTERN_TRANSFORM_CATALOG.filter(
+    (option) => !option.httpHeaderOnly || type === "httpHeader",
   );
 }
 
@@ -2553,8 +2702,8 @@ function normalizeRulePattern(pattern = {}) {
     ),
     regionEnabled: Boolean(
       pattern.regionEnabled ??
-        pattern.searchRangeEnabled ??
-        defaults.regionEnabled,
+      pattern.searchRangeEnabled ??
+      defaults.regionEnabled,
     ),
     regionBytes: normalizeRulePatternInteger(
       pattern.regionBytes ?? pattern.searchDepth,
@@ -2906,7 +3055,17 @@ function createSuricataDrawerState(rule) {
     editable: Boolean(rule?.editable),
     description: String(rule?.description ?? ""),
     relatedSid: String(rule?.relatedSid ?? rule?.sid ?? ""),
-    folderLabel: String(rule?.folderLabel ?? ""),
+    folderNodeId: String(rule?.folderNodeId ?? ""),
+    originFolderNodeId: String(
+      rule?.originFolderNodeId ?? rule?.folderNodeId ?? "",
+    ),
+    folderLabel: String(
+      rule?.folderLabel ||
+        (typeof getDisplayFolderLabel === "function"
+          ? getDisplayFolderLabel(rule?.folderNodeId)
+          : "") ||
+        "",
+    ),
     ruleStateTags: cloneDrawerState(
       Array.isArray(rule?.ruleStateTags) ? rule.ruleStateTags : [],
     ),
@@ -2916,57 +3075,65 @@ function createSuricataDrawerState(rule) {
       Array.isArray(rule?.versionHistory) ? rule.versionHistory : [],
     ),
     selectedVersionId: String(rule?.selectedVersionId ?? ""),
-    priority: "1 · High",
-    sid: String(rule?.sid ?? 2024847),
+    priority: String(rule?.priority ?? "2 · Medium"),
+    sid: String(rule?.sid ?? ""),
     classType: String(rule?.classType ?? "trojan-activity"),
-    protocols: "HTTP",
-    sourcePorts: "Exclude · 5 selected",
-    destinationPorts: "Include · 4 selected",
-    subnetFilters: {
-      sourceSubnets: {
-        mode: "include",
-        variables: ["HOME_NET", "HTTPS_SERVERS"],
-        checked: ["192.168.10.0/24", "192.168.30.0/24", "192.168.50.0/24"],
-        manual: ["172.16.12.0/24"],
+    protocols: String(rule?.protocols ?? "HTTP"),
+    subnetFilters: cloneDrawerState(
+      rule?.subnetFilters ?? {
+        sourceSubnets: {
+          includeVariables: [],
+          excludeVariables: [],
+          includeChecked: [],
+          excludeChecked: [],
+          includeManual: [],
+          excludeManual: [],
+        },
+        destinationSubnets: {
+          includeVariables: [],
+          excludeVariables: [],
+          includeChecked: [],
+          excludeChecked: [],
+          includeManual: [],
+          excludeManual: [],
+        },
       },
-      destinationSubnets: {
-        mode: "exclude",
-        variables: ["EXTERNAL_NET"],
-        checked: ["192.168.20.0/24", "192.168.40.0/24"],
-        manual: ["198.18.12.0/23", "10.25.typo.0/24"],
-      },
-    },
-    portFilters: {
-      sourcePorts: {
-        mode: "exclude",
-        variables: ["HOME_PORTS"],
-        checked: ["80", "443", "22"],
-        manual: ["25"],
-      },
-      destinationPorts: {
-        mode: "include",
-        variables: ["HTTPS_PORTS"],
-        checked: ["443", "3389"],
-        manual: ["8443"],
-      },
-    },
-    directionality: "Unidirectional",
-    flow: "To Server",
-    state: "Established",
-    contentMatch: cloneDrawerState(
-      Array.isArray(rule?.contentMatch)
-        ? rule.contentMatch
-        : ['"index.php"', "fast_pattern", '"?id="', "nocase"],
     ),
-    regexPattern: String(rule?.regexPattern ?? "/regex_name/"),
+    portFilters: cloneDrawerState(
+      rule?.portFilters ?? {
+        sourcePorts: {
+          includeVariables: [],
+          excludeVariables: [],
+          includeChecked: [],
+          excludeChecked: [],
+          includeManual: [],
+          excludeManual: [],
+        },
+        destinationPorts: {
+          includeVariables: [],
+          excludeVariables: [],
+          includeChecked: [],
+          excludeChecked: [],
+          includeManual: [],
+          excludeManual: [],
+        },
+      },
+    ),
+    directionality: String(rule?.directionality ?? "Unidirectional"),
+    flow: String(rule?.flow ?? "To Server"),
+    state: String(rule?.state ?? "Established"),
+    contentMatch: cloneDrawerState(
+      Array.isArray(rule?.contentMatch) ? rule.contentMatch : [],
+    ),
+    regexPattern: String(rule?.regexPattern ?? ""),
     modifiers: String(rule?.modifiers ?? ""),
     ignoreCase: false,
     multiline: false,
     detail: false,
-    httpUri: String(rule?.httpUri ?? "/admin/login"),
-    httpHeader: String(rule?.httpHeader ?? "curl"),
+    httpUri: String(rule?.httpUri ?? ""),
+    httpHeader: String(rule?.httpHeader ?? ""),
     httpHeaderField: String(rule?.httpHeaderField ?? "User-Agent"),
-    dnsQuery: String(rule?.dnsQuery ?? "bad-domain.com"),
+    dnsQuery: String(rule?.dnsQuery ?? ""),
     caseSensitive: false,
     action: String(rule?.action ?? "Alert"),
     behaviorTriggerWord: String(rule?.behaviorTriggerWord ?? "after"),
@@ -2982,7 +3149,9 @@ function createSuricataDrawerState(rule) {
     behaviorWindowValue: Number(
       rule?.behaviorWindowValue ?? rule?.seconds ?? 60,
     ),
-    references: cloneDrawerState(DEFAULT_REFERENCE_ROWS),
+    references: cloneDrawerState(
+      Array.isArray(rule?.references) ? rule.references : [],
+    ),
     ruleConfig: DEFAULT_RULE_CONFIG_YAML,
   };
   drawerState.rulePatterns =
@@ -2998,6 +3167,9 @@ function createSuricataDrawerState(rule) {
 
 function createDefaultAlertDrawerState(rule) {
   const drawerState = {
+    id: rule?.id ?? null,
+    name: String(rule?.name ?? ""),
+    source: String(rule?.source ?? "Teleseer"),
     description: String(rule?.description ?? ""),
     enabled: Boolean(rule?.enabled),
     version: String(rule?.version ?? "v4 Latest"),
@@ -3005,40 +3177,24 @@ function createDefaultAlertDrawerState(rule) {
       Array.isArray(rule?.versionHistory) ? rule.versionHistory : [],
     ),
     selectedVersionId: String(rule?.selectedVersionId ?? ""),
-    schedule: "Auto",
-    timeRange: "Auto",
-    threshold: 1,
-    quota: 10000,
-    protocols: "4 Protocols",
-    hosts: "3 Hosts",
-    sourceHosts: "Select Hosts",
-    destinationHosts: "Select Hosts",
-    ports: "Select Ports",
-    sourcePorts: "Select Ports",
-    destinationPorts: "Select Ports",
-    subnets: "6 Subnets",
-    sourceSubnets: "Select Subnets",
-    destinationSubnets: "Select Subnets",
-    filterSelections: {
-      protocols: ["DNS", "HTTP", "TLS", "RDP"],
-      hosts: ["HQ-SRV-AD-01", "DMZ-WEB-02", "OT-PLC-07"],
-      sourceHosts: [],
-      destinationHosts: [],
-      ports: [],
-      sourcePorts: [],
-      destinationPorts: [],
-      subnets: [
-        "10.10.4.0/24",
-        "10.10.8.0/24",
-        "10.20.0.0/24",
-        "172.18.31.0/24",
-        "192.168.50.0/24",
-        "198.18.12.0/23",
-      ],
-      sourceSubnets: [],
-      destinationSubnets: [],
-    },
-    references: cloneDrawerState(DEFAULT_ALERT_REFERENCE_ROWS),
+    schedule: String(rule?.schedule ?? "Auto"),
+    timeRange: String(rule?.timeRange ?? "Auto"),
+    threshold: Number(rule?.threshold ?? 1),
+    quota: Number(rule?.quota ?? 10000),
+    protocols: String(rule?.protocols ?? ""),
+    hosts: String(rule?.hosts ?? ""),
+    sourceHosts: String(rule?.sourceHosts ?? ""),
+    destinationHosts: String(rule?.destinationHosts ?? ""),
+    ports: String(rule?.ports ?? ""),
+    sourcePorts: String(rule?.sourcePorts ?? ""),
+    destinationPorts: String(rule?.destinationPorts ?? ""),
+    subnets: String(rule?.subnets ?? ""),
+    sourceSubnets: String(rule?.sourceSubnets ?? ""),
+    destinationSubnets: String(rule?.destinationSubnets ?? ""),
+    filterSelections: cloneDrawerState(rule?.filterSelections ?? {}),
+    references: cloneDrawerState(
+      Array.isArray(rule?.references) ? rule.references : [],
+    ),
     ruleConfig: "",
   };
   return ensureDrawerVersionHistory(syncDefaultAlertFilterLabels(drawerState));
@@ -3131,7 +3287,9 @@ function getDefaultAlertFilterOptionEntries(field) {
   }));
   const seen = new Set();
   return [...variableEntries, ...baseEntries].filter((option) => {
-    const key = String(option.value || "").trim().toLowerCase();
+    const key = String(option.value || "")
+      .trim()
+      .toLowerCase();
     if (!key || seen.has(key)) return false;
     seen.add(key);
     return true;
@@ -3281,7 +3439,9 @@ function getDefaultAlertFilterReadonlyEntries(field, entries) {
     kind && typeof getScopeVariableOptions === "function"
       ? new Set(
           getScopeVariableOptions(kind).map((option) =>
-            String(option.name || "").trim().toLowerCase(),
+            String(option.name || "")
+              .trim()
+              .toLowerCase(),
           ),
         )
       : new Set();
@@ -3389,7 +3549,12 @@ function renderDefaultAlertFilterMenuSelectionShell(field, entries) {
   `;
 }
 
-function renderDefaultAlertFilterPanelContent(field, state, searchHandler, options = {}) {
+function renderDefaultAlertFilterPanelContent(
+  field,
+  state,
+  searchHandler,
+  options = {},
+) {
   const uiState = getDefaultAlertFilterUiState(field);
   const config = getDefaultAlertFilterConfig(field);
   if (!config) return "";
@@ -3398,14 +3563,20 @@ function renderDefaultAlertFilterPanelContent(field, state, searchHandler, optio
     .toLowerCase();
   const selection = getDefaultAlertFilterSelection(state, field);
   const appliedEntries = getDefaultAlertFilterAppliedEntries(selection);
-  const visibleOptions = getDefaultAlertFilterOptionEntries(field).filter((option) => {
-    const valueText = String(option.value || "").toLowerCase();
-    const metaText = String(option.meta || "").toLowerCase();
-    return !search || valueText.includes(search) || metaText.includes(search);
-  });
+  const visibleOptions = getDefaultAlertFilterOptionEntries(field).filter(
+    (option) => {
+      const valueText = String(option.value || "").toLowerCase();
+      const metaText = String(option.meta || "").toLowerCase();
+      return !search || valueText.includes(search) || metaText.includes(search);
+    },
+  );
   return `
-    ${options.hideSelectionShell ? "" : `${renderDefaultAlertFilterMenuSelectionShell(field, appliedEntries)}
-    <div class="suri-subnet-divider" aria-hidden="true"></div>`}
+    ${
+      options.hideSelectionShell
+        ? ""
+        : `${renderDefaultAlertFilterMenuSelectionShell(field, appliedEntries)}
+    <div class="suri-subnet-divider" aria-hidden="true"></div>`
+    }
     <div class="suri-subnet-search" onclick="event.stopPropagation()">
       <img src="${SURI_ICON_SEARCH_SRC}" alt="" aria-hidden="true" />
       <input
@@ -3482,10 +3653,10 @@ function renderDefaultAlertFilterSummaryControl(field, state) {
       field,
       appliedEntries,
     );
-    return renderRuleConfigReadonlyTrigger(
-      summaryLabel,
-      { entries: readonlyEntries, emptyLabel: summaryLabel },
-    );
+    return renderRuleConfigReadonlyTrigger(summaryLabel, {
+      entries: readonlyEntries,
+      emptyLabel: summaryLabel,
+    });
   }
   return `
     <div class="suri-menu suri-madlib-menu${isOpen ? " is-open" : ""}" data-menu-key="${escapeHtml(menuKey)}">
@@ -3517,7 +3688,89 @@ function renderDefaultAlertFilterEditor(field, state) {
 }
 
 function getDrawerContentEl() {
+  if (drawerRenderTargetOverride) return drawerRenderTargetOverride;
+  if (ruleViewState === "full") {
+    return document.getElementById("ruleFullViewContent");
+  }
   return document.getElementById("drawerContent");
+}
+
+function isRuleFullViewActive() {
+  return ruleViewState === "full";
+}
+
+function isRuleDrawerViewActive() {
+  return ruleViewState === "drawer";
+}
+
+function getRulePreviewUrlPath() {
+  if (ruleViewState === "full" && selectedRule !== null) {
+    return `/rules/${selectedRule}`;
+  }
+  if (ruleViewState === "drawer" && selectedRule !== null) {
+    return `/rules?selected=${selectedRule}`;
+  }
+  return "/rules";
+}
+
+function syncRulePreviewUrl() {
+  const pathEl = document.querySelector(".rule-preview-url-path");
+  if (pathEl) pathEl.textContent = getRulePreviewUrlPath();
+}
+
+function syncRuleViewChrome() {
+  const body = document.querySelector(".modal-body");
+  const fullView = document.getElementById("ruleFullView");
+  const drawer = document.getElementById("drawer");
+  const fullHeaderActions = document.getElementById(
+    "ruleFullViewHeaderActions",
+  );
+  if (body) {
+    body.classList.toggle("rule-view-list", ruleViewState === "list");
+    body.classList.toggle("rule-view-drawer", ruleViewState === "drawer");
+    body.classList.toggle("rule-view-full", ruleViewState === "full");
+    body.classList.toggle("drawer-open", ruleViewState === "drawer");
+  }
+  fullView?.classList.toggle("hidden", ruleViewState !== "full");
+  fullHeaderActions?.classList.toggle("hidden", ruleViewState !== "full");
+  drawer?.classList.toggle("open", ruleViewState === "drawer");
+  syncRulePreviewUrl();
+}
+
+function setRuleViewState(nextState) {
+  ruleViewState = ["list", "drawer", "full"].includes(nextState)
+    ? nextState
+    : "list";
+  syncRuleViewChrome();
+}
+
+function renderFullViewBackControl() {
+  return `
+    <button
+      class="btn-reset btn-secondary size-m style-ghost rule-full-view-back"
+      type="button"
+      onclick="backToRuleList()"
+    >
+      <span class="btn-icon-slot" aria-hidden="true">
+        ${svgIcon(SURI_ICON_ARROW_LEFT_SRC)}
+      </span>
+      <span class="btn-label">Back to list</span>
+    </button>
+  `;
+}
+
+function findRuleById(ruleId) {
+  if (ruleId === null || ruleId === undefined) return null;
+  return (
+    currentRules.find((item) => item.id === ruleId) ||
+    (typeof suricataRuleDb !== "undefined"
+      ? suricataRuleDb.find((item) => item.id === ruleId)
+      : null) ||
+    (typeof teleseerRuleDb !== "undefined"
+      ? teleseerRuleDb.find((item) => item.id === ruleId)
+      : null) ||
+    null
+  );
 }
 
 function syncDrawerHeaderActions() {
@@ -3526,10 +3779,8 @@ function syncDrawerHeaderActions() {
   const cancelBtn = document.getElementById("cancelBtn");
   const drawerMenuButton = document.getElementById("drawerMenuButton");
   if (!editBtn || !saveBtn || !cancelBtn) return;
-  const activeRule =
-    selectedRule !== null
-      ? currentRules.find((item) => item.id === selectedRule)
-      : null;
+  const activeRule = selectedRule !== null ? findRuleById(selectedRule) : null;
+  syncFullRuleViewHeaderActions(activeRule);
 
   if (drawerVariant === "threshold-settings") {
     editBtn.classList.add("hidden");
@@ -3605,6 +3856,9 @@ function getDrawerTitleRule() {
   if (selectedRule === null) return null;
   return (
     suricataRuleDb.find((item) => item.id === selectedRule) ||
+    (typeof teleseerRuleDb !== "undefined"
+      ? teleseerRuleDb.find((item) => item.id === selectedRule)
+      : null) ||
     currentRules.find((item) => item.id === selectedRule) ||
     null
   );
@@ -3612,97 +3866,34 @@ function getDrawerTitleRule() {
 
 function syncDrawerTitle() {
   const titleEl = document.getElementById("drawerTitle");
+  const fullTitleEl = document.getElementById("ruleFullViewTitle");
   if (!titleEl) return;
   if (drawerVariant === "threshold-settings") {
     titleEl.textContent = "Set Thresholds";
+    if (fullTitleEl) fullTitleEl.textContent = "Set Thresholds";
     return;
   }
   const rule = getDrawerTitleRule();
   if (!rule) {
     titleEl.textContent = "";
+    if (fullTitleEl) fullTitleEl.textContent = "";
     return;
   }
   const nextName = String(
     (suricataDrawerDraft && suricataDrawerDraft.name) || rule.name || "",
   );
-  const allowRename =
-    (drawerVariant !== "suricata" || !isReadonlySuricataRule(rule)) &&
-    !isViewingHistoricalDrawerVersion();
-  if (drawerRenameMode && allowRename) {
-    titleEl.innerHTML = `
-      <input
-        class="drawer-title-input"
-        id="drawerTitleInput"
-        type="text"
-        value="${escapeHtml(nextName)}"
-        oninput="onDrawerTitleInput(this.value)"
-        onkeydown="handleDrawerTitleKey(event)"
-      />
-    `;
-    requestAnimationFrame(() => {
-      const input = document.getElementById("drawerTitleInput");
-      if (!input) return;
-      input.focus();
-      input.select();
-    });
-    return;
-  }
   titleEl.textContent = nextName;
+  if (fullTitleEl) fullTitleEl.textContent = nextName;
 }
 
-function onDrawerTitleInput(value) {
-  if (!suricataDrawerDraft) return;
-  suricataDrawerDraft.name = value;
-}
-
-function handleDrawerTitleKey(event) {
-  if (event.key === "Enter") {
-    event.preventDefault();
-    saveChanges();
-    return;
-  }
-  if (event.key === "Escape") {
-    event.preventDefault();
-    cancelEdit();
-  }
-}
-
-function triggerDrawerRename() {
-  const rule = getDrawerTitleRule();
-  if (!rule) return;
-  if (
-    drawerVariant === "default-alert" ||
-    (drawerVariant === "suricata" && isReadonlySuricataRule(rule))
-  )
-    return;
-  if (!editMode) {
-    editMode = true;
-    suricataDrawerDraft = cloneDrawerState(
-      suricataDrawerBaseline || createDrawerStateForRule(rule),
-    );
-  }
-  drawerRenameMode = true;
-  syncDrawerHeaderActions();
-  syncDrawerTitle();
-}
-
-function syncReadonlySuricataDrawerMenu(rule) {
-  const menu = document.getElementById("drawerMenu");
-  if (!menu) return;
+function renderRuleActionMenuMarkup(rule) {
   if (!rule) {
-    if (typeof restoreDefaultDrawerMenuMarkup === "function") {
-      restoreDefaultDrawerMenuMarkup();
-    }
-    return;
+    return "";
   }
   const isReadonly =
     drawerVariant === "default-alert" ||
     (drawerVariant === "suricata" && isReadonlySuricataRule(rule));
-  menu.innerHTML = `
-    <button type="button" class="menu-item${isReadonly ? " is-disabled" : ""}" ${isReadonly ? 'disabled aria-disabled="true"' : 'onclick="triggerDrawerRename()"'}>
-      <span class="menu-item-icon">${svgIcon(SURI_ICON_RENAME_SRC)}</span>
-      <span class="menu-item-label">Rename</span>
-    </button>
+  return `
     <button type="button" class="menu-item" onclick="openCopyRuleDialog()">
       <span class="menu-item-icon">${svgIcon(SURI_ICON_COPY_SRC)}</span>
       <span class="menu-item-label">Make a Copy</span>
@@ -3720,9 +3911,82 @@ function syncReadonlySuricataDrawerMenu(rule) {
   `;
 }
 
+function syncReadonlySuricataDrawerMenu(rule) {
+  const menu = document.getElementById("drawerMenu");
+  const fullMenu = document.getElementById("fullRuleMenu");
+  if (!rule) {
+    if (typeof restoreDefaultDrawerMenuMarkup === "function") {
+      restoreDefaultDrawerMenuMarkup();
+    }
+    if (fullMenu) fullMenu.innerHTML = "";
+    return;
+  }
+  if (menu) {
+    menu.innerHTML = renderRuleActionMenuMarkup(rule);
+  }
+  if (fullMenu) {
+    fullMenu.innerHTML = renderRuleActionMenuMarkup(rule);
+  }
+}
+
+function syncFullRuleViewHeaderActions(rule = null) {
+  const editBtn = document.getElementById("fullEditBtn");
+  const saveBtn = document.getElementById("fullSaveBtn");
+  const cancelBtn = document.getElementById("fullCancelBtn");
+  const menuButton = document.getElementById("fullRuleMenuButton");
+  if (!editBtn || !saveBtn || !cancelBtn) return;
+  const resolvedRule = rule || getDrawerTitleRule() || getSelectedDrawerRule();
+
+  const isRuleDetail =
+    resolvedRule &&
+    drawerVariant !== "variables" &&
+    drawerVariant !== "threshold-settings";
+  menuButton?.classList.toggle("hidden", !isRuleDetail);
+  if (!isRuleDetail) {
+    editBtn.classList.add("hidden");
+    saveBtn.classList.add("hidden");
+    cancelBtn.classList.add("hidden");
+    return;
+  }
+
+  const isEditableRule =
+    drawerVariant === "suricata" && !isReadonlySuricataRule(resolvedRule);
+  if (
+    drawerVariant === "default-alert" ||
+    !isEditableRule ||
+    isViewingHistoricalDrawerVersion()
+  ) {
+    editBtn.classList.add("hidden");
+    saveBtn.classList.add("hidden");
+    cancelBtn.classList.add("hidden");
+    return;
+  }
+
+  if (editMode) {
+    editBtn.classList.add("hidden");
+    saveBtn.classList.remove("hidden");
+    cancelBtn.classList.remove("hidden");
+    return;
+  }
+
+  editBtn.classList.remove("hidden");
+  saveBtn.classList.add("hidden");
+  cancelBtn.classList.add("hidden");
+}
+
+function toggleFullRuleMenu(event = window.event) {
+  event?.stopPropagation?.();
+  const menu = document.getElementById("fullRuleMenu");
+  const button = document.getElementById("fullRuleMenuButton");
+  if (!menu) return;
+  const willOpen = !menu.classList.contains("open");
+  menu.classList.toggle("open", willOpen);
+  button?.setAttribute("aria-expanded", willOpen ? "true" : "false");
+}
+
 function getSelectedDrawerRule() {
   if (selectedRule === null) return null;
-  return currentRules.find((item) => item.id === selectedRule) || null;
+  return findRuleById(selectedRule);
 }
 
 function getCopySourceRuleOptions() {
@@ -4215,20 +4479,185 @@ function getActiveDrawerState() {
   if (drawerVariant === "threshold-settings") {
     return suricataDrawerDraft || suricataDrawerBaseline;
   }
+  if (drawerVariant === "variables") {
+    return suricataDrawerDraft || suricataDrawerBaseline;
+  }
+  if (selectedRule === null || !suricataDrawerBaseline) {
+    return null;
+  }
   if (editMode) {
     return suricataDrawerDraft;
   }
-  if (!suricataDrawerBaseline) return null;
   const selectedEntry = getSelectedDrawerVersionEntry(suricataDrawerBaseline);
   if (!selectedEntry || selectedEntry.isCurrent) {
     return suricataDrawerBaseline;
   }
   const snapshot = createDrawerVersionSnapshot(selectedEntry.snapshot);
-  snapshot.versionHistory = cloneDrawerState(suricataDrawerBaseline.versionHistory);
+  snapshot.versionHistory = cloneDrawerState(
+    suricataDrawerBaseline.versionHistory,
+  );
   snapshot.selectedVersionId = suricataDrawerBaseline.selectedVersionId;
   snapshot.version = selectedEntry.label;
   snapshot.versionSavedAt = selectedEntry.savedAt;
   return snapshot;
+}
+
+function getDrawerFolderMenuKey() {
+  return "drawer:folder";
+}
+
+function getDrawerFolderLabel(state) {
+  const nodeId = state?.folderNodeId;
+  const resolvedLabel =
+    nodeId && typeof getDisplayFolderLabel === "function"
+      ? getDisplayFolderLabel(nodeId)
+      : "";
+  return String(resolvedLabel || state?.folderLabel || "Folder");
+}
+
+function getDrawerFolderTargets() {
+  return typeof getEditableCustomTargetNodes === "function"
+    ? getEditableCustomTargetNodes()
+    : [];
+}
+
+function getDrawerFolderPathLabel(node) {
+  if (!node) return "";
+  if (typeof getNodePathLabels === "function") {
+    const labels = getNodePathLabels(node.id);
+    if (labels.length) return labels.join(" / ");
+  }
+  return node.label || "";
+}
+
+function renderDrawerFolderValue(state) {
+  return `
+    <span class="suri-folder-value">
+      <img class="suri-folder-value-icon" src="${SURI_DRAWER_ICON_FOLDER_SRC}" alt="" aria-hidden="true" />
+      <span class="suri-folder-value-label">${escapeHtml(getDrawerFolderLabel(state))}</span>
+    </span>
+  `;
+}
+
+function restoreDrawerFolderSearchFocus() {
+  requestAnimationFrame(() => {
+    const menu = document.querySelector(
+      `.suri-menu[data-menu-key="${getDrawerFolderMenuKey()}"]`,
+    );
+    const input = menu?.querySelector(".suri-folder-search input");
+    if (!input) return;
+    const cursorPosition = input.value.length;
+    focusTextFieldWithoutScroll(input, cursorPosition);
+  });
+}
+
+function onDrawerFolderSearchInput(value) {
+  if (!editMode || !suricataDrawerDraft) return;
+  suricataFolderSearch = String(value ?? "");
+  renderSuricataDrawerContent();
+  restoreDrawerFolderSearchFocus();
+}
+
+function selectDrawerFolder(event, nodeId) {
+  event?.preventDefault?.();
+  event?.stopPropagation?.();
+  if (!editMode || !suricataDrawerDraft) return;
+  const target = getDrawerFolderTargets().find(
+    ({ node }) => node.id === nodeId,
+  )?.node;
+  if (!target) return;
+  suricataDrawerDraft.folderNodeId = target.id;
+  suricataDrawerDraft.folderLabel =
+    (typeof getDisplayFolderLabel === "function"
+      ? getDisplayFolderLabel(target.id)
+      : "") ||
+    target.label ||
+    "";
+  suricataOpenMenuKey = null;
+  suricataFolderSearch = "";
+  renderSuricataDrawerContent();
+}
+
+function renderDrawerFolderSelect(state) {
+  if (!editMode || !suricataDrawerDraft) return renderDrawerFolderValue(state);
+  const targets = getDrawerFolderTargets();
+  if (!targets.length) return renderDrawerFolderValue(state);
+  const menuKey = getDrawerFolderMenuKey();
+  const isOpen = suricataOpenMenuKey === menuKey;
+  const query = String(suricataFolderSearch || "")
+    .trim()
+    .toLowerCase();
+  const selectedNodeId = String(state?.folderNodeId || "");
+  const visibleTargets = targets.filter(({ node }) => {
+    if (!query) return true;
+    const path = getDrawerFolderPathLabel(node).toLowerCase();
+    return (
+      path.includes(query) ||
+      String(node.label || "")
+        .toLowerCase()
+        .includes(query)
+    );
+  });
+  const renderedRows = visibleTargets.length
+    ? visibleTargets
+        .map(({ node, depth }) => {
+          const normalizedDepth = Math.max(
+            0,
+            Math.min(4, Number(depth) - 1 || 0),
+          );
+          const selectedClass =
+            node.id === selectedNodeId ? " is-selected" : "";
+          const pathLabel = getDrawerFolderPathLabel(node);
+          return `
+            <button
+              type="button"
+              class="menu-item suri-menu-option suri-folder-option is-depth-${normalizedDepth}${selectedClass}"
+              role="option"
+              aria-selected="${selectedClass ? "true" : "false"}"
+              aria-label="${escapeHtml(pathLabel)}"
+              onclick="selectDrawerFolder(event, '${escapeJsSingleQuoted(node.id)}')"
+            >
+              ${renderMenuValueContent(node.label, SURI_DRAWER_ICON_FOLDER_SRC)}
+            </button>
+          `;
+        })
+        .join("")
+    : '<div class="suri-scope-empty">No folders match your search.</div>';
+  return `
+    <div class="suri-menu suri-madlib-menu suri-folder-picker${isOpen ? " is-open" : ""}" data-menu-key="${escapeHtml(menuKey)}">
+      <button
+        type="button"
+        class="btn-reset btn-secondary size-m style-outline suri-madlib-trigger suri-folder-trigger"
+        aria-haspopup="listbox"
+        aria-expanded="${isOpen ? "true" : "false"}"
+        onclick="toggleSuricataMenu(event, '${escapeJsSingleQuoted(menuKey)}')"
+      >
+        <span class="btn-secondary-labelgroup">
+          <span class="btn-label suri-madlib-trigger-label">${renderDrawerFolderValue(state)}</span>
+        </span>
+        <span class="btn-chevron-slot" aria-hidden="true">
+          <img class="suri-madlib-trigger-icon" src="${SURI_MENU_DROPDOWN_ICON_SRC}" alt="" />
+        </span>
+      </button>
+      <div class="menu-list suri-folder-menu-list" role="listbox">
+        <div class="suri-subnet-search suri-folder-search">
+          <img src="${SURI_ICON_SEARCH_SRC}" alt="" aria-hidden="true" />
+          <input
+            type="text"
+            value="${escapeHtml(suricataFolderSearch)}"
+            placeholder="Search..."
+            aria-label="Search folders"
+            oninput="onDrawerFolderSearchInput(this.value)"
+          />
+        </div>
+        <div class="suri-subnet-divider" aria-hidden="true"></div>
+        <div class="menu-section-label suri-folder-section-label">Folders</div>
+        <div class="suri-folder-option-list">
+          ${renderedRows}
+        </div>
+      </div>
+    </div>
+  `;
 }
 
 function renderSuricataMenuControl(kind, field, value, options) {
@@ -4334,7 +4763,9 @@ function normalizeSuricataProtocolSelection(value) {
         .map((entry) => entry.trim());
   const selected = [];
   rawValues.forEach((entry) => {
-    const protocol = String(entry || "").trim().toUpperCase();
+    const protocol = String(entry || "")
+      .trim()
+      .toUpperCase();
     if (
       !protocol ||
       protocol === "ANY" ||
@@ -4372,7 +4803,9 @@ function renderSuricataProtocolPicker(state) {
   const isOpen = suricataOpenMenuKey === menuKey;
   const selected = normalizeSuricataProtocolSelection(state?.protocols);
   const selectedSet = new Set(selected);
-  const query = String(suricataProtocolSearch || "").trim().toLowerCase();
+  const query = String(suricataProtocolSearch || "")
+    .trim()
+    .toLowerCase();
   const visibleOptions = SURICATA_PROTOCOL_OPTIONS.filter((option) =>
     option.value.toLowerCase().includes(query),
   );
@@ -4400,7 +4833,9 @@ function renderSuricataProtocolPicker(state) {
     : '<div class="suri-scope-empty">No protocols match your search.</div>';
 
   if (!editMode) {
-    return renderRuleConfigReadonlyTrigger(formatSuricataProtocolSummary(state?.protocols));
+    return renderRuleConfigReadonlyTrigger(
+      formatSuricataProtocolSummary(state?.protocols),
+    );
   }
 
   return `
@@ -4440,7 +4875,12 @@ function renderSuricataProtocolPicker(state) {
   `;
 }
 
-function renderSuricataMadlibSelect(field, value, options, readonlyVariant = "teletext") {
+function renderSuricataMadlibSelect(
+  field,
+  value,
+  options,
+  readonlyVariant = "teletext",
+) {
   const menuKey = `drawer:select:${field}`;
   const isOpen = suricataOpenMenuKey === menuKey;
   const renderedOptions = options
@@ -4547,6 +4987,16 @@ function renderSuricataDropdown(field, value, options) {
 
 function renderSuricataInput(field, value, placeholder = "") {
   return `<input class="suri-input-field" type="text" value="${escapeHtml(value)}" placeholder="${escapeHtml(placeholder)}" onchange="setSuricataField('${field}', this.value)" />`;
+}
+
+function renderSuricataNameInput(value) {
+  return `<input class="suri-input-field is-wide" type="text" value="${escapeHtml(value)}" placeholder="Rule name" oninput="onSuricataNameInput(this.value)" />`;
+}
+
+function onSuricataNameInput(value) {
+  if (!editMode || !suricataDrawerDraft) return;
+  suricataDrawerDraft.name = String(value ?? "");
+  syncDrawerTitle();
 }
 
 function renderSuricataToggle(field, enabled, disabled) {
@@ -4710,8 +5160,9 @@ function formatRuleConfigReadonlyConjunction(items) {
 }
 
 function getRuleConfigReadonlyEntryCategory(entry) {
-  const singular = String(entry?.categorySingular || entry?.category || "Item")
-    .trim();
+  const singular = String(
+    entry?.categorySingular || entry?.category || "Item",
+  ).trim();
   const plural = String(entry?.categoryPlural || `${singular}s`).trim();
   return {
     singular: singular || "Item",
@@ -4729,7 +5180,9 @@ function formatRuleConfigReadonlyMadlib(entries, emptyLabel = "") {
       label: fallbackLabel || "—",
     };
   }
-  const values = normalizedEntries.map((entry) => String(entry?.value || "").trim());
+  const values = normalizedEntries.map((entry) =>
+    String(entry?.value || "").trim(),
+  );
   if (normalizedEntries.length === 1) {
     const entry = normalizedEntries[0];
     const value = values[0] || fallbackLabel || "—";
@@ -4767,8 +5220,9 @@ function formatRuleConfigReadonlyMadlib(entries, emptyLabel = "") {
     entries: normalizedEntries,
     hasPopover: true,
     label: formatRuleConfigReadonlyConjunction(
-      groupedCounts.map((group) =>
-        `${group.count} ${group.count === 1 ? group.singular : group.plural}`,
+      groupedCounts.map(
+        (group) =>
+          `${group.count} ${group.count === 1 ? group.singular : group.plural}`,
       ),
     ),
   };
@@ -4815,7 +5269,8 @@ function renderRuleConfigReadonlyTrigger(label, config = "") {
           hasPopover: false,
           label: String(label ?? "").trim() || "—",
         };
-  const resolvedLabel = String(readonlyMeta.label || label || "—").trim() || "—";
+  const resolvedLabel =
+    String(readonlyMeta.label || label || "—").trim() || "—";
   const popoverMarkup = readonlyMeta.hasPopover
     ? renderRuleConfigReadonlyPopover(readonlyMeta.entries)
     : "";
@@ -4844,7 +5299,7 @@ function renderMenuItemModeButtons(
     <span class="suri-item-action-buttons" onclick="event.stopPropagation()">
       <button
         type="button"
-        class="btn-reset btn-secondary-icon size-s style-outline suri-item-action-button is-include${resolvedMode === "include" ? " is-active" : ""}"
+        class="btn-reset btn-secondary-icon btn-secondary-icon-colored size-s is-blue suri-item-action-button is-include${resolvedMode === "include" ? " is-active" : ""}"
         aria-label="Include"
         onclick="${includeAction}"
         onkeydown="if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); ${includeAction}; }"
@@ -4853,7 +5308,7 @@ function renderMenuItemModeButtons(
       </button>
       <button
         type="button"
-        class="btn-reset btn-secondary-icon size-s style-outline suri-item-action-button is-exclude${resolvedMode === "exclude" ? " is-active" : ""}"
+        class="btn-reset btn-secondary-icon btn-secondary-icon-colored size-s is-orange suri-item-action-button is-exclude${resolvedMode === "exclude" ? " is-active" : ""}"
         aria-label="Exclude"
         onclick="${excludeAction}"
         onkeydown="if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); ${excludeAction}; }"
@@ -5081,14 +5536,19 @@ function renderRulePatternStringLikeBody(pattern, options = {}) {
     : String(options.leadingControls || "");
   const includeRelation = options.includeRelation !== false;
   const includeTransformChain =
-    options.includeTransformChain !== false && isRulePatternTransformEligible(pattern.type);
-  const controlsClass = options.controlsClass ? ` ${options.controlsClass}` : "";
+    options.includeTransformChain !== false &&
+    isRulePatternTransformEligible(pattern.type);
+  const controlsClass = options.controlsClass
+    ? ` ${options.controlsClass}`
+    : "";
   const valueInput =
     options.valueInput === false
       ? ""
       : renderRulePatternTextInput(
           pattern,
-          options.valueOverride === undefined ? pattern.value : options.valueOverride,
+          options.valueOverride === undefined
+            ? pattern.value
+            : options.valueOverride,
         );
   return `
     <div class="suri-rule-pattern-grid two-line">
@@ -5111,8 +5571,18 @@ function renderRulePatternNumberCompareBody(pattern, widthClass = "") {
   `;
 }
 
-function renderRulePatternNumberInput(patternId, field, value, widthClass = "") {
-  const className = ["suri-input-field", "suri-rule-pattern-input", "suri-rule-pattern-number-input", widthClass]
+function renderRulePatternNumberInput(
+  patternId,
+  field,
+  value,
+  widthClass = "",
+) {
+  const className = [
+    "suri-input-field",
+    "suri-rule-pattern-input",
+    "suri-rule-pattern-number-input",
+    widthClass,
+  ]
     .filter(Boolean)
     .join(" ");
   return `
@@ -5125,7 +5595,13 @@ function renderRulePatternNumberInput(patternId, field, value, widthClass = "") 
   `;
 }
 
-function renderRulePatternSelect(patternId, field, value, options, widthClass = "") {
+function renderRulePatternSelect(
+  patternId,
+  field,
+  value,
+  options,
+  widthClass = "",
+) {
   const menuKey = `rule-pattern:${patternId}:${field}`;
   const isOpen = suricataOpenMenuKey === menuKey;
   const renderedOptions = options
@@ -5133,7 +5609,9 @@ function renderRulePatternSelect(patternId, field, value, options, widthClass = 
       const optionValue =
         typeof option === "string" ? option : String(option.value ?? "");
       const optionLabel =
-        typeof option === "string" ? option : String(option.label ?? optionValue);
+        typeof option === "string"
+          ? option
+          : String(option.label ?? optionValue);
       const selectedClass = optionValue === value ? " is-selected" : "";
       return `
         <button
@@ -5249,13 +5727,19 @@ function renderRulePatternTransformMenu(pattern, transform, index) {
 }
 
 function renderRulePatternTransformChain(pattern) {
-  if (!isRulePatternTransformEligible(pattern.type) || !pattern.transformEnabled) {
+  if (
+    !isRulePatternTransformEligible(pattern.type) ||
+    !pattern.transformEnabled
+  ) {
     return "";
   }
-  const transforms = Array.isArray(pattern.transforms) && pattern.transforms.length
-    ? pattern.transforms
-    : [{ kind: "", args: {} }];
-  const disableAdd = !transforms.every((transform) => String(transform?.kind || "").trim());
+  const transforms =
+    Array.isArray(pattern.transforms) && pattern.transforms.length
+      ? pattern.transforms
+      : [{ kind: "", args: {} }];
+  const disableAdd = !transforms.every((transform) =>
+    String(transform?.kind || "").trim(),
+  );
   return `
     <div class="suri-rule-pattern-transform-row">
       ${transforms
@@ -5270,7 +5754,7 @@ function renderRulePatternTransformChain(pattern) {
       <button
         type="button"
         class="btn-reset btn-secondary size-m style-default suri-rule-pattern-transform-add${disableAdd ? " is-disabled" : ""}"
-        ${disableAdd ? 'disabled aria-disabled="true"' : `onclick="addRulePatternTransform(event, '${escapeJsSingleQuoted(pattern.id)}')"` }
+        ${disableAdd ? 'disabled aria-disabled="true"' : `onclick="addRulePatternTransform(event, '${escapeJsSingleQuoted(pattern.id)}')"`}
       >
         Add
       </button>
@@ -5280,7 +5764,8 @@ function renderRulePatternTransformChain(pattern) {
 }
 
 function renderRulePatternRegionRow(pattern) {
-  if (!isRulePatternRegionEligible(pattern.type) || !pattern.regionEnabled) return "";
+  if (!isRulePatternRegionEligible(pattern.type) || !pattern.regionEnabled)
+    return "";
   return `
     <div class="suri-rule-pattern-inline-row">
       <span class="suri-rule-pattern-inline-label">Search</span>
@@ -5610,11 +6095,11 @@ function renderRulePatternFlagToggle(pattern, flag) {
 
 function renderRulePatternFlags(pattern) {
   const flags = getRulePatternFlagOptions(pattern.type);
-  const rightSideFlags = flags.filter((flag) =>
-    flag.key === "regionEnabled" || flag.key === "transformEnabled"
+  const rightSideFlags = flags.filter(
+    (flag) => flag.key === "regionEnabled" || flag.key === "transformEnabled",
   );
-  const leftSideFlags = flags.filter((flag) =>
-    flag.key !== "regionEnabled" && flag.key !== "transformEnabled"
+  const leftSideFlags = flags.filter(
+    (flag) => flag.key !== "regionEnabled" && flag.key !== "transformEnabled",
   );
   if (!leftSideFlags.length && !rightSideFlags.length) return "";
   return `
@@ -5666,19 +6151,31 @@ function formatRulePatternReadonlyContextText(pattern) {
   switch (pattern.type) {
     case "httpRequestHeader":
     case "httpResponseHeader":
-      return String(pattern.headerName || "header_name").trim().toLowerCase();
+      return String(pattern.headerName || "header_name")
+        .trim()
+        .toLowerCase();
     case "httpLine":
-      return String(pattern.lineScope || "Request").trim().toLowerCase();
+      return String(pattern.lineScope || "Request")
+        .trim()
+        .toLowerCase();
     case "tlsCertIdentifier":
-      return String(pattern.identifierField || "Serial").trim().toLowerCase();
+      return String(pattern.identifierField || "Serial")
+        .trim()
+        .toLowerCase();
     case "ipAddress":
     case "ipCountry":
     case "ipReputation":
-      return String(pattern.scope || "Source").trim().toLowerCase();
+      return String(pattern.scope || "Source")
+        .trim()
+        .toLowerCase();
     case "fileHash":
-      return String(pattern.hashAlgorithm || "SHA-256").trim().toLowerCase();
+      return String(pattern.hashAlgorithm || "SHA-256")
+        .trim()
+        .toLowerCase();
     case "fileSize":
-      return String(pattern.sizeUnit || "MB").trim().toLowerCase();
+      return String(pattern.sizeUnit || "MB")
+        .trim()
+        .toLowerCase();
     case "dnp3Object":
       return `${String(pattern.objectGroup || "15").trim()} · ${String(pattern.objectVariation || "18").trim()}`;
     default:
@@ -5709,7 +6206,10 @@ function getRulePatternReadonlyRegionTokens(pattern) {
 }
 
 function getRulePatternReadonlyTransformTokens(pattern) {
-  if (!isRulePatternTransformEligible(pattern.type) || !pattern.transformEnabled)
+  if (
+    !isRulePatternTransformEligible(pattern.type) ||
+    !pattern.transformEnabled
+  )
     return [];
   return (Array.isArray(pattern.transforms) ? pattern.transforms : [])
     .map((transform) => {
@@ -5735,7 +6235,11 @@ function getRulePatternReadonlyBaseTokens(pattern) {
         `variation ${pattern.objectVariation || "18"}`,
       ];
     case "fileSize":
-      return [pattern.compareOperator, pattern.numericValue, pattern.sizeUnit || "MB"];
+      return [
+        pattern.compareOperator,
+        pattern.numericValue,
+        pattern.sizeUnit || "MB",
+      ];
     default:
       break;
   }
@@ -5804,16 +6308,19 @@ function getRulePatternReadonlyValueTokens(pattern) {
 function renderRulePatternReadonlySentence(pattern, index) {
   const headerPrefix =
     index > 0 ? '<span class="suri-rule-pattern-prefix">then</span>' : "";
-  const excludeSuffix = pattern.exclude && !pattern.transformEnabled
-    ? '<span class="suri-rule-pattern-exclude">does not</span>'
-    : "";
+  const excludeSuffix =
+    pattern.exclude && !pattern.transformEnabled
+      ? '<span class="suri-rule-pattern-exclude">does not</span>'
+      : "";
   const relationText = formatRulePatternReadonlyRelationText(pattern);
   const headerFieldText =
     pattern.type === "httpHeader"
       ? `<span class="suri-rule-pattern-readonly-tertiary">${escapeHtml(formatRulePatternReadonlyHeaderField(pattern))}</span>`
       : "";
   const contextText = formatRulePatternReadonlyContextText(pattern);
-  const valueTokens = renderTeletextList(getRulePatternReadonlyValueTokens(pattern));
+  const valueTokens = renderTeletextList(
+    getRulePatternReadonlyValueTokens(pattern),
+  );
   return `
     <div class="suri-rule-pattern-item is-readonly-layout" data-rule-pattern-id="${escapeHtml(pattern.id)}">
       <div class="suri-rule-pattern-sentence suri-rule-pattern-readonly-row">
@@ -5839,9 +6346,10 @@ function renderRulePatternItem(pattern, index) {
   }
   const headerPrefix =
     index > 0 ? '<span class="suri-rule-pattern-prefix">then</span>' : "";
-  const excludeSuffix = pattern.exclude && !pattern.transformEnabled
-    ? '<span class="suri-rule-pattern-exclude">does not</span>'
-    : "";
+  const excludeSuffix =
+    pattern.exclude && !pattern.transformEnabled
+      ? '<span class="suri-rule-pattern-exclude">does not</span>'
+      : "";
   const grabSlot = editMode
     ? `
       <div class="suri-rule-pattern-grab-slot">
@@ -5904,7 +6412,11 @@ function renderRulePatternsAddControl() {
   const isOpen = suricataOpenMenuKey === menuKey;
   const filteredOptions = RULE_PATTERN_TYPE_OPTIONS.filter((option) => {
     const haystack = `${option.group} ${option.label}`.toLowerCase();
-    return haystack.includes(String(suricataRulePatternAddSearch || "").trim().toLowerCase());
+    return haystack.includes(
+      String(suricataRulePatternAddSearch || "")
+        .trim()
+        .toLowerCase(),
+    );
   });
   return `
     <div class="suri-menu suri-rule-pattern-add-menu${isOpen ? " is-open" : ""}" data-menu-key="${escapeHtml(menuKey)}">
@@ -5931,8 +6443,10 @@ function renderRulePatternsAddControl() {
         </div>
         <div class="suri-subnet-divider" aria-hidden="true"></div>
         <div class="suri-rule-pattern-add-results">
-        ${filteredOptions.map(
-          (option) => `
+        ${
+          filteredOptions
+            .map(
+              (option) => `
           <button
             type="button"
             class="menu-item suri-menu-option${option.enabled ? "" : " is-disabled"}"
@@ -5945,7 +6459,10 @@ function renderRulePatternsAddControl() {
             </span>
           </button>
         `,
-        ).join("") || '<div class="suri-rule-pattern-empty">No patterns found.</div>'}
+            )
+            .join("") ||
+          '<div class="suri-rule-pattern-empty">No patterns found.</div>'
+        }
         </div>
       </div>
     </div>
@@ -6058,7 +6575,13 @@ function updateRulePatternValue(patternId, value) {
   syncLegacyRulePatternFields(suricataDrawerDraft);
 }
 
-function updateRulePatternField(eventOrPatternId, patternIdOrField, fieldOrValue, maybeValue, maybeMenuKey) {
+function updateRulePatternField(
+  eventOrPatternId,
+  patternIdOrField,
+  fieldOrValue,
+  maybeValue,
+  maybeMenuKey,
+) {
   let patternId = eventOrPatternId;
   let field = patternIdOrField;
   let value = fieldOrValue;
@@ -6099,7 +6622,12 @@ function selectRulePatternTransform(event, patternId, index, kind, menuKey) {
   event?.stopPropagation?.();
   updateRulePatternState((patterns) => {
     const pattern = patterns.find((item) => item.id === patternId);
-    if (!pattern || !Array.isArray(pattern.transforms) || !pattern.transforms[index]) return;
+    if (
+      !pattern ||
+      !Array.isArray(pattern.transforms) ||
+      !pattern.transforms[index]
+    )
+      return;
     const meta = getRulePatternTransformMeta(kind);
     if (!meta) return;
     pattern.transforms[index] = {
@@ -6344,7 +6872,8 @@ function formatRulePatternRelationSuffix(pattern) {
 }
 
 function serializeRulePatternTransforms(pattern) {
-  if (!pattern.transformEnabled || !Array.isArray(pattern.transforms)) return [];
+  if (!pattern.transformEnabled || !Array.isArray(pattern.transforms))
+    return [];
   return pattern.transforms
     .filter((transform) => String(transform?.kind || "").trim())
     .map((transform) => {
@@ -6370,7 +6899,10 @@ function formatRulePatternRegionSuffix(pattern, index, rawValue = "") {
 function getRulePatternBufferKeyword(pattern) {
   switch (pattern.type) {
     case "httpHeader":
-      return RULE_PATTERN_HTTP_HEADER_BUFFER_MAP[pattern.headerField] || "http.header";
+      return (
+        RULE_PATTERN_HTTP_HEADER_BUFFER_MAP[pattern.headerField] ||
+        "http.header"
+      );
     case "httpMethod":
       return "http.method";
     case "httpUri":
@@ -6487,7 +7019,12 @@ function getRulePatternBufferKeyword(pattern) {
   }
 }
 
-function formatRulePatternContentClause(pattern, keyword, index = 0, value = pattern.value) {
+function formatRulePatternContentClause(
+  pattern,
+  keyword,
+  index = 0,
+  value = pattern.value,
+) {
   const rawValue = String(value || "").trim();
   if (!rawValue) return "";
   const negatedValue = pattern.exclude ? "!" : "";
@@ -6511,7 +7048,11 @@ function serializeRulePattern(pattern, index = 0) {
       const transforms = serializeRulePatternTransforms(pattern)
         .map((transform) => `  ${transform};`)
         .join("\n");
-      const regionSuffix = formatRulePatternRegionSuffix(pattern, index, rawValue);
+      const regionSuffix = formatRulePatternRegionSuffix(
+        pattern,
+        index,
+        rawValue,
+      );
       return `${transforms ? `${transforms}\n` : ""}  content:${pattern.exclude ? "!" : ""}"${rawValue}";${relationSuffix}${pattern.ignoreCase ? " nocase;" : ""}${pattern.fastPattern ? " fast_pattern;" : ""}${pattern.rawBytes ? " rawbytes;" : ""}${regionSuffix}`;
     }
     case "regex": {
@@ -6537,11 +7078,23 @@ function serializeRulePattern(pattern, index = 0) {
       return `${transforms ? `${transforms}\n` : ""}  pcre:${pattern.exclude ? "!" : ""}${normalizedRegex};`;
     }
     case "httpHeader":
-      return formatRulePatternContentClause(pattern, getRulePatternBufferKeyword(pattern), index);
+      return formatRulePatternContentClause(
+        pattern,
+        getRulePatternBufferKeyword(pattern),
+        index,
+      );
     case "httpMethod":
-      return formatRulePatternContentClause(pattern, getRulePatternBufferKeyword(pattern), index);
+      return formatRulePatternContentClause(
+        pattern,
+        getRulePatternBufferKeyword(pattern),
+        index,
+      );
     case "httpUri":
-      return formatRulePatternContentClause(pattern, getRulePatternBufferKeyword(pattern), index);
+      return formatRulePatternContentClause(
+        pattern,
+        getRulePatternBufferKeyword(pattern),
+        index,
+      );
     case "httpHost":
     case "httpCookie":
     case "httpUserAgent":
@@ -6562,37 +7115,75 @@ function serializeRulePattern(pattern, index = 0) {
     case "httpResponseLine":
     case "httpRequestMethod":
     case "httpResponseHeaderName":
-      return formatRulePatternContentClause(pattern, getRulePatternBufferKeyword(pattern), index);
+      return formatRulePatternContentClause(
+        pattern,
+        getRulePatternBufferKeyword(pattern),
+        index,
+      );
     case "tlsSni":
-      return formatRulePatternContentClause(pattern, getRulePatternBufferKeyword(pattern), index);
+      return formatRulePatternContentClause(
+        pattern,
+        getRulePatternBufferKeyword(pattern),
+        index,
+      );
     case "tlsCertSubject":
-      return formatRulePatternContentClause(pattern, getRulePatternBufferKeyword(pattern), index);
+      return formatRulePatternContentClause(
+        pattern,
+        getRulePatternBufferKeyword(pattern),
+        index,
+      );
     case "tlsCertIssuer":
-      return formatRulePatternContentClause(pattern, getRulePatternBufferKeyword(pattern), index);
+      return formatRulePatternContentClause(
+        pattern,
+        getRulePatternBufferKeyword(pattern),
+        index,
+      );
     case "tlsCertIdentifier":
     case "tlsCert":
     case "tlsRandom":
     case "tlsJa3":
     case "tlsJa3s":
-      return formatRulePatternContentClause(pattern, getRulePatternBufferKeyword(pattern), index);
+      return formatRulePatternContentClause(
+        pattern,
+        getRulePatternBufferKeyword(pattern),
+        index,
+      );
     case "fileName":
     case "nfsFileName":
-      return formatRulePatternContentClause(pattern, getRulePatternBufferKeyword(pattern), index);
+      return formatRulePatternContentClause(
+        pattern,
+        getRulePatternBufferKeyword(pattern),
+        index,
+      );
     case "fileData":
     case "fileMagic":
     case "fileHash":
     case "fileExtension":
-      return formatRulePatternContentClause(pattern, getRulePatternBufferKeyword(pattern), index);
+      return formatRulePatternContentClause(
+        pattern,
+        getRulePatternBufferKeyword(pattern),
+        index,
+      );
     case "sshSoftware":
     case "sshHassh":
     case "sshHasshServer":
     case "sshHasshString":
     case "sshHasshServerString":
-      return formatRulePatternContentClause(pattern, getRulePatternBufferKeyword(pattern), index);
+      return formatRulePatternContentClause(
+        pattern,
+        getRulePatternBufferKeyword(pattern),
+        index,
+      );
     case "sshProtocolVersion":
-      return pattern.enumValue ? `  ssh.protoversion:${pattern.enumValue};` : "";
+      return pattern.enumValue
+        ? `  ssh.protoversion:${pattern.enumValue};`
+        : "";
     case "dnsQuery":
-      return formatRulePatternContentClause(pattern, getRulePatternBufferKeyword(pattern), index);
+      return formatRulePatternContentClause(
+        pattern,
+        getRulePatternBufferKeyword(pattern),
+        index,
+      );
     case "dnsOpcode":
     case "dnsRrtype":
     case "ipTtl":
@@ -6600,13 +7191,27 @@ function serializeRulePattern(pattern, index = 0) {
         ? `  ${getRulePatternKeyword(pattern.type)}:${pattern.compareOperator}${pattern.numericValue};`
         : "";
     case "smtpHelo":
-      return formatRulePatternContentClause(pattern, getRulePatternBufferKeyword(pattern), index);
+      return formatRulePatternContentClause(
+        pattern,
+        getRulePatternBufferKeyword(pattern),
+        index,
+      );
     case "smtpMailFrom":
-      return formatRulePatternContentClause(pattern, getRulePatternBufferKeyword(pattern), index);
+      return formatRulePatternContentClause(
+        pattern,
+        getRulePatternBufferKeyword(pattern),
+        index,
+      );
     case "smtpRcptTo":
-      return formatRulePatternContentClause(pattern, getRulePatternBufferKeyword(pattern), index);
+      return formatRulePatternContentClause(
+        pattern,
+        getRulePatternBufferKeyword(pattern),
+        index,
+      );
     case "ipProtocol":
-      return pattern.enumValue ? `  ip.proto:${String(pattern.enumValue).toLowerCase()};` : "";
+      return pattern.enumValue
+        ? `  ip.proto:${String(pattern.enumValue).toLowerCase()};`
+        : "";
     case "ipOpts":
       return pattern.enumValue ? `  ipopts:${pattern.enumValue};` : "";
     case "ipAddress":
@@ -6617,7 +7222,11 @@ function serializeRulePattern(pattern, index = 0) {
     case "smbDceRpcInterface":
     case "smbDceRpcStubData":
     case "ftpCommand":
-      return formatRulePatternContentClause(pattern, getRulePatternBufferKeyword(pattern), index);
+      return formatRulePatternContentClause(
+        pattern,
+        getRulePatternBufferKeyword(pattern),
+        index,
+      );
     case "dnp3Object":
       return pattern.objectGroup || pattern.objectVariation
         ? `  dnp3.object:${pattern.objectGroup || "15"}.${pattern.objectVariation || "18"};`
@@ -6627,15 +7236,27 @@ function serializeRulePattern(pattern, index = 0) {
         ? `  ip.rep:${pattern.compareOperator}${pattern.numericValue};`
         : "";
     case "krb5Cname":
-      return formatRulePatternContentClause(pattern, getRulePatternBufferKeyword(pattern), index);
+      return formatRulePatternContentClause(
+        pattern,
+        getRulePatternBufferKeyword(pattern),
+        index,
+      );
     case "krb5MsgType":
       return pattern.enumValue ? `  krb5_msg_type:${pattern.enumValue};` : "";
     case "krb5ErrorCode":
       return pattern.enumValue ? `  krb5_error_code:${pattern.enumValue};` : "";
     case "smbShare":
-      return formatRulePatternContentClause(pattern, getRulePatternBufferKeyword(pattern), index);
+      return formatRulePatternContentClause(
+        pattern,
+        getRulePatternBufferKeyword(pattern),
+        index,
+      );
     case "smbNamedPipe":
-      return formatRulePatternContentClause(pattern, getRulePatternBufferKeyword(pattern), index);
+      return formatRulePatternContentClause(
+        pattern,
+        getRulePatternBufferKeyword(pattern),
+        index,
+      );
     case "smbDceRpcOpnum":
       return pattern.numericValue
         ? `  smb.dcerpc.opnum:${pattern.compareOperator}${pattern.numericValue};`
@@ -6643,13 +7264,17 @@ function serializeRulePattern(pattern, index = 0) {
     case "nfsProcedure":
       return pattern.enumValue ? `  nfs_procedure:${pattern.enumValue};` : "";
     case "ftpDataCommand":
-      return pattern.enumValue ? `  ftp.data_command:${pattern.enumValue};` : "";
+      return pattern.enumValue
+        ? `  ftp.data_command:${pattern.enumValue};`
+        : "";
     case "modbusFunction":
       return pattern.enumValue ? `  modbus.func:${pattern.enumValue};` : "";
     case "dnp3Function":
       return pattern.enumValue ? `  dnp3.func:${pattern.enumValue};` : "";
     case "ethernetIpCommand":
-      return pattern.enumValue ? `  ethernetip.command:${pattern.enumValue};` : "";
+      return pattern.enumValue
+        ? `  ethernetip.command:${pattern.enumValue};`
+        : "";
     case "tlsVersion":
       return pattern.enumValue ? `  tls.version:${pattern.enumValue};` : "";
     case "fileSize":
@@ -6725,7 +7350,9 @@ function buildSuricataDerivedConfig(state) {
     state.limitEnabled
       ? `  # limit: ${String(state.limitCount || 1)} alert per time window;`
       : "  # limit: disabled;",
-    ...patterns.map((pattern, index) => serializeRulePattern(pattern, index)).filter(Boolean),
+    ...patterns
+      .map((pattern, index) => serializeRulePattern(pattern, index))
+      .filter(Boolean),
     `  classtype:${String(state.classType || "trojan-activity")};`,
     `  sid:${String(state.sid || "2024847")};`,
     `  rev:4;`,
@@ -7182,7 +7809,9 @@ function syncDefaultAlertFilterSuggestionAnchor(
   const shellRect = shell.getBoundingClientRect();
   const boundaryRect = getDefaultAlertSuggestionBoundaryRect(shell);
   const indicatorRect = indicator.getBoundingClientRect();
-  const panel = anchor.querySelector(".menu-list, .suri-scope-suggestion-panel");
+  const panel = anchor.querySelector(
+    ".menu-list, .suri-scope-suggestion-panel",
+  );
   const livePanelRect = useLivePanelRect
     ? panel?.getBoundingClientRect()
     : null;
@@ -7293,7 +7922,8 @@ function setDefaultAlertFilterValueMode(field, value, mode) {
   setDefaultAlertFilterSelection(suricataDrawerDraft, field, nextSelection);
   syncDefaultAlertFilterLabels(suricataDrawerDraft);
   if (
-    getDefaultAlertFilterSelectedCount(suricataDrawerDraft, field) > beforeCount &&
+    getDefaultAlertFilterSelectedCount(suricataDrawerDraft, field) >
+      beforeCount &&
     document.querySelector(
       `[data-simple-selection-key="${getDefaultAlertFilterSimpleSelectionKey(field)}"]`,
     )
@@ -7582,9 +8212,17 @@ function toggleSuricataProtocolOption(event, protocol) {
   event.preventDefault();
   event.stopPropagation();
   if (!editMode || !suricataDrawerDraft) return;
-  const selected = normalizeSuricataProtocolSelection(suricataDrawerDraft.protocols);
-  const normalizedProtocol = String(protocol || "").trim().toUpperCase();
-  if (!SURICATA_PROTOCOL_OPTIONS.some((option) => option.value === normalizedProtocol)) {
+  const selected = normalizeSuricataProtocolSelection(
+    suricataDrawerDraft.protocols,
+  );
+  const normalizedProtocol = String(protocol || "")
+    .trim()
+    .toUpperCase();
+  if (
+    !SURICATA_PROTOCOL_OPTIONS.some(
+      (option) => option.value === normalizedProtocol,
+    )
+  ) {
     return;
   }
   suricataDrawerDraft.protocols = selected.includes(normalizedProtocol)
@@ -7627,15 +8265,20 @@ function toggleSuricataToggle(field) {
 
   if (field === "enabled") {
     suricataDrawerBaseline.enabled = target.enabled;
+    suricataDrawerBaseline.statusDot = target.enabled ? "green" : "gray";
     if (suricataDrawerDraft) suricataDrawerDraft.enabled = target.enabled;
+    if (suricataDrawerDraft)
+      suricataDrawerDraft.statusDot = target.enabled ? "green" : "gray";
     if (selectedRule) {
       const rule = currentRules.find((item) => item.id === selectedRule);
       if (rule) {
         rule.enabled = target.enabled;
+        rule.statusDot = target.enabled ? "green" : "gray";
       }
       const dbRule = suricataRuleDb.find((item) => item.id === selectedRule);
       if (dbRule) {
         dbRule.enabled = target.enabled;
+        dbRule.statusDot = target.enabled ? "green" : "gray";
       }
       refreshRuleCollections({ preservePage: true });
       renderRules();
@@ -7787,9 +8430,7 @@ function renderSuricataScopeVerboseBody(state) {
 
 function renderSuricataScopeSimpleBody(state) {
   return renderParamSentence(`
-    ${renderParamInlineControl(
-      renderSuricataProtocolPicker(state),
-    )}
+    ${renderParamInlineControl(renderSuricataProtocolPicker(state))}
     <span class="suri-param-text">from</span>
     ${renderParamInlineControl(
       renderScopeMadlibControl("sourceSubnets", "subnet", state),
@@ -7817,11 +8458,12 @@ function renderSuricataScopeSimpleBody(state) {
     )}
     <span class="suri-param-text">and inspect full transactions for</span>
     ${renderParamInlineControl(
-      renderSuricataMadlibSelect("state", state.state, [
-        "Established",
-        "Not Established",
-        "Stateless",
-      ], "rule-config"),
+      renderSuricataMadlibSelect(
+        "state",
+        state.state,
+        ["Established", "Not Established", "Stateless"],
+        "rule-config",
+      ),
     )}
     <span class="suri-param-text">connections</span>
   `);
@@ -8027,7 +8669,11 @@ function renderRuleBehaviorsSimpleBody(state) {
     ? `
       <span class="suri-param-text">Override</span>
       ${renderParamInlineControl(
-        renderSuricataToggle("overrideEnabled", state.overrideEnabled, !editMode),
+        renderSuricataToggle(
+          "overrideEnabled",
+          state.overrideEnabled,
+          !editMode,
+        ),
       )}
       ${
         state.overrideEnabled
@@ -8058,7 +8704,11 @@ function renderRuleBehaviorsSimpleBody(state) {
     ? `
       <span class="suri-param-text">Suppress</span>
       ${renderParamInlineControl(
-        renderSuricataToggle("suppressEnabled", state.suppressEnabled, !editMode),
+        renderSuricataToggle(
+          "suppressEnabled",
+          state.suppressEnabled,
+          !editMode,
+        ),
       )}
       ${
         state.suppressEnabled
@@ -8101,7 +8751,11 @@ function renderRuleBehaviorsSimpleBody(state) {
     ? `
       <span class="suri-param-text">On match</span>
       ${renderParamInlineControl(
-        renderSuricataToggle("flowbitsEnabled", state.flowbitsEnabled, !editMode),
+        renderSuricataToggle(
+          "flowbitsEnabled",
+          state.flowbitsEnabled,
+          !editMode,
+        ),
       )}
       ${
         state.flowbitsEnabled
@@ -8244,11 +8898,10 @@ function renderRuleBehaviorsSimpleBody(state) {
         ),
       )}
     `),
-    renderSuricataRow(
-      `Advanced Settings (${advancedActiveCount} of 5)`,
-      "",
-      { disclosureId: "behaviorAdvancedSettings", info: true },
-    ),
+    renderSuricataRow(`Advanced Settings (${advancedActiveCount} of 5)`, "", {
+      disclosureId: "behaviorAdvancedSettings",
+      info: true,
+    }),
     renderSuricataRowExpansion(
       editMode
         ? [
@@ -8597,7 +9250,8 @@ function renderDrawerVersionSelector(state) {
   const isOpen = suricataOpenMenuKey === menuKey;
   const renderedOptions = entries
     .map((entry) => {
-      const selectedClass = entry.id === state.selectedVersionId ? " is-selected" : "";
+      const selectedClass =
+        entry.id === state.selectedVersionId ? " is-selected" : "";
       const savedAt = entry.savedAt ? ` · ${entry.savedAt}` : "";
       return `
         <button
@@ -8666,9 +9320,13 @@ function renderSuricataBehaviorSliderControl(field, value) {
 
 function renderDerivedConfigBlock(content) {
   return `
-    <div class="suri-rule-config-shell is-derived is-standalone">
-      <pre class="suri-rule-config-code is-derived">${escapeHtml(content)}</pre>
-    </div>
+    <section class="card suri-card suri-rule-config-card">
+      <div class="card-body suri-card-body suri-rule-config-card-body">
+        <div class="suri-rule-config-shell is-derived is-standalone">
+          <pre class="suri-rule-config-code is-derived">${escapeHtml(content)}</pre>
+        </div>
+      </div>
+    </section>
   `;
 }
 
@@ -8713,11 +9371,9 @@ function renderDefaultAlertDrawerContent(container, state) {
   ].join("");
 
   const versionBody = [
-    renderSuricataRow(
-      "Version",
-      renderDrawerVersionSelector(state),
-      { className: "is-borderless" },
-    ),
+    renderSuricataRow("Version", renderDrawerVersionSelector(state), {
+      className: "is-borderless",
+    }),
   ].join("");
 
   const thresholdControl = editMode
@@ -8862,7 +9518,11 @@ function renderDefaultAlertDrawerContent(container, state) {
 function renderSuricataDrawerContent() {
   const container = getDrawerContentEl();
   const state = getActiveDrawerState();
-  if (!container || !state) return;
+  if (!container) return;
+  if (!state) {
+    container.innerHTML = "";
+    return;
+  }
   captureSuricataMenuScrollState();
 
   if (drawerVariant === "threshold-settings") {
@@ -8884,17 +9544,26 @@ function renderSuricataDrawerContent() {
   const basicBody = [
     renderSuricataRow(
       "Enabled",
-      renderSuricataToggle("enabled", state.enabled, isViewingHistoricalDrawerVersion()),
+      renderSuricataToggle(
+        "enabled",
+        state.enabled,
+        isViewingHistoricalDrawerVersion(),
+      ),
       { className: "is-borderless" },
     ),
   ].join("");
 
   const versionPriorityBody = [
     renderSuricataRow(
-      "Version",
-      renderDrawerVersionSelector(state),
+      "Name",
+      editMode
+        ? renderSuricataNameInput(state.name)
+        : renderSuricataValue(state.name),
       { muted: true },
     ),
+    renderSuricataRow("Version", renderDrawerVersionSelector(state), {
+      muted: true,
+    }),
     renderSuricataRow(
       "Priority",
       editMode
@@ -8909,6 +9578,13 @@ function renderSuricataDrawerContent() {
   ].join("");
 
   const sidClassBody = [
+    renderSuricataRow(
+      "Folder",
+      editMode
+        ? renderDrawerFolderSelect(state)
+        : renderDrawerFolderValue(state),
+      { muted: true },
+    ),
     renderSuricataRow(
       "SID",
       editMode
@@ -8976,11 +9652,10 @@ function renderSuricataDrawerContent() {
       renderSuricataToggle("limitEnabled", state.limitEnabled, !editMode),
       { muted: true, info: true },
     ),
-    renderSuricataRow(
-      "Number of Alerts",
-      limitCountControl,
-      { muted: true, indentLevel: 1 },
-    ),
+    renderSuricataRow("Number of Alerts", limitCountControl, {
+      muted: true,
+      indentLevel: 1,
+    }),
     renderSuricataRow(
       "Override",
       renderSuricataToggle("overrideEnabled", state.overrideEnabled, !editMode),
@@ -9195,51 +9870,38 @@ function renderSuricataDrawerContent() {
 
 function openDrawerForRule(rule) {
   if (!rule) return;
-  selectedRule = rule.id;
-  drawerVariant = isDefaultAlertsRule(rule) ? "default-alert" : "suricata";
-  suricataDrawerBaseline = createDrawerStateForRule(rule);
-  suricataDrawerDraft = cloneDrawerState(suricataDrawerBaseline);
-  drawerRenameMode = false;
-  ruleConfigEditMode = false;
-  suricataAccordionState = { ...SURICATA_ACCORDION_DEFAULT_STATE };
-  defaultAlertAccordionState = { ...DEFAULT_ALERT_ACCORDION_DEFAULT_STATE };
-  suricataRowAccordionState = { ...SURICATA_ROW_ACCORDION_DEFAULT_STATE };
-  suricataOpenMenuKey = null;
-  resetParamEditorModes();
-  resetSuricataSubnetUiState();
-  resetDefaultAlertFilterUiState();
-  syncDrawerHeaderActions();
-
-  syncDrawerTitle();
-  document.getElementById("drawer").classList.add("open");
-  document.querySelector(".modal-body").classList.add("drawer-open");
-  renderSuricataDrawerContent();
-  renderRules();
+  openRuleDetail(rule.id);
 }
 
 function openDrawer(ruleId) {
-  const rule =
-    currentRules.find((item) => item.id === ruleId) ||
-    (typeof suricataRuleDb !== "undefined"
-      ? suricataRuleDb.find((item) => item.id === ruleId)
-      : null) ||
-    (typeof teleseerRuleDb !== "undefined"
-      ? teleseerRuleDb.find((item) => item.id === ruleId)
-      : null);
-  if (!rule) return;
-  openDrawerForRule(rule);
+  openRuleDetail(ruleId);
+}
+
+function openFullRuleView(ruleId = selectedRule) {
+  openRuleDetail(ruleId, { forceFull: true });
+}
+
+function collapseFullRuleView() {
+  setRuleViewPreference("drawer");
+}
+
+function backToRuleList() {
+  document.getElementById("drawerMenu")?.classList.remove("open");
+  document.getElementById("fullRuleMenu")?.classList.remove("open");
+  closeDrawer();
 }
 
 function openThresholdSettingsDrawer() {
   closeCopyRuleDialog();
+  setRuleViewState("drawer");
   selectedRule = null;
   drawerVariant = "threshold-settings";
   suricataDrawerBaseline = createThresholdSettingsState();
   suricataDrawerDraft = cloneDrawerState(suricataDrawerBaseline);
   editMode = true;
-  drawerRenameMode = false;
   ruleConfigEditMode = false;
   suricataOpenMenuKey = null;
+  suricataFolderSearch = "";
   suricataAccordionState = {
     ...SURICATA_ACCORDION_DEFAULT_STATE,
     thresholdSlow: true,
@@ -9251,29 +9913,82 @@ function openThresholdSettingsDrawer() {
   resetDefaultAlertFilterUiState();
   syncDrawerHeaderActions();
   syncDrawerTitle();
-  document.getElementById("drawer").classList.add("open");
-  document.querySelector(".modal-body").classList.add("drawer-open");
+  syncRuleViewChrome();
   renderSuricataDrawerContent();
 }
 
 function closeDrawer() {
   const wasVariableDrawer = drawerVariant === "variables";
   closeCopyRuleDialog();
-  document.getElementById("drawer").classList.remove("open");
-  document.querySelector(".modal-body").classList.remove("drawer-open");
+  document.getElementById("drawerMenu")?.classList.remove("open");
+  document.getElementById("fullRuleMenu")?.classList.remove("open");
+  clearRuleViewOverride();
+  setRuleViewState("list");
   selectedRule = null;
   suricataOpenMenuKey = null;
+  suricataFolderSearch = "";
+  suricataDrawerBaseline = null;
+  suricataDrawerDraft = null;
   resetSuricataSubnetUiState();
   resetDefaultAlertFilterUiState();
   editMode = false;
-  drawerRenameMode = false;
+  ruleConfigEditMode = false;
   if (wasVariableDrawer && typeof onVariableDrawerClosed === "function") {
     onVariableDrawerClosed();
   }
   drawerVariant = "suricata";
   syncDrawerHeaderActions();
   syncDrawerTitle();
+  renderSuricataDrawerContent();
   renderRules();
+}
+
+function initializeRuleDetailState(rule) {
+  drawerVariant = isDefaultAlertsRule(rule) ? "default-alert" : "suricata";
+  suricataDrawerBaseline = createDrawerStateForRule(rule);
+  suricataDrawerDraft = cloneDrawerState(suricataDrawerBaseline);
+  ruleConfigEditMode = false;
+  suricataAccordionState = { ...SURICATA_ACCORDION_DEFAULT_STATE };
+  defaultAlertAccordionState = { ...DEFAULT_ALERT_ACCORDION_DEFAULT_STATE };
+  suricataRowAccordionState = { ...SURICATA_ROW_ACCORDION_DEFAULT_STATE };
+  suricataOpenMenuKey = null;
+  suricataFolderSearch = "";
+  resetParamEditorModes();
+  resetSuricataSubnetUiState();
+  resetDefaultAlertFilterUiState();
+}
+
+function openRuleDetail(ruleId, options = {}) {
+  const rule = findRuleById(ruleId);
+  if (!rule) return;
+  closeCopyRuleDialog();
+  if (typeof closeToolbarMenus === "function") {
+    closeToolbarMenus();
+  }
+  document.getElementById("drawerMenu")?.classList.remove("open");
+  document.getElementById("fullRuleMenu")?.classList.remove("open");
+  const isNewRule = selectedRule !== rule.id || !suricataDrawerBaseline;
+  selectedRule = rule.id;
+  if (isNewRule) {
+    initializeRuleDetailState(rule);
+  } else {
+    drawerVariant = isDefaultAlertsRule(rule) ? "default-alert" : "suricata";
+  }
+  if (options.forceFull) {
+    ruleViewOverride = "full";
+    setRuleViewState("full");
+  } else {
+    clearRuleViewOverride();
+    setRuleViewState(getRuleViewPreference());
+  }
+  syncDrawerHeaderActions();
+  syncDrawerTitle();
+  renderSuricataDrawerContent();
+  renderRules();
+  if (typeof updateHeaderActionState === "function") {
+    updateHeaderActionState();
+  }
+  syncDrawerHeaderActions();
 }
 
 function toggleEditMode() {
@@ -9286,19 +10001,30 @@ function toggleEditMode() {
   if (isViewingHistoricalDrawerVersion()) {
     return;
   }
+  if (!suricataDrawerBaseline) {
+    return;
+  }
   editMode = true;
-  drawerRenameMode = false;
   syncDrawerHeaderActions();
-  suricataDrawerDraft = cloneDrawerState(
-    suricataDrawerBaseline || createDrawerStateForRule(currentRules[0]),
-  );
+  suricataDrawerDraft = cloneDrawerState(suricataDrawerBaseline);
   ruleConfigEditMode = false;
   suricataOpenMenuKey = null;
+  suricataFolderSearch = "";
   resetParamEditorModes();
   resetSuricataSubnetUiState();
   resetDefaultAlertFilterUiState();
   syncDrawerTitle();
   renderSuricataDrawerContent();
+  syncDrawerHeaderActions();
+}
+
+function persistDrawerStateToRule(target, state) {
+  if (!target || !state) return;
+  const snapshot = cloneDrawerState(state);
+  Object.assign(target, snapshot);
+  if (typeof snapshot.enabled === "boolean") {
+    target.statusDot = snapshot.enabled ? "green" : "gray";
+  }
 }
 
 function cancelEdit() {
@@ -9316,20 +10042,23 @@ function cancelEdit() {
     cancelVariableDrawerEditMode();
     return;
   }
+  if (!suricataDrawerBaseline) {
+    closeDrawer();
+    return;
+  }
   editMode = false;
-  drawerRenameMode = false;
   syncDrawerHeaderActions();
-  suricataDrawerDraft = cloneDrawerState(
-    suricataDrawerBaseline || createDrawerStateForRule(currentRules[0]),
-  );
+  suricataDrawerDraft = cloneDrawerState(suricataDrawerBaseline);
   ruleConfigEditMode = false;
   suricataOpenMenuKey = null;
+  suricataFolderSearch = "";
   resetParamEditorModes();
   resetSuricataSubnetUiState();
   resetDefaultAlertFilterUiState();
   syncDrawerTitle();
   renderSuricataDrawerContent();
   renderRules();
+  syncDrawerHeaderActions();
 }
 
 function saveChanges() {
@@ -9350,91 +10079,45 @@ function saveChanges() {
     saveVariableDrawerChangesImpl();
     return;
   }
-  const previousBaseline = cloneDrawerState(
-    suricataDrawerBaseline || createDrawerStateForRule(currentRules[0]),
-  );
+  if (!suricataDrawerBaseline) {
+    closeDrawer();
+    return;
+  }
+  const previousBaseline = cloneDrawerState(suricataDrawerBaseline);
   if (suricataDrawerDraft) {
     suricataDrawerBaseline = cloneDrawerState(suricataDrawerDraft);
     appendDrawerVersionHistory(previousBaseline, suricataDrawerBaseline);
   }
   if (selectedRule && suricataDrawerBaseline) {
     const rule = currentRules.find((item) => item.id === selectedRule);
-    if (rule) {
-      rule.enabled = Boolean(suricataDrawerBaseline.enabled);
-      rule.version = suricataDrawerBaseline.version;
-      rule.versionHistory = cloneDrawerState(suricataDrawerBaseline.versionHistory);
-      rule.selectedVersionId = suricataDrawerBaseline.selectedVersionId;
-      if (typeof suricataDrawerBaseline.name === "string") {
-        rule.name = suricataDrawerBaseline.name;
-      }
-      if (drawerVariant === "suricata") {
-        rule.rulePatterns = cloneDrawerState(
-          ensureRulePatterns(suricataDrawerBaseline),
-        );
-        rule.contentMatch = cloneDrawerState(
-          suricataDrawerBaseline.contentMatch,
-        );
-        rule.regexPattern = suricataDrawerBaseline.regexPattern;
-        rule.httpHeader = suricataDrawerBaseline.httpHeader;
-        rule.httpHeaderField = suricataDrawerBaseline.httpHeaderField;
-        rule.httpUri = suricataDrawerBaseline.httpUri;
-        rule.dnsQuery = suricataDrawerBaseline.dnsQuery;
-        rule.behaviorTriggerWord = suricataDrawerBaseline.behaviorTriggerWord;
-        rule.trackBy = suricataDrawerBaseline.trackBy;
-        rule.count = suricataDrawerBaseline.count;
-        rule.seconds = suricataDrawerBaseline.seconds;
-        rule.minutes = suricataDrawerBaseline.minutes;
-        rule.hours = suricataDrawerBaseline.hours;
-        rule.behaviorWindowUnit = suricataDrawerBaseline.behaviorWindowUnit;
-        rule.behaviorWindowValue = suricataDrawerBaseline.behaviorWindowValue;
-        rule.limitEnabled = suricataDrawerBaseline.limitEnabled;
-        rule.limitCount = suricataDrawerBaseline.limitCount;
-        rule.rateLimiting = suricataDrawerBaseline.limitEnabled;
-      }
-      if (
-        drawerVariant === "default-alert" &&
-        typeof suricataDrawerBaseline.description === "string"
-      ) {
-        rule.name = suricataDrawerBaseline.name;
-        rule.description = suricataDrawerBaseline.description;
-      }
-    }
-    const dbRule = suricataRuleDb.find((item) => item.id === selectedRule);
-    if (dbRule) {
-      dbRule.name = suricataDrawerBaseline.name;
-      dbRule.enabled = Boolean(suricataDrawerBaseline.enabled);
-      dbRule.version = suricataDrawerBaseline.version;
-      dbRule.versionHistory = cloneDrawerState(suricataDrawerBaseline.versionHistory);
-      dbRule.selectedVersionId = suricataDrawerBaseline.selectedVersionId;
-    }
-    const teleseerRule =
-      typeof teleseerRuleDb !== "undefined"
-        ? teleseerRuleDb.find((item) => item.id === selectedRule)
-        : null;
-    if (teleseerRule) {
-      teleseerRule.name = suricataDrawerBaseline.name;
-      teleseerRule.enabled = Boolean(suricataDrawerBaseline.enabled);
-      teleseerRule.version = suricataDrawerBaseline.version;
-      teleseerRule.versionHistory = cloneDrawerState(
-        suricataDrawerBaseline.versionHistory,
-      );
-      teleseerRule.selectedVersionId = suricataDrawerBaseline.selectedVersionId;
-      if (typeof suricataDrawerBaseline.description === "string") {
-        teleseerRule.description = suricataDrawerBaseline.description;
-      }
+    const persistedState = cloneDrawerState(suricataDrawerBaseline);
+    persistDrawerStateToRule(rule, persistedState);
+    if (drawerVariant === "suricata") {
+      const dbRule = suricataRuleDb.find((item) => item.id === selectedRule);
+      persistDrawerStateToRule(dbRule, persistedState);
+    } else if (drawerVariant === "default-alert") {
+      const teleseerRule =
+        typeof teleseerRuleDb !== "undefined"
+          ? teleseerRuleDb.find((item) => item.id === selectedRule)
+          : null;
+      persistDrawerStateToRule(teleseerRule, persistedState);
     }
   }
   editMode = false;
-  drawerRenameMode = false;
   syncDrawerHeaderActions();
   ruleConfigEditMode = false;
   suricataOpenMenuKey = null;
+  suricataFolderSearch = "";
   resetParamEditorModes();
   resetSuricataSubnetUiState();
   resetDefaultAlertFilterUiState();
   syncDrawerTitle();
   renderSuricataDrawerContent();
   renderRules();
+  if (typeof renderSidebar === "function") {
+    renderSidebar();
+  }
+  syncDrawerHeaderActions();
   showToast("Changes saved successfully");
 }
 

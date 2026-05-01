@@ -230,6 +230,47 @@
   background: var(--material-semi-thin-white);
 }
 
+.btn-secondary-icon-colored {
+  --btn-icon-colored-text: var(--text-secondary);
+  --btn-icon-colored-border: var(--material-medium-white);
+  --btn-icon-colored-fill: var(--material-ultra-thin-white);
+  --btn-icon-colored-fill-hover: var(--material-thin-white);
+
+  border: 1px solid var(--btn-icon-colored-border);
+  background: var(--btn-icon-colored-fill);
+  color: var(--btn-icon-colored-text);
+}
+
+.btn-secondary-icon-colored.size-s {
+  width: 24px;
+  min-width: 24px;
+  height: 24px;
+  min-height: 24px;
+  padding: 4px;
+}
+
+.btn-secondary-icon-colored.is-blue {
+  --btn-icon-colored-text: var(--cyber-blue-50);
+  --btn-icon-colored-border: var(--tag-chip-label-blue-outline-strong);
+  --btn-icon-colored-fill: var(--tag-chip-label-blue-alpha-fill);
+  --btn-icon-colored-fill-hover: var(--tag-chip-label-blue-alpha-fill-hover);
+}
+
+.btn-secondary-icon-colored.is-orange {
+  --btn-icon-colored-text: var(--cyber-orange-200);
+  --btn-icon-colored-border: var(--tag-chip-label-orange-outline-strong);
+  --btn-icon-colored-fill: var(--tag-chip-label-orange-alpha-fill);
+  --btn-icon-colored-fill-hover: var(--tag-chip-label-orange-alpha-fill-hover);
+}
+
+.btn-secondary-icon-colored:hover,
+.btn-secondary-icon-colored.active,
+.btn-secondary-icon-colored.is-active {
+  border-color: var(--btn-icon-colored-border);
+  background: var(--btn-icon-colored-fill-hover);
+  color: var(--btn-icon-colored-text);
+}
+
 .btn-secondary.style-ghost,
 .btn-secondary-icon.style-ghost {
   background: transparent;
@@ -286,6 +327,13 @@
   outline: none;
   border-color: var(--stroke-active);
   box-shadow: 0 0 0 1px var(--fill-menu-item-hover);
+}
+
+.btn-secondary-icon-colored:focus-visible {
+  border-color: var(--btn-icon-colored-border);
+  background: var(--btn-icon-colored-fill-hover);
+  box-shadow: none;
+  color: var(--btn-icon-colored-text);
 }
 
 .btn-secondary:disabled,
@@ -385,7 +433,7 @@
   ),
 .btn-secondary-icon:not(.style-default):not(.style-outline):not(
     .style-ghost
-  ):not(.style-floating) {
+  ):not(.style-floating):not(.btn-secondary-icon-colored) {
   background: var(--material-thin-white);
   border: 1px solid var(--material-medium-white);
   box-shadow: var(--shadow-btn-default);
@@ -397,7 +445,7 @@
   ):hover,
 .btn-secondary-icon:not(.style-default):not(.style-outline):not(
     .style-ghost
-  ):not(.style-floating):hover {
+  ):not(.style-floating):not(.btn-secondary-icon-colored):hover {
   background: var(--material-medium-white);
   border-color: var(--material-thick-white);
 }

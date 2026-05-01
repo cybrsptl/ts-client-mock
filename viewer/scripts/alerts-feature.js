@@ -84,7 +84,9 @@ const PROJECT_SUBNET_OPTIONS = [
   { cidr: "192.168.60.0/24", count: 10 },
 ];
 
-const ALERTS_TABLE_DATA = [
+const sharedAlertingData = window.TeleseerAppData?.alerting || null;
+
+const ALERTS_TABLE_DATA = sharedAlertingData?.viewerAlerts?.alertGroups || [
   {
     id: "grp-bruteforce-auth",
     ruleId: "rule-bruteforce-auth",
@@ -278,7 +280,7 @@ const ALERTS_TABLE_DATA = [
   },
 ];
 
-const ALERT_RULE_GROUPS = [
+const ALERT_RULE_GROUPS = sharedAlertingData?.viewerAlerts?.ruleGroups || [
   {
     id: "teleseer-default",
     source: "Teleseer",
@@ -309,7 +311,7 @@ const ALERT_RULE_GROUPS = [
   },
 ];
 
-const ALERT_RULES = [
+const ALERT_RULES = sharedAlertingData?.viewerAlerts?.rules || [
   {
     id: "rule-bruteforce-auth",
     groupId: "teleseer-default",
@@ -723,7 +725,7 @@ function cidrIsValid(value) {
 }
 
 function getRuleById(ruleId) {
-  return ALERT_RULES.find((rule) => rule.id === ruleId) || null;
+  return ALERT_RULES.find((rule) => String(rule.id) === String(ruleId)) || null;
 }
 
 function getVersionById(versionId) {
@@ -1168,7 +1170,7 @@ function renderRuleGroups() {
                     <strong>${escapeHtml(group.source)} · ${escapeHtml(group.name)}</strong>
                     <span>${escapeHtml(group.description)}</span>
                   </span>
-                  <span class="alerts-rule-group-count">${group.count}</span>
+                  <span class="alerts-rule-group-count">${escapeHtml(formatCountCompact(group.count))}</span>
                 </button>
               `,
         )
@@ -1208,7 +1210,7 @@ function renderRuleTable() {
                     ? `${refGroup.source} / ${refGroup.name}`
                     : rule.referenceGroupId || "";
                   return `
-                  <div class="alerts-rule-table-row ${rule.id === alertsUiState.selectedRuleId ? "active" : ""}" data-rule-id="${rule.id}">
+                  <div class="alerts-rule-table-row ${String(rule.id) === String(alertsUiState.selectedRuleId) ? "active" : ""}" data-rule-id="${rule.id}">
                     <div class="alerts-rule-cell">
                       ${wrapTableElement(
                         "stacked",
@@ -2400,7 +2402,7 @@ async function mountAlertingInlineModal(options = {}) {
     const modalUrl = new URL("../alerting-modal/alert-modal.html", window.location.href);
     modalUrl.searchParams.set("surface", context.surface);
     modalUrl.searchParams.set("embed", "viewer");
-    modalUrl.searchParams.set("v", "20260415-tooltip-cursor-fix-22");
+    modalUrl.searchParams.set("v", "20260427-icon-colored-buttons-1");
 
     const iframe = document.createElement("iframe");
     iframe.className = "alerting-inline-frame";

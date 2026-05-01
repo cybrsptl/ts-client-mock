@@ -7,6 +7,12 @@ This file is a durable contract for component semantics and styling in this work
 ### Scope
 - Applies whenever a shared component contract, naming rule, or source-of-truth implementation changes.
 
+### Git Workflow Contract
+- Canonical Git workflow guide: `/Users/renzdupitas/Desktop/Teleseer Mockups/teleseer-dummy/docs/git-workflow.md`
+- Before preparing a commit, summarize changed files, classify the work as MVP-facing or future-scope where relevant, confirm documentation updates, and state verification performed.
+- Stage only files that belong to the requested change; leave unrelated local edits unstaged.
+- Use conventional commit messages with the scopes documented in the Git workflow guide.
+
 ### Non-Negotiable Implementation Rule
 - Update this file whenever a shared component semantic or styling rule changes.
 - Do not invent ad-hoc component behavior if the rule can be recorded here and reused.
@@ -86,6 +92,12 @@ This file is a durable contract for component semantics and styling in this work
 - Every sidebar row must include:
   - `sidebar-item-row`
   - one of: `sidebar-item` or `sidebar-section-header`
+- Sidebar item state colors:
+  - hover uses `--fill-accordion-hover` (`Fill/Accordion/Hover`)
+  - active/focused uses `--fill-accordion-active` (`Fill/Accordion/Active`)
+  - do not use menu-item fill tokens for sidebar row hover/active states
+- Nested tree arrow/icon hover uses a neutral material hover fill (`--material-thin-white`), not active blue fill tokens.
+- Sidebar row classes are intentionally composed: surface base (`side-row`), shared semantics (`sidebar-item-row sidebar-item`), tree variant (`side-tree-row`), and state flags such as `is-active`, `is-readonly`, `has-children`, `has-hover-cta`, and `has-count`.
 - State flags:
   - `is-active`
   - `is-expanded`
@@ -138,6 +150,13 @@ This file is a durable contract for component semantics and styling in this work
 - Viewer-only collapsed sidebar behavior may expose a transient interactive flyout from the collapsed trigger.
 - That flyout must reuse the same canonical sidebar DOM/state rather than a second tree instance.
 - The flyout is an overlay convenience state, not a second persistent navigation mode.
+- The collapsed sidebar flyout slides in from the left edge below chrome and shares the same chrome sidebar width as the expanded shell.
+- Viewer View notes are launched from the sidebar footer accordion `Notes` control, always follow the active View, and can live either as a docked sidebar tray or as a floating modal-style panel. The docked surface uses a single bottom accordion header, with the pin/unpin action kept separate from the expand/collapse trigger.
+- View notes continue to use the saved View `savedMarkdown` lifecycle. Docked tray open/height and floating panel position/size are chrome UI state and must not be saved into View snapshots.
+- Export belongs in the open notes toolbars, not the closed sidebar. The docked tray and floating panel both expose the same notes tools inline with the editor controls.
+- Bottom-attached notes export menus must prefer opening upward from the footer toolbar, only falling back downward when there is not enough space above.
+- The sidebar notes tray must resize with the sidebar width and use an invisible top-edge resize hit target, matching the existing panel resize affordance style.
+- View rows and the topbar must not expose notes launchers unless product direction changes.
 
 ## Checkbox Source Of Truth
 
@@ -158,6 +177,7 @@ This file is a durable contract for component semantics and styling in this work
 - Do not introduce new per-feature checkbox visuals when `sot-checkbox` can be used.
 - Keep table cell and row wrappers context-specific, but checkbox visual state must come from `sot-checkbox`.
 - The visual treatment for `sot-checkbox` follows the Suricata-style checked checkbox treatment used in alerting flows (`suri-subnet-checkbox.checked`), not the simpler combobox square.
+- Unchecked checkbox fills must stay neutral (`--material-thin-white`); do not use active menu/sidebar fills for checkbox rest states.
 
 ## Rule Config Readonly Value Source Of Truth
 
@@ -228,13 +248,17 @@ This file is a durable contract for component semantics and styling in this work
   - option list
 - The top selection shell is not typable.
 - Users may only remove chips from the top selection shell.
-- Option rows must commit include/exclude via inline `+` and `-` secondary outline icon buttons on the right.
+- Option rows must commit include/exclude via inline `+` and `-` Design System 2026 `button/secondary/icon_colored` buttons on the right.
 - Option rows are a two-column layout:
   - left = value content
   - right = `+ / -` action buttons
   - do not preserve a dead checkbox column once the checkbox is removed
 - Option rows with inline `+` and `-` action buttons must not show a row hover fill; only the buttons themselves may show hover affordance.
-- Include/exclude action buttons must preserve their semantic blue/orange color on hover; shared secondary-icon hover must not turn the glyph text-primary/white.
+- Include/exclude action buttons use fixed `button/secondary/icon_colored` variants: include/`+` = blue, exclude/`-` = orange.
+- Include/exclude action buttons inside menu items are fixed 24px square controls; do not use 26px or any other expanded local size.
+- Include/exclude action button interaction states only change fill color. Stroke width, stroke color, glyph color, and shadow must remain stable across default, hover, active, pressed, and focus-visible states.
+- Include/exclude action buttons must preserve their semantic blue/orange color on hover and active/pressed states; shared secondary-icon hover must not turn the glyph text-primary/white.
+- This colored `+`/`-` treatment applies only to include/exclude menu CTAs, not generic add/remove, transform, chip remove, or drawer controls.
 - Re-rendering after `+`, `-`, or chip removal must preserve list scroll position.
 - The simple-mode selection shell for `suri-simple-menu-selection` is capped at `160px` tall and scrolls internally once it overflows.
 - When a new chip is added or excluded in `suri-simple-menu-selection`, the shell snaps to the bottom so the newest chip stays visible.
@@ -358,7 +382,8 @@ This file is a durable contract for component semantics and styling in this work
 
 ### Scope
 - Applies to the viewer navbar Variables trigger and the standalone workspace-level Variables modal.
-- Variables are workspace-level and are no longer navigated from the Manage Alerts sidebar.
+- Workspace Variables remain workspace-level and are still triggered from the viewer navbar.
+- Manage Alerts also exposes a Suricata-scoped Variables quick action in the sidebar; it reuses the shared Variables table/runtime but does not change workspace scope.
 
 ### Canonical Files
 - Viewer trigger: `/Users/renzdupitas/Desktop/Teleseer Mockups/teleseer-dummy/viewer/viewer.html`
@@ -441,6 +466,7 @@ This file is a durable contract for component semantics and styling in this work
 - Suricata sidebar counts must be derived from the live Suricata rule dataset, not hardcoded placeholder counts on the nodes.
 - The imported Suricata root item must not render a `Read-only` badge in the sidebar.
 - `Emerging Threats Pro` feed rules are readonly by default.
+- `Emerging Threats Pro` sidebar counts represent catalog totals, not just the concrete rows currently surfaced in the table; the table can show a smaller sampled subset as long as the folder/count taxonomy stays coherent.
 - Default Alerts are readonly source rules. Users must use `Make a Copy` before modifying them.
 - Readonly Suricata feed selections must not expose the content-header settings button.
 - Suricata content header actions must be:
@@ -471,13 +497,32 @@ This file is a durable contract for component semantics and styling in this work
   - creating a new subfolder
 - Custom detection folders/subfolders must be creatable from the copy workflow.
 - Custom detection names must be renameable by double-click in the sidebar.
-- The Suricata drawer meatball menu is:
-  - `Rename`
-  - `Make a Copy`
-  - divider
-  - `Export`
-  - divider
-  - `Delete`
+- The Suricata sidebar exposes a `Variables` quick action row directly under the Suricata section header, followed by a divider.
+- That quick action reuses the shared Variables table/runtime and the `Add Variable` content action, but it stays scoped to Manage Alerts and does not replace the viewer navbar Variables trigger.
+- Manage Alerts rule detail has three prototype view states:
+  - list: table visible, no selected row, preview URL `/rules`
+  - drawer: table visible with drawer open, preview URL `/rules?selected={ruleId}`
+  - full: sidebar remains visible while the table/drawer are replaced by full detail, preview URL `/rules/{ruleId}`
+- The fake preview URL is visual annotation only; do not use `history.pushState`, hash routing, `window.location`, or browser back/forward handling.
+- The rule view format is a persistent preference owned by the table View Settings menu under `Rule detail view`:
+  - `Drawer`
+  - `Full content area`
+  - changing the preference applies immediately to the currently open rule
+  - the meatball remains rule actions only
+  - the deeplink-style `/rules/{ruleId}` entry forces full view without overwriting the saved preference
+- Full rule view reuses existing Suricata/Default Alert drawer content and controls. Variables drawer remains drawer-only.
+- Full rule view is unframed page-in content, not a card/drawer shell: do not add a separate full-view background, border, or internal header divider.
+- Derived Config must use the shared `card/suri-card` outer shell in both drawer and full-view contexts; `suri-rule-config-shell` is the inner code-pane primitive, not a standalone section container.
+- Full rule view actions live inline in the existing content header action row with View Settings:
+  - left side: `← Back to list`
+  - right side: View Settings, `Edit` / `Save` / `Cancel`, and meatball menu
+- Drawer-open mode must not dim or block the table. Analysts must be able to click another visible rule row to swap the drawer selection without closing the drawer first.
+- When a Suricata drawer is open, the table uses a temporary compact column filter:
+  - keep `select`, `led`, `action`, `name`, `speed`, `lastSeen`, `hits`, `status`
+  - hide `sid`, `class`, `created`, `updated`
+  - preserve the user's normal View Settings choices when returning to list view
+- In the Suricata drawer, rule rename is owned by the `Name` metadata row in edit mode.
+- The `Folder` metadata row uses the editable custom-folder hierarchy only; ET Pro and other read-only folders remain protected.
 - `Assign to Project` and `Publish to Library` are not valid options in Manage Alerts.
 - Suricata table rows must use a two-line name cell:
   - line 1 = rule name
@@ -577,9 +622,31 @@ This file is a durable contract for component semantics and styling in this work
   - sidebar is hidden
   - modal title is `Variables`
   - the existing Variables table/actions layout is reused
+  - `Projects` uses the same metric pill treatment as `Values`, `Used By`, and `Referenced By`
+  - `Created` and `Updated` are underlined tertiary buttons with a full timestamp hover tooltip
+  - outbound `referenceItems` are the canonical variable dependency source; inbound `Referenced By` counts and tooltips are derived from a reverse index
   - clicking a variable row opens the shared right-side drawer in `variables` variant
   - the variable drawer reuses existing drawer/card/row/chipbox primitives rather than introducing a second drawer implementation
-- Do not reintroduce Variables as a Manage Alerts sidebar quick action unless product direction changes.
+- The Manage Alerts sidebar Variables quick action stays visible only inside the Suricata section and must keep the viewer navbar Variables trigger as the workspace-level entry point.
+
+## Canonical Alerting Graph Source Of Truth
+
+### Scope
+- Applies to Variables, Manage Alerts, and Viewer Alerts.
+
+### Canonical Files
+- Alerting graph bootstrap: `/Users/renzdupitas/Desktop/Teleseer Mockups/teleseer-dummy/shared/alerting-data.js`
+- Shared workspace data merge point: `/Users/renzdupitas/Desktop/Teleseer Mockups/teleseer-dummy/shared/app-data.js`
+- Manage Alerts runtime: `/Users/renzdupitas/Desktop/Teleseer Mockups/teleseer-dummy/alerting-modal/content-browser-runtime.js`
+- Variables runtime: `/Users/renzdupitas/Desktop/Teleseer Mockups/teleseer-dummy/alerting-modal/variables-runtime.js`
+- Viewer Alerts runtime: `/Users/renzdupitas/Desktop/Teleseer Mockups/teleseer-dummy/viewer/scripts/alerts-feature.js`
+
+### Non-Negotiable Implementation Rule
+- There is one canonical alerting graph, exposed through `window.TeleseerAppData.alerting`, that feeds all alert-related surfaces.
+- Variable labels, `valueCount`, tooltips, drawer entries, `Used By`, `Referenced By`, and `Projects` must all be derived from the same graph.
+- `SSH_PORTS`-style port counts are derived from literal values and inclusive ranges, not hardcoded display counts.
+- Viewer alert groups and Manage Alerts rule rows must reference the same canonical rule ids wherever they describe the same detection.
+- ET Pro realism matters: the canonical graph should keep a dense read-only vendor catalog, with concrete rows only representing the inspectable sample, not the full inventory size.
 
 ## Alerting Modal Mount Source Of Truth
 
@@ -601,6 +668,21 @@ This file is a durable contract for component semantics and styling in this work
   - `surface=workspace-variables`
 - Embedded viewer mounts must also pass `embed=viewer` so the standalone modal overlay/padding is disabled inside the iframe host.
 - If the mounted viewer modal diverges from the standalone modal, fix the standalone modal or the iframe host, not a shadow-mounted fork.
+- Rule and variable tables must render explicit neutral empty-state rows for empty/search-empty results; do not leave table bodies blank.
+
+## Alerting Rule Data Source Of Truth
+
+### Scope
+- Applies to Manage Alerts rule rows and the Suricata / Default Alert drawers.
+
+### Canonical Files
+- Rule seed / normalization source: `/Users/renzdupitas/Desktop/Teleseer Mockups/teleseer-dummy/shared/alerting-data.js`
+- Rule runtime normalization: `/Users/renzdupitas/Desktop/Teleseer Mockups/teleseer-dummy/alerting-modal/content-browser-runtime.js`
+- Drawer state construction: `/Users/renzdupitas/Desktop/Teleseer Mockups/teleseer-dummy/alerting-modal/drawer-runtime.js`
+
+### Non-Negotiable Implementation Rule
+- Drawer state must be derived from the selected rule record, not from drawer-local canned HTTP/DNS examples.
+- Rule rows, drawer state, search, regrouping, and viewer linkage must all read from the same canonical rule record.
 
 ## Inspector Drawer/Card/Row Source Of Truth
 
@@ -608,6 +690,10 @@ This file is a durable contract for component semantics and styling in this work
 - Applies to Launcher right-side feed drawer and future inspector-style drawers.
 - Drawer shell, card shell, and row primitives are shared.
 - Right-side content inside rows can vary per feature (toggle, text, dropdown, badge, button, etc.).
+- The system intentionally has two drawer shell colors:
+  - app-level drawers use `--drawer-shell-bg`
+  - drawers inside modals use `--modal-drawer-shell-bg`
+- Figma's uniform `linear-gradient(...)` layers represent stacked flat fills, not visual gradients. Drawer implementations consume the semantic shell tokens instead of copying those exported layer stacks locally.
 
 ### Canonical File
 - Card styling contract: `/Users/renzdupitas/Desktop/Teleseer Mockups/teleseer-dummy/shared/styles/components/ui-primitives.css`
@@ -734,6 +820,21 @@ This file is a durable contract for component semantics and styling in this work
 - Fill is allowed only at row interaction states:
   - row hover
   - row selected
+- Active blue tokens are reserved for active states only, never for passive structural chrome:
+  - `--fill-table-active` only for active/selected table rows
+  - `--fill-menu-item-active` only for active/selected menu or dropdown items
+  - `--fill-tab-active` only for active tab or segmented-control surfaces
+  - `--fill-accordion-active` only for active/focused sidebar rows
+  - never use these tokens for borders, dividers, shells, cards, or inset shadows that are not the active state itself
+- Dense tables use the Suricata resize-handle divider contract:
+  - the visible column boundary is the resize handle line, not a passive `th` border
+  - the at-rest handle line is `--material-medium-white`
+  - hover/resizing switches the handle line to `--stroke-active`
+  - do not use `--divider-table-default` as the primary column divider on Launcher tables
+  - the header row still keeps its own horizontal divider using a neutral structural token; only the vertical column boundaries move to the handle line
+- Launcher table columns should use the shared `LauncherTableSOT` resize behavior when a section owns configurable columns.
+- Launcher table sections with configurable columns expose `View Settings` as a secondary icon ghost medium button using `icon_view_settings`.
+- Launcher Projects `Name` cells are single-line, name-only cells. Do not render workspace/subnet metadata as a second line in the Projects table.
 - Feeds table `Type` column is plain text (no badge/chip treatment).
 
 ## Feeds Filter Control Pattern
@@ -937,8 +1038,9 @@ CSS variable names are derived from the Figma token JSON path:
 | `--modal-shell-inner-shadow` | `var(--material-ultra-thick-white)` | `Effects/Modal/InnerShadow` ✓ | Modal inset highlight |
 | `--modal-shell-drop-shadow` | `var(--material-intense-black)` | `Effects/Modal/DropShadow` ✓ | Modal hairline shadow |
 | `--modal-shell-drop-shadow-2` | `var(--material-medium-black)` | `Effects/Modal/DropShadow 2` ✓ | Modal outer drop shadow |
-| `--drawer-shell-bg` | dynamic | Drawer shell alias | Solid precomposed drawer background; visually combines `--surface-drawer`, `--content-area`, and `--app-theme-bg` |
-| `--drawer-shell-overlay-color` | dynamic | Drawer shell alias | Opaque RGB basis extracted from `--surface-drawer` for precomposed drawer color |
+| `--drawer-shell-bg` | dynamic | Drawer shell alias | App-level / Launcher drawer background; layers `--surface-drawer` over `--content-area` over `--app-theme-bg` |
+| `--modal-drawer-shell-bg` | dynamic | Modal drawer shell alias | Modal-contained drawer background; layers `--surface-drawer-dark` over `--content-area` over `--app-theme-bg` |
+| `--surface-drawer-dark` | `var(--material-ultra-thin-black)` | `SurfaceDrawerDark` | Modal drawer top-layer alias derived from `Material/Ultra Thin - Black` |
 | `--drawer-shell-shadow` | dynamic | Drawer shell alias | Drawer inset border plus drop shadow |
 | `--drawer-shell-backdrop-filter` | `blur(38px)` | Drawer shell alias | Drawer blur strength |
 | `--drawer-shell-radius` | `8px` | Drawer shell alias | Drawer radius |
@@ -958,16 +1060,21 @@ CSS variable names are derived from the Figma token JSON path:
 | `--stroke-default` | `#fefefe66` | `Stroke/Default` ✓ | Default border/stroke |
 | `--stroke-subtle` | `#fefefe3d` | `Stroke/Subtle` ✓ | Subtle border |
 | `--stroke-faint` | `#fefefe1f` | `Stroke/Faint` ✓ | Faint/ghost border |
-| `--divider-menu-list` | `#09090b1f` | `Divider/MenuList` ✓ | Menu/table dividers |
+| `--divider-menu-list` | `#e0e4f01f` | `Divider/MenuList` ✓ | Menu list dividers |
 
 ### Interactive States
 | CSS Variable | Value | Figma Variable | Usage |
 |---|---|---|---|
-| `--fill-menu-item-hover` | `#4f6dff38` | `Fill/MenuItem/Hover` ✓ | Sidebar/menu item hover |
-| `--fill-menu-item-active` | `#fefefe2e` | `Fill/MenuItem/Active` ✓ | Menu item active/pressed |
-| `--fill-table-active` | `#2f53ff33` | `Fill/Table/Active` ✓ | Active table row / toggle-on fill |
+| `--fill-accordion-hover` | `#e0e4f014` | `Fill/Accordion/Hover` ✓ | Sidebar item hover |
+| `--fill-accordion-active` | `#4f6dff38` | `Fill/Accordion/Active` ✓ | Sidebar item active/focused |
+| `--fill-menu-item-hover` | `#e0e4f014` | `Fill/MenuItem/Hover` ✓ | Menu/dropdown item hover |
+| `--fill-menu-item-active` | `#4f6dff38` | `Fill/MenuItem/Active` ✓ | Menu/dropdown item active/focused |
+| `--fill-table-active` | `#2f53ff33` | `Fill/Table/Active` ✓ | Active/selected table row only |
 | `--fill-table-hover` | `#fefefe1f` | `Fill/Table/Hover` ✓ | Table row hover |
 | `--fill-tab-active` | `#fefefe0a` | `Fill/Tab/Active` ✓ | Active tab pill fill |
+
+Menu list separators use `--divider-menu-list` (`Divider/MenuList`). Do not use menu item hover/active fills or material overlay colors for menu list divider rules.
+Card row, drawer row, group header, and Rule Pattern row separators also use `--divider-menu-list` so structural dividers do not inherit active blue state fills.
 
 ### Typography Quick Reference
 | Token | Value | Figma Variable |

@@ -71,7 +71,10 @@ function beginPanelResize(type, event) {
     type,
     startX: event.clientX,
     startY: event.clientY,
-    startSizes: panelSizes,
+    startSizes: {
+      ...panelSizes,
+      sidebarWidth: clampSidebarWidth(state.sidebarWidth),
+    },
     startedViewId: state.activeViewId,
   };
   event.currentTarget.classList.add("dragging");
@@ -80,6 +83,19 @@ function beginPanelResize(type, event) {
 
 function handlePanelResizeMove(event) {
   if (!resizeDrag || resizeDrag.startedViewId !== state.activeViewId) return;
+  if (resizeDrag.type === "sidebar-width") {
+    const sidebarWidth = clampSidebarWidth(
+      resizeDrag.startSizes.sidebarWidth +
+        (event.clientX - resizeDrag.startX),
+    );
+    if (sidebarWidth !== state.sidebarWidth) {
+      state.sidebarWidth = sidebarWidth;
+      if (typeof syncSidebarWidth === "function") {
+        syncSidebarWidth();
+      }
+    }
+    return;
+  }
   if (resizeDrag.type === "inspector") {
     const maxInspectorWidth = Math.max(
       320,
@@ -125,9 +141,9 @@ function handlePanelResizeMove(event) {
 
 function endPanelResize() {
   if (!resizeDrag) return;
-  workspaceInspectorResizeHandleEl.classList.remove("dragging");
-  topTimelineResizeHandleEl.classList.remove("dragging");
-  timelineSidebarResizeHandleEl.classList.remove("dragging");
+  document
+    .querySelectorAll(".panel-resize-handle.dragging")
+    .forEach((handle) => handle.classList.remove("dragging"));
   document.body.classList.remove("resizing-panels");
   const currentSizes = getEffectiveSnapshot(getCurrentView()).panelSizes ||
     defaultPanelSizes();
@@ -142,6 +158,12 @@ workspaceInspectorResizeHandleEl.addEventListener(
   "pointerdown",
   (event) => beginPanelResize("inspector", event),
 );
+sidebarResizeHandleEl?.addEventListener("pointerdown", (event) =>
+  beginPanelResize("sidebar-width", event)
+);
+sidebarFlyoutResizeHandleEl?.addEventListener("pointerdown", (event) =>
+  beginPanelResize("sidebar-width", event)
+);
 topTimelineResizeHandleEl.addEventListener(
   "pointerdown",
   (event) => beginPanelResize("timeline-height", event),
@@ -153,11 +175,7 @@ timelineSidebarResizeHandleEl.addEventListener(
 window.addEventListener("pointermove", handlePanelResizeMove);
 window.addEventListener("pointerup", endPanelResize);
 window.addEventListener("pointercancel", endPanelResize);
-labToggleEl.addEventListener("click", () => {
-  state.labPanelOpen = !state.labPanelOpen;
-  render();
-});
-labCollapseEl.addEventListener("click", () => {
+labCollapseEl?.addEventListener("click", () => {
   state.labPanelOpen = false;
   render();
 });
@@ -185,6 +203,7 @@ function handleSidebarFlyoutRegionEnter() {
 
 function handleSidebarFlyoutRegionLeave() {
   if (!state.collapsedSidebar) return;
+  if (document.body.classList.contains("resizing-panels")) return;
   state.sidebarFlyout.hover = false;
   if (typeof closeSidebarFlyout === "function") {
     closeSidebarFlyout();
@@ -223,6 +242,7 @@ sidebarFlyoutPanelEl?.addEventListener("focusout", handleSidebarFlyoutFocusOut);
 
 let viewNotesDrag = null;
 let viewNotesResize = null;
+let sidebarNotesResize = null;
 
 function buildNotesExportFilename(view) {
   const baseName = (view?.name || "view-notes")
@@ -234,10 +254,30 @@ function buildNotesExportFilename(view) {
 }
 
 function closeViewNotesPanel() {
-  if (!state.notesPanel.open) return;
+  if (!state.notesPanel.open && !state.sidebarNotes?.open) return;
   closeMenus();
   state.notesPanel.open = false;
+  state.sidebarNotes.open = false;
   render();
+}
+
+function closeSidebarNotesPanel() {
+  if (!state.sidebarNotes?.open) return;
+  closeMenus();
+  state.sidebarNotes.open = false;
+  render();
+}
+
+function toggleSidebarNotesPanel() {
+  if (state.notesPanel.open) {
+    dockViewNotesPanel();
+    return;
+  }
+  if (state.sidebarNotes.open) {
+    closeSidebarNotesPanel();
+    return;
+  }
+  openSidebarNotesForActiveView();
 }
 
 function exportCurrentViewNote() {
@@ -261,31 +301,123 @@ function exportCurrentViewNote() {
 
 function openViewNotesExportMenu(event) {
   event.stopPropagation();
+  const isDockedNotesMenu = event.currentTarget === sidebarNotesMenuButtonEl;
   openMenu(
-    viewNotesMenuButtonEl,
+    event.currentTarget || viewNotesMenuButtonEl,
     [{
       label: "Export Markdown",
       icon: "../icons/ui_core/collection/icon_export_file.svg",
       onClick: exportCurrentViewNote,
     }],
     false,
+    {
+      horizontal: "end",
+      vertical: isDockedNotesMenu ? "top" : "auto",
+    },
   );
 }
 
 function toggleViewNotesPanel() {
-  state.notesPanel.open = !state.notesPanel.open;
-  if (state.notesPanel.open && !state.notesPanel.position) {
+  toggleSidebarNotesPanel();
+}
+
+function openSidebarNotesForActiveView() {
+  closeMenus();
+  state.notesPanel.open = false;
+  state.sidebarNotes.open = true;
+  state.sidebarNotes.height = clampSidebarNotesHeight(
+    state.sidebarNotes.height,
+    getSidebarNotesHostHeight(),
+  );
+  render();
+  window.setTimeout(() => sidebarNotesEditorEl?.focus(), 0);
+}
+
+function openFloatingNotesPanel() {
+  closeMenus();
+  state.sidebarNotes.open = false;
+  state.notesPanel.open = true;
+  if (!state.notesPanel.position) {
     state.notesPanel.position = getAnchoredViewNotesPosition();
   }
   render();
-  if (state.notesPanel.open) {
-    window.setTimeout(() => viewNotesEditorEl?.focus(), 0);
+  window.setTimeout(() => viewNotesEditorEl?.focus(), 0);
+}
+
+function dockViewNotesPanel() {
+  closeMenus();
+  state.notesPanel.open = false;
+  state.sidebarNotes.open = true;
+  state.sidebarNotes.height = clampSidebarNotesHeight(
+    state.sidebarNotes.height,
+    getSidebarNotesHostHeight(),
+  );
+  render();
+  window.setTimeout(() => sidebarNotesEditorEl?.focus(), 0);
+}
+
+const VIEW_NOTES_RESIZE_EDGE = 8;
+
+function getViewNotesResizeDirection(event) {
+  if (!state.notesPanel.open || !viewNotesFloatEl) return null;
+  const rect = viewNotesFloatEl.getBoundingClientRect();
+  const nearLeft = event.clientX - rect.left <= VIEW_NOTES_RESIZE_EDGE;
+  const nearRight = rect.right - event.clientX <= VIEW_NOTES_RESIZE_EDGE;
+  const nearTop = event.clientY - rect.top <= VIEW_NOTES_RESIZE_EDGE;
+  const nearBottom = rect.bottom - event.clientY <= VIEW_NOTES_RESIZE_EDGE;
+
+  const vertical = nearTop ? "n" : nearBottom ? "s" : "";
+  const horizontal = nearLeft ? "w" : nearRight ? "e" : "";
+  const direction = `${vertical}${horizontal}`;
+  return direction || null;
+}
+
+function syncViewNotesResizeCursor(event) {
+  if (!viewNotesFloatEl) return;
+  if (viewNotesResize) {
+    viewNotesFloatEl.dataset.resizeDirection = viewNotesResize.direction;
+    return;
+  }
+  if (!state.notesPanel.open) {
+    delete viewNotesFloatEl.dataset.resizeDirection;
+    return;
+  }
+  const direction = getViewNotesResizeDirection(event);
+  if (direction) {
+    viewNotesFloatEl.dataset.resizeDirection = direction;
+  } else {
+    delete viewNotesFloatEl.dataset.resizeDirection;
+  }
+}
+
+function beginViewNotesResize(event, direction = getViewNotesResizeDirection(event)) {
+  if (!state.notesPanel.open || !viewNotesFloatEl || !direction) return;
+  if (!event.isPrimary || event.button !== 0) return;
+  event.preventDefault();
+  event.stopPropagation();
+  viewNotesResize = {
+    pointerId: event.pointerId,
+    direction,
+    startX: event.clientX,
+    startY: event.clientY,
+    startPosition: {
+      ...(state.notesPanel.position || getAnchoredViewNotesPosition()),
+    },
+    startSize: {
+      ...defaultNotesPanelSize(),
+      ...(state.notesPanel.size || {}),
+    },
+  };
+  viewNotesFloatEl.dataset.resizeDirection = direction;
+  if (typeof event.currentTarget?.setPointerCapture === "function") {
+    event.currentTarget.setPointerCapture(event.pointerId);
   }
 }
 
 function beginViewNotesDrag(event) {
   if (!state.notesPanel.open || !viewNotesFloatEl) return;
   if (!event.isPrimary || event.button !== 0) return;
+  if (getViewNotesResizeDirection(event)) return;
   if (event.target.closest("button")) return;
   event.preventDefault();
   const currentPosition = state.notesPanel.position ||
@@ -300,19 +432,18 @@ function beginViewNotesDrag(event) {
   }
 }
 
-function beginViewNotesResize(event) {
-  if (!state.notesPanel.open || !viewNotesFloatEl) return;
+function beginSidebarNotesResize(event) {
+  if (!state.sidebarNotes?.open || !sidebarNotesTrayEl) return;
   if (!event.isPrimary || event.button !== 0) return;
   event.preventDefault();
   event.stopPropagation();
-  viewNotesResize = {
+  sidebarNotesResize = {
     pointerId: event.pointerId,
-    startX: event.clientX,
     startY: event.clientY,
-    startSize: {
-      ...defaultNotesPanelSize(),
-      ...(state.notesPanel.size || {}),
-    },
+    startHeight: clampSidebarNotesHeight(
+      state.sidebarNotes.height,
+      getSidebarNotesHostHeight(),
+    ),
   };
   if (typeof event.currentTarget.setPointerCapture === "function") {
     event.currentTarget.setPointerCapture(event.pointerId);
@@ -332,28 +463,75 @@ function handleViewNotesPointerMove(event) {
     return;
   }
   if (viewNotesResize && event.pointerId === viewNotesResize.pointerId) {
-    const nextWidth = clamp(
-      viewNotesResize.startSize.width +
-        (event.clientX - viewNotesResize.startX),
-      300,
-      Math.min(560, window.innerWidth - 24),
-    );
-    const nextHeight = clamp(
-      viewNotesResize.startSize.height +
-        (event.clientY - viewNotesResize.startY),
-      220,
-      window.innerHeight - 56,
-    );
+    const dx = event.clientX - viewNotesResize.startX;
+    const dy = event.clientY - viewNotesResize.startY;
+    const direction = viewNotesResize.direction;
+    const startPosition = viewNotesResize.startPosition;
+    const startSize = viewNotesResize.startSize;
+    const startRight = startPosition.left + startSize.width;
+    const startBottom = startPosition.top + startSize.height;
+    let nextLeft = startPosition.left;
+    let nextTop = startPosition.top;
+    let nextWidth = startSize.width;
+    let nextHeight = startSize.height;
+
+    if (direction.includes("e")) {
+      nextWidth = clamp(
+        startSize.width + dx,
+        300,
+        Math.min(560, window.innerWidth - startPosition.left - 12),
+      );
+    }
+
+    if (direction.includes("w")) {
+      nextWidth = clamp(
+        startSize.width - dx,
+        300,
+        Math.min(560, startRight - 12),
+      );
+      nextLeft = startRight - nextWidth;
+    }
+
+    if (direction.includes("s")) {
+      nextHeight = clamp(
+        startSize.height + dy,
+        220,
+        window.innerHeight - startPosition.top - 12,
+      );
+    }
+
+    if (direction.includes("n")) {
+      nextHeight = clamp(
+        startSize.height - dy,
+        220,
+        startBottom - 52,
+      );
+      nextTop = startBottom - nextHeight;
+    }
+
     state.notesPanel.size = {
       width: nextWidth,
       height: nextHeight,
     };
-    state.notesPanel.position = clampViewNotesPosition(
-      state.notesPanel.position || getAnchoredViewNotesPosition(),
-      state.notesPanel.size,
-    );
+    state.notesPanel.position = {
+      left: nextLeft,
+      top: nextTop,
+    };
     applyViewNotesFrame();
   }
+}
+
+function handleSidebarNotesPointerMove(event) {
+  if (!sidebarNotesResize || event.pointerId !== sidebarNotesResize.pointerId) {
+    return;
+  }
+  event.preventDefault();
+  state.sidebarNotes.height = clampSidebarNotesHeight(
+    sidebarNotesResize.startHeight +
+      (sidebarNotesResize.startY - event.clientY),
+    getSidebarNotesHostHeight(),
+  );
+  applySidebarNotesFrame();
 }
 
 function endViewNotesPointerInteraction(event) {
@@ -367,13 +545,45 @@ function endViewNotesPointerInteraction(event) {
     (!event || event.pointerId === viewNotesResize.pointerId)
   ) {
     viewNotesResize = null;
+    delete viewNotesFloatEl?.dataset.resizeDirection;
   }
 }
 
-viewNotesButtonEl?.addEventListener("click", (event) => {
+function endSidebarNotesPointerInteraction(event) {
+  if (
+    sidebarNotesResize &&
+    (!event || event.pointerId === sidebarNotesResize.pointerId)
+  ) {
+    sidebarNotesResize = null;
+  }
+}
+
+sidebarNotesToggleEl?.addEventListener("click", (event) => {
   event.stopPropagation();
   closeMenus();
-  toggleViewNotesPanel();
+  toggleSidebarNotesPanel();
+});
+
+sidebarNotesToggleEl?.addEventListener("keydown", (event) => {
+  if (event.key !== "Enter" && event.key !== " ") return;
+  event.preventDefault();
+  event.stopPropagation();
+  closeMenus();
+  toggleSidebarNotesPanel();
+});
+
+document.querySelectorAll("[data-notes-tool]").forEach((button) => {
+  button.addEventListener("click", (event) => {
+    event.stopPropagation();
+    const tool = button.getAttribute("data-notes-tool");
+    const label =
+      tool === "image"
+        ? "Image insertion"
+        : tool === "attach"
+        ? "Attachments"
+        : "Emoji picker";
+    showToast("Coming soon", `${label} is not wired yet in this prototype.`);
+  });
 });
 
 viewNotesCloseButtonEl?.addEventListener("click", (event) => {
@@ -381,13 +591,42 @@ viewNotesCloseButtonEl?.addEventListener("click", (event) => {
   closeViewNotesPanel();
 });
 
+viewNotesDockButtonEl?.addEventListener("click", (event) => {
+  event.stopPropagation();
+  dockViewNotesPanel();
+});
+
 viewNotesMenuButtonEl?.addEventListener("click", openViewNotesExportMenu);
+sidebarNotesFloatButtonEl?.addEventListener("click", (event) => {
+  event.stopPropagation();
+  if (state.notesPanel.open) {
+    dockViewNotesPanel();
+    return;
+  }
+  openFloatingNotesPanel();
+});
+sidebarNotesMenuButtonEl?.addEventListener("click", openViewNotesExportMenu);
 
 viewNotesToolbarEl?.addEventListener("pointerdown", beginViewNotesDrag);
-viewNotesResizeHandleEl?.addEventListener("pointerdown", beginViewNotesResize);
+viewNotesFloatEl?.addEventListener("pointerdown", (event) => {
+  beginViewNotesResize(event);
+});
+viewNotesFloatEl?.addEventListener("pointermove", syncViewNotesResizeCursor);
+viewNotesFloatEl?.addEventListener("pointerleave", () => {
+  if (!viewNotesResize && viewNotesFloatEl) {
+    delete viewNotesFloatEl.dataset.resizeDirection;
+  }
+});
+sidebarNotesResizeHandleEl?.addEventListener(
+  "pointerdown",
+  beginSidebarNotesResize,
+);
 window.addEventListener("pointermove", handleViewNotesPointerMove);
+window.addEventListener("pointermove", handleSidebarNotesPointerMove);
 window.addEventListener("pointerup", endViewNotesPointerInteraction);
+window.addEventListener("pointerup", endSidebarNotesPointerInteraction);
 window.addEventListener("pointercancel", endViewNotesPointerInteraction);
+window.addEventListener("pointercancel", endSidebarNotesPointerInteraction);
 
 const APP_THEME_CLASS_MAP = {
   space: "theme-space",
@@ -900,11 +1139,21 @@ window.addEventListener("resize", () => {
   refreshTabOverflow();
   hideTimelineMenus();
   syncTimelineViewport(getEffectiveSnapshot(getCurrentView()));
+  const nextSidebarWidth = clampSidebarWidth(state.sidebarWidth);
+  if (nextSidebarWidth !== state.sidebarWidth) {
+    state.sidebarWidth = nextSidebarWidth;
+  }
+  if (typeof syncSidebarWidth === "function") {
+    syncSidebarWidth();
+  }
   if (state.sidebarFlyout.open && typeof syncSidebarFlyoutPosition === "function") {
     syncSidebarFlyoutPosition();
   }
   if (state.notesPanel.open) {
     applyViewNotesFrame();
+  }
+  if (state.sidebarNotes.open) {
+    applySidebarNotesFrame();
   }
 });
 
@@ -931,7 +1180,7 @@ clearFilterButtonEl.addEventListener("click", () => {
   filterViewsInputEl.focus();
 });
 
-viewNotesEditorEl.addEventListener("input", (event) => {
+function handleViewNotesEditorInput(event) {
   setViewMarkdownDraft(event.target.value, { render: false, group: "notes" });
   renderTree();
   renderTopbar();
@@ -939,7 +1188,13 @@ viewNotesEditorEl.addEventListener("input", (event) => {
   if (typeof syncViewNotesDraftState === "function") {
     syncViewNotesDraftState();
   }
-});
+  if (typeof syncSidebarNotesDraftState === "function") {
+    syncSidebarNotesDraftState();
+  }
+}
+
+viewNotesEditorEl?.addEventListener("input", handleViewNotesEditorInput);
+sidebarNotesEditorEl?.addEventListener("input", handleViewNotesEditorInput);
 
 document.querySelectorAll("[data-action]").forEach((button) => {
   button.addEventListener("click", () => {
@@ -1061,6 +1316,16 @@ document.addEventListener("keydown", (event) => {
       restoreFocus: true,
       clearInteraction: true,
     });
+    return;
+  }
+  if (state.sidebarNotes.open) {
+    closeSidebarNotesPanel();
+    sidebarNotesToggleEl?.focus();
+    return;
+  }
+  if (state.notesPanel.open) {
+    closeViewNotesPanel();
+    sidebarNotesToggleEl?.focus();
     return;
   }
   if (typeof handleAlertsEscape === "function" && handleAlertsEscape()) {

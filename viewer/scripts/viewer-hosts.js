@@ -3,13 +3,6 @@ function renderTopbar() {
   const statusMeta = getViewStatusMeta(current);
   saveMenuButtonEl.classList.remove("visible", "active");
   saveMenuButtonEl.hidden = true;
-  if (viewNotesButtonEl) {
-    viewNotesButtonEl.classList.toggle("active", state.notesPanel.open);
-    viewNotesButtonEl.setAttribute(
-      "aria-expanded",
-      state.notesPanel.open ? "true" : "false",
-    );
-  }
   setStatusBadge(activeBadgeEl, statusMeta.label, statusMeta.status);
 
   const undoCount = current.undoStack.length;
@@ -320,11 +313,10 @@ function getAnchoredViewNotesPosition() {
     ...defaultNotesPanelSize(),
     ...(state.notesPanel.size || {}),
   };
-  const rect = viewNotesButtonEl?.getBoundingClientRect();
-  const preferredLeft = rect
-    ? rect.right - size.width
-    : window.innerWidth - size.width - 16;
-  const preferredTop = rect ? rect.bottom + 8 : 56;
+  const rect = sidebarNotesFloatButtonEl?.getBoundingClientRect() ||
+    sidebarNotesToggleEl?.getBoundingClientRect();
+  const preferredLeft = rect ? rect.right + 8 : 12;
+  const preferredTop = rect ? rect.top - 10 : 56;
   return clampViewNotesPosition(
     { left: preferredLeft, top: preferredTop },
     size,
@@ -372,11 +364,24 @@ function renderViewNotesPane() {
     "aria-hidden",
     state.notesPanel.open ? "false" : "true",
   );
-  if (!state.notesPanel.open) return;
+  if (!state.notesPanel.open) {
+    syncSidebarNotesChromeControls();
+    return;
+  }
   const shouldSyncEditor = viewNotesEditorEl.dataset.viewId !== current.id ||
     document.activeElement !== viewNotesEditorEl;
   if (shouldSyncEditor) {
     viewNotesEditorEl.value = markdown;
+  }
+  if (viewNotesTitleEl) {
+    const titleLabelEl = viewNotesTitleEl.querySelector(
+      ".view-notes-title-label",
+    );
+    if (titleLabelEl) {
+      titleLabelEl.textContent = "Notes";
+    } else {
+      viewNotesTitleEl.textContent = "Notes";
+    }
   }
   viewNotesEditorEl.dataset.viewId = current.id;
   viewNotesEditorEl.setAttribute(
@@ -385,11 +390,93 @@ function renderViewNotesPane() {
   );
   applyViewNotesFrame();
   syncViewNotesDraftState();
+  syncSidebarNotesChromeControls();
 }
 
 function syncViewNotesDraftState() {
   if (!viewNotesEditorEl) return;
   viewNotesEditorEl.dataset.hasContent = hasViewNotes(getCurrentView())
+    ? "true"
+    : "false";
+}
+
+function getSidebarNotesHostHeight() {
+  return sidebarEl?.clientHeight || sidebarShellEl?.clientHeight ||
+    window.innerHeight - 44;
+}
+
+function applySidebarNotesFrame() {
+  if (!sidebarNotesTrayEl) return;
+  const height = clampSidebarNotesHeight(
+    state.sidebarNotes?.height,
+    getSidebarNotesHostHeight(),
+  );
+  state.sidebarNotes.height = height;
+  sidebarNotesTrayEl.style.setProperty("--sidebar-notes-height", `${height}px`);
+}
+
+function renderSidebarNotesTray() {
+  if (!sidebarNotesTrayEl || !sidebarNotesEditorEl) return;
+  const isOpen = !!state.sidebarNotes?.open;
+  const isFloating = !!state.notesPanel.open;
+  const current = getCurrentView();
+  const markdown = getEffectiveMarkdown(current);
+
+  sidebarNotesTrayEl.hidden = isFloating;
+  sidebarNotesTrayEl.classList.toggle("is-open", isOpen);
+  sidebarNotesTrayEl.setAttribute("aria-hidden", isFloating ? "true" : "false");
+
+  if (isOpen) {
+    applySidebarNotesFrame();
+    const shouldSyncEditor = sidebarNotesEditorEl.dataset.viewId !==
+        current.id ||
+      document.activeElement !== sidebarNotesEditorEl;
+    if (shouldSyncEditor) {
+      sidebarNotesEditorEl.value = markdown;
+    }
+    sidebarNotesEditorEl.dataset.viewId = current.id;
+    sidebarNotesEditorEl.setAttribute(
+      "aria-label",
+      `Edit notes for ${current.name}`,
+    );
+  }
+  syncSidebarNotesDraftState();
+  syncSidebarNotesChromeControls();
+}
+
+function syncSidebarNotesChromeControls() {
+  const notesOpen = !!(state.sidebarNotes?.open || state.notesPanel.open);
+  const dockedNotesOpen = !!state.sidebarNotes?.open;
+  if (sidebarNotesToggleEl) {
+    sidebarNotesToggleEl.setAttribute(
+      "aria-expanded",
+      String(dockedNotesOpen),
+    );
+    sidebarNotesToggleEl.classList.toggle("is-active", notesOpen);
+    sidebarNotesToggleEl.classList.toggle("is-open", dockedNotesOpen);
+  }
+  if (sidebarNotesFloatButtonEl) {
+    const isFloating = !!state.notesPanel.open;
+    sidebarNotesFloatButtonEl.classList.toggle("is-unpin", !isFloating);
+    sidebarNotesFloatButtonEl.setAttribute(
+      "aria-label",
+      isFloating ? "Dock notes in sidebar" : "Open notes in floating panel",
+    );
+  }
+  if (viewNotesDockButtonEl) {
+    viewNotesDockButtonEl.setAttribute(
+      "aria-label",
+      state.notesPanel.open
+        ? "Dock notes in sidebar"
+        : "Open notes in floating panel",
+    );
+    viewNotesDockButtonEl.classList.toggle("is-unpin", !state.notesPanel.open);
+  }
+}
+
+function syncSidebarNotesDraftState() {
+  if (!sidebarNotesEditorEl) return;
+  sidebarNotesEditorEl.dataset.hasContent = hasViewNotes(getCurrentView())
     ? "true"
     : "false";
 }

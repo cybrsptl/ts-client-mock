@@ -108,7 +108,7 @@
   justify-content: space-between;
   gap: 12px;
   padding: 8px 8px 8px 14px;
-  border-bottom: 1px solid var(--fill-menu-item-active);
+  border-bottom: 1px solid var(--divider-menu-list);
 }
 
 .suri-row:last-child {

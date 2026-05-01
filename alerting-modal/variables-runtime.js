@@ -94,16 +94,132 @@ const FALLBACK_RULE_VARIABLE_ROWS = [
   },
 ];
 
-const VARIABLE_DRAWER_TYPE_OPTIONS = ["Ports", "Subnets", "Hosts", "Values"];
+const VARIABLE_DRAWER_TYPE_OPTIONS = ["Port", "Subnet"];
 const VARIABLE_HISTORY_PAGE_SIZE = 5;
-const VARIABLE_HISTORY_ACTORS = ["Ricky Tan", "Renz Dupitas", "Ricky Tan", "Ricky Tan", "Renz Dupitas"];
+const VARIABLE_HISTORY_ACTORS = [
+  "Ricky Tan",
+  "Renz Dupitas",
+  "Ricky Tan",
+  "Ricky Tan",
+  "Renz Dupitas",
+];
+
+function getCurrentVariableTimestamp() {
+  return new Date().toISOString();
+}
+
+function normalizeVariableSeedRow(row = {}, index = 0) {
+  const base = cloneDrawerState(row || {});
+  const type = normalizeVariableType(base.type);
+  const literalItems = Array.isArray(base.literalValues)
+    ? base.literalValues
+    : Array.isArray(base.valueItems)
+      ? base.valueItems
+      : [];
+  const valueItems = literalItems.map((item) => String(item ?? "").trim()).filter(Boolean);
+  const valueCount = Number.isFinite(Number(base.valueCount))
+    ? Math.max(0, Number(base.valueCount))
+    : countVariableLiteralValues(type, valueItems);
+  const usedByCount = Number.isFinite(Number(base.usedByRules))
+    ? Math.max(0, Number(base.usedByRules))
+    : Number.isFinite(Number(base.usedByAlerts))
+      ? Math.max(0, Number(base.usedByAlerts))
+      : 0;
+  const projectCount = Number.isFinite(Number(base.projects))
+    ? Math.max(0, Number(base.projects))
+    : Array.isArray(base.projectItems)
+      ? base.projectItems.length
+      : 0;
+  const createdAt = String(base.createdAt || base.created || "").trim() || `2026-01-${String(10 + (index % 18)).padStart(2, "0")}T08:00:00Z`;
+  const updatedAt = String(base.updatedAt || base.updated || "").trim() || createdAt;
+  const referenceItems = Array.isArray(base.referenceItems)
+    ? base.referenceItems.map((item) => String(item ?? "").trim()).filter(Boolean)
+    : [];
+  const usedByRuleItems = Array.isArray(base.usedByRuleItems)
+    ? base.usedByRuleItems.map((item) => String(item ?? "").trim()).filter(Boolean)
+    : [];
+  const projectItems = Array.isArray(base.projectItems)
+    ? base.projectItems.map((item) => String(item ?? "").trim()).filter(Boolean)
+    : [];
+  const nextRow = {
+    ...base,
+    type,
+    valueItems,
+    literalValues: valueItems,
+    valueCount,
+    usedByRules: usedByCount,
+    usedByAlerts: usedByCount,
+    referencedBy: 0,
+    references: 0,
+    projects: projectCount,
+    createdAt,
+    updatedAt,
+    referencedByItems: [],
+    usedByRuleItems,
+    projectItems,
+    referenceItems,
+  };
+  if (!String(nextRow.valueLabel || "").trim()) {
+    nextRow.valueLabel = formatVariableValueCountLabel(type, valueCount, nextRow);
+  }
+  if (!String(nextRow.valueTooltip || "").trim()) {
+    nextRow.valueTooltip = formatVariableTooltipList(valueItems, valueCount);
+  }
+  return nextRow;
+}
+
+function normalizeVariableSeedRows(rows) {
+  return deriveVariableReferenceState(
+    (Array.isArray(rows) ? rows : []).map((row, index) =>
+      normalizeVariableSeedRow(row, index),
+    ),
+  );
+}
+
+function buildVariableReferenceReverseIndex(rows) {
+  const reverseIndex = new Map();
+  (Array.isArray(rows) ? rows : []).forEach((row) => {
+    const sourceName = String(row?.name || "").trim();
+    if (!sourceName) return;
+    const references = Array.isArray(row?.referenceItems)
+      ? row.referenceItems.map((item) => String(item ?? "").trim()).filter(Boolean)
+      : [];
+    [...new Set(references)].forEach((targetName) => {
+      if (!reverseIndex.has(targetName)) reverseIndex.set(targetName, new Set());
+      reverseIndex.get(targetName).add(sourceName);
+    });
+  });
+  return reverseIndex;
+}
+
+function deriveVariableReferenceState(rows) {
+  const normalizedRows = cloneDrawerState(Array.isArray(rows) ? rows : []);
+  const reverseIndex = buildVariableReferenceReverseIndex(normalizedRows);
+  return normalizedRows.map((row) => {
+    const name = String(row?.name || "").trim();
+    const referencedByItems = name && reverseIndex.has(name)
+      ? Array.from(reverseIndex.get(name)).sort((left, right) =>
+          left.localeCompare(right, undefined, { sensitivity: "base" }),
+        )
+      : [];
+    return {
+      ...row,
+      referenceItems: Array.isArray(row?.referenceItems)
+        ? row.referenceItems.map((item) => String(item ?? "").trim()).filter(Boolean)
+        : [],
+      referencedByItems,
+      referencedBy: referencedByItems.length,
+      references: referencedByItems.length,
+    };
+  });
+}
 
 function getSharedRuleVariableRows() {
   const sharedRows = window.TeleseerAppData?.alerting?.variables;
   if (Array.isArray(sharedRows) && sharedRows.length) {
-    return cloneDrawerState(sharedRows);
+    return normalizeVariableSeedRows(sharedRows);
   }
-  return cloneDrawerState(FALLBACK_RULE_VARIABLE_ROWS);
+  return normalizeVariableSeedRows(FALLBACK_RULE_VARIABLE_ROWS);
 }
 
 const DEFAULT_RULE_VARIABLE_ROWS = getSharedRuleVariableRows();
@@ -112,6 +228,7 @@ let ruleVariableBaselineRows = cloneDrawerState(DEFAULT_RULE_VARIABLE_ROWS);
 let ruleVariableRows = cloneDrawerState(DEFAULT_RULE_VARIABLE_ROWS);
 let ruleVariablesEditMode = false;
 let variableOpenMenuKey = null;
+let variableDrawerTypeChangePending = null;
 let selectedVariableRowIndex = null;
 let defaultContentActionsMarkup = "";
 let defaultDrawerMenuMarkup = "";
@@ -155,6 +272,7 @@ function getDefaultDrawerMenuMarkup() {
 function resetVariableDrawerUiState() {
   variableDrawerUiState = createVariableDrawerUiState();
   variableOpenMenuKey = null;
+  variableDrawerTypeChangePending = null;
 }
 
 function restoreDefaultDrawerMenuMarkup() {
@@ -167,9 +285,44 @@ function restoreDefaultDrawerMenuMarkup() {
 }
 
 function closeVariableDrawerState() {
+  ruleVariableRows = cloneDrawerState(ruleVariableBaselineRows);
   selectedVariableRowIndex = null;
   resetVariableDrawerUiState();
   restoreDefaultDrawerMenuMarkup();
+}
+
+function syncVariableTableRowFromDraft() {
+  if (
+    selectedVariableRowIndex === null ||
+    !suricataDrawerDraft ||
+    drawerVariant !== "variables"
+  ) return;
+  const entries = Array.isArray(suricataDrawerDraft.valueEntries)
+    ? suricataDrawerDraft.valueEntries.filter((e) => String(e.value || "").trim())
+    : [];
+  const valueItems = entries
+    .filter((e) => e.kind === "literal")
+    .map((e) => (e.exclude ? `!${e.value}` : e.value));
+  const referenceItems = entries
+    .filter((e) => e.kind === "variable" && !e.exclude)
+    .map((e) => e.value);
+  const type = suricataDrawerDraft.type || "port";
+  const valueCount = countVariableLiteralValues(type, valueItems);
+  const row = ruleVariableRows[selectedVariableRowIndex];
+  if (!row) return;
+  row.name = String(suricataDrawerDraft.name || row.name || "").trim() || row.name;
+  row.type = type;
+  row.valueItems = valueItems;
+  row.literalValues = valueItems;
+  row.valueCount = valueCount;
+  row.valueLabel = formatVariableValueCountLabel(type, valueCount, { valueItems, referenceItems });
+  row.valueTooltip = formatVariableTooltipList(
+    valueItems.map((v) => String(v).trim()).filter(Boolean),
+    valueCount,
+  );
+  row.referenceItems = referenceItems;
+  ruleVariableRows = deriveVariableReferenceState(ruleVariableRows);
+  if (typeof renderRules === "function") renderRules();
 }
 
 function resetRuleVariablesViewState(options = {}) {
@@ -186,7 +339,32 @@ function resetRuleVariablesViewState(options = {}) {
 
 function syncSharedVariableRows() {
   if (window.TeleseerAppData?.alerting) {
-    window.TeleseerAppData.alerting.variables = cloneDrawerState(ruleVariableBaselineRows);
+    const sharedRows = cloneDrawerState(
+      ruleVariableBaselineRows.map((row) => {
+        const nextRow = { ...row };
+        delete nextRow.referencedBy;
+        delete nextRow.references;
+        delete nextRow.referencedByItems;
+        delete nextRow.usedByRules;
+        delete nextRow.usedByAlerts;
+        delete nextRow.usedByRuleItems;
+        delete nextRow.projects;
+        delete nextRow.projectItems;
+        delete nextRow.valueCount;
+        return nextRow;
+      }),
+    );
+    window.TeleseerAppData.alerting.variables = sharedRows;
+    if (window.TeleseerAppData.alerting.graph?.variables) {
+      window.TeleseerAppData.alerting.graph.variables = sharedRows.map((row) => ({
+        name: row.name,
+        type: row.type,
+        literalValues: cloneDrawerState(row.valueItems || row.literalValues || []),
+        referenceItems: cloneDrawerState(row.referenceItems || []),
+        createdAt: row.createdAt,
+        updatedAt: row.updatedAt,
+      }));
+    }
   }
 }
 
@@ -230,32 +408,10 @@ function getVariableSearchQuery() {
   );
 }
 
-function getFilteredRuleVariables(query = getVariableSearchQuery()) {
-  return ruleVariableRows
-    .map((row, index) => ({ row, index }))
-    .filter(({ row }) => {
-      if (!query) return true;
-      const referencesText = row.references > 0 ? `${row.references} variables` : "";
-      const usedByText = row.usedByAlerts > 0 ? `${row.usedByAlerts} alerts` : "not used";
-      return [row.name, row.valueLabel, referencesText, usedByText]
-        .join(" ")
-        .toLowerCase()
-        .includes(query);
-    });
-}
-
-function canDeleteRuleVariable(variable) {
-  return (
-    Number(variable?.usedByAlerts || 0) === 0 &&
-    Number(variable?.references || 0) === 0
-  );
-}
-
-function normalizeVariableType(type) {
-  return VARIABLE_DRAWER_TYPE_OPTIONS.includes(type) ? type : "Values";
-}
-
-function getVariableLiteralItems(variable) {
+function getVariableValueItems(variable) {
+  if (Array.isArray(variable?.literalValues) && variable.literalValues.length) {
+    return variable.literalValues.map((item) => String(item ?? "").trim()).filter(Boolean);
+  }
   if (Array.isArray(variable?.valueItems) && variable.valueItems.length) {
     return variable.valueItems.map((item) => String(item ?? "").trim()).filter(Boolean);
   }
@@ -267,43 +423,167 @@ function getVariableLiteralItems(variable) {
     .filter(Boolean);
 }
 
+function countVariableLiteralValues(type, valueItems) {
+  const normalizedType = normalizeVariableType(type);
+  const items = Array.isArray(valueItems)
+    ? valueItems.map((item) => String(item ?? "").trim()).filter(Boolean)
+    : [];
+  if (normalizedType === "Subnet") {
+    return items.length;
+  }
+  return items.reduce((sum, item) => {
+    const clean = item.replace(/^!/, "");
+    const rangeMatch = clean.match(/^(\d{1,5})-(\d{1,5})$/);
+    if (rangeMatch) {
+      const start = Number(rangeMatch[1]);
+      const end = Number(rangeMatch[2]);
+      if (Number.isFinite(start) && Number.isFinite(end) && end >= start) {
+        return sum + ((end - start) + 1);
+      }
+      return sum;
+    }
+    return sum + (/^\d{1,5}$/.test(clean) ? 1 : 0);
+  }, 0);
+}
+
+function getVariableUsedByCount(variable) {
+  const explicitCount = Number(variable?.usedByRules ?? variable?.usedByAlerts);
+  if (Number.isFinite(explicitCount) && explicitCount >= 0) return explicitCount;
+  return Array.isArray(variable?.usedByRuleItems) ? variable.usedByRuleItems.length : 0;
+}
+
+function getVariableReferencedByCount(variable) {
+  return Array.isArray(variable?.referencedByItems) ? variable.referencedByItems.length : 0;
+}
+
+function getVariableProjectCount(variable) {
+  const explicitCount = Number(variable?.projects);
+  if (Number.isFinite(explicitCount) && explicitCount >= 0) return explicitCount;
+  return Array.isArray(variable?.projectItems) ? variable.projectItems.length : 0;
+}
+
+function getVariableValueCount(variable) {
+  const explicitCount = Number(variable?.valueCount);
+  if (Number.isFinite(explicitCount) && explicitCount >= 0) return explicitCount;
+  return countVariableLiteralValues(inferVariableType(variable), getVariableValueItems(variable));
+}
+
+function getVariableUsedByItems(variable) {
+  return Array.isArray(variable?.usedByRuleItems)
+    ? variable.usedByRuleItems.map((item) => String(item ?? "").trim()).filter(Boolean)
+    : [];
+}
+
+function getVariableReferencedByItems(variable) {
+  return Array.isArray(variable?.referencedByItems)
+    ? variable.referencedByItems.map((item) => String(item ?? "").trim()).filter(Boolean)
+    : [];
+}
+
+function getVariableProjectItems(variable) {
+  return Array.isArray(variable?.projectItems)
+    ? variable.projectItems.map((item) => String(item ?? "").trim()).filter(Boolean)
+    : [];
+}
+
+function getFilteredRuleVariables(query = getVariableSearchQuery()) {
+  return ruleVariableRows
+    .map((row, index) => ({ row, index }))
+    .filter(({ row }) => {
+      if (!query) return true;
+      const searchableFields = [
+        row.name,
+        row.type,
+        row.valueLabel,
+        formatVariableValueCountLabel(
+          row.type || inferVariableType(row),
+          row.valueCount ?? getVariableValueItems(row).length,
+          row,
+        ),
+        `${getVariableUsedByCount(row)} rules`,
+        `${getVariableReferencedByCount(row)} variables`,
+        `${getVariableProjectCount(row)} projects`,
+        ...(Array.isArray(row.valueItems) ? row.valueItems : []),
+        ...(Array.isArray(row.usedByRuleItems) ? row.usedByRuleItems : []),
+        ...(Array.isArray(row.referencedByItems) ? row.referencedByItems : []),
+        ...(Array.isArray(row.projectItems) ? row.projectItems : []),
+        row.createdAt,
+        row.updatedAt,
+      ];
+      return searchableFields.filter(Boolean).join(" ").toLowerCase().includes(query);
+    });
+}
+
+function canDeleteRuleVariable(variable) {
+  return (
+    getVariableUsedByCount(variable) === 0 &&
+    getVariableReferencedByCount(variable) === 0 &&
+    getVariableProjectCount(variable) === 0
+  );
+}
+
+function normalizeVariableType(type) {
+  const normalized = String(type || "").trim().toLowerCase();
+  if (normalized.startsWith("subnet") || normalized.startsWith("address")) {
+    return "Subnet";
+  }
+  if (normalized.startsWith("port")) {
+    return "Port";
+  }
+  return "";
+}
+
+function getVariableLiteralItems(variable) {
+  return getVariableValueItems(variable);
+}
+
 function inferVariableType(variable) {
   const explicitType = normalizeVariableType(String(variable?.type || ""));
-  if (explicitType !== "Values") return explicitType;
+  if (explicitType) return explicitType;
   const name = String(variable?.name || "").toUpperCase();
   const label = String(variable?.valueLabel || "");
   const literals = getVariableLiteralItems(variable);
-  if (name.includes("PORT") || /Port/i.test(label)) return "Ports";
-  if (name.includes("NET") || name.includes("SUBNET") || /Address|Subnet/i.test(label)) return "Subnets";
-  if (name.includes("HOST") || name.includes("SERVER") || /Host|Server/i.test(label)) return "Hosts";
-  if (literals.some((item) => /^!?\d{1,5}(?:-\d{1,5})?$/.test(item))) return "Ports";
-  if (literals.some((item) => /^!?\d{1,3}(?:\.\d{1,3}){3}(?:\/\d{1,2})?$/.test(item))) return "Subnets";
-  return "Values";
+  if (name.includes("NET") || name.includes("SUBNET") || /Address|Subnet/i.test(label)) return "Subnet";
+  if (name.includes("PORT") || /Port/i.test(label)) return "Port";
+  if (literals.some((item) => /^!?\d{1,5}(?:-\d{1,5})?$/.test(item))) return "Port";
+  if (literals.some((item) => /^!?\d{1,3}(?:\.\d{1,3}){3}(?:\/\d{1,2})?$/.test(item))) return "Subnet";
+  return "Port";
 }
 
 function inferVariableValueUnit(variable, type = inferVariableType(variable)) {
-  const label = String(variable?.valueLabel || "");
-  if (/Address/i.test(label)) return "Address";
-  if (/Subnet/i.test(label)) return "Subnet";
-  if (/Port/i.test(label)) return "Port";
-  if (/Host|Server/i.test(label)) return "Host";
-  switch (type) {
-    case "Ports":
-      return "Port";
-    case "Subnets":
-      return "Subnet";
-    case "Hosts":
-      return "Host";
-    default:
-      return "Value";
-  }
+  return normalizeVariableType(type) === "Subnet" ? "Address" : "Port";
 }
 
 function formatVariableValueCountLabel(type, count, fallbackVariable = null) {
   const safeCount = Math.max(0, Number(count) || 0);
   const unit = inferVariableValueUnit(fallbackVariable || { type, valueLabel: "" }, type);
-  const plural = safeCount === 1 ? unit : `${unit}s`;
+  const plural =
+    safeCount === 1
+      ? unit
+      : unit === "Address"
+        ? "Addresses"
+        : `${unit}s`;
   return `${safeCount} ${plural}`;
+}
+
+function formatVariableMetricCountLabel(count, singularLabel) {
+  const safeCount = Math.max(0, Number(count) || 0);
+  const plural = safeCount === 1 ? singularLabel : `${singularLabel}s`;
+  return `${safeCount} ${plural}`;
+}
+
+function formatVariableTooltipList(items, totalCount = null, limit = 12) {
+  const tokens = (Array.isArray(items) ? items : [])
+    .map((item) => String(item ?? "").trim())
+    .filter(Boolean);
+  const visibleTokens = limit > 0 ? tokens.slice(0, limit) : tokens;
+  if (!visibleTokens.length) return "";
+  const lines = [...visibleTokens];
+  const numericTotal = Number(totalCount);
+  if (Number.isFinite(numericTotal) && numericTotal > visibleTokens.length) {
+    lines.push(`+${numericTotal - visibleTokens.length} more`);
+  }
+  return lines.join("\n");
 }
 
 function buildVariableValueEntries(variable) {
@@ -349,44 +629,181 @@ function buildVariableHistoryRows(variable) {
 
 function buildVariableDrawerState(variable) {
   const type = inferVariableType(variable);
+  const valueCount = getVariableValueCount(variable);
   return {
     name: String(variable?.name || "").trim() || "NEW_VARIABLE",
     type,
-    usedByAlerts: Number(variable?.usedByAlerts || 0),
-    references: Number(variable?.references || 0),
+    valueCount,
+    usedByRules: getVariableUsedByCount(variable),
+    usedByAlerts: getVariableUsedByCount(variable),
+    usedByRuleItems: cloneDrawerState(getVariableUsedByItems(variable)),
+    referencedBy: getVariableReferencedByCount(variable),
+    references: getVariableReferencedByCount(variable),
+    referencedByItems: cloneDrawerState(getVariableReferencedByItems(variable)),
+    projects: getVariableProjectCount(variable),
+    projectItems: cloneDrawerState(getVariableProjectItems(variable)),
     referenceItems: cloneDrawerState(variable?.referenceItems || []),
     valueEntries: buildVariableValueEntries(variable),
-    valueLabel: String(variable?.valueLabel || formatVariableValueCountLabel(type, 0, variable)),
-    valueTooltip: String(variable?.valueTooltip || ""),
+    valueItems: cloneDrawerState(getVariableValueItems(variable)),
+    literalValues: cloneDrawerState(getVariableValueItems(variable)),
+    valueLabel: String(variable?.valueLabel || formatVariableValueCountLabel(type, valueCount, variable)),
+    valueTooltip: String(variable?.valueTooltip || formatVariableTooltipList(getVariableValueItems(variable), valueCount)),
+    createdAt: String(variable?.createdAt || getCurrentVariableTimestamp()),
+    updatedAt: String(variable?.updatedAt || variable?.createdAt || getCurrentVariableTimestamp()),
+    description: String(variable?.description || "").trim(),
     historyRows: buildVariableHistoryRows(variable),
+    author: (() => { const rows = buildVariableHistoryRows(variable); return rows.length ? rows[rows.length - 1].user : ""; })(),
+    editor: (() => { const rows = buildVariableHistoryRows(variable); return rows.length ? rows[0].user : ""; })(),
     tags: cloneDrawerState(variable?.tags || []),
   };
 }
 
 function renderVariableUsedByCell(variable) {
-  if (!variable.usedByAlerts) {
-    return '<span class="variable-empty">-</span>';
-  }
+  const count = getVariableUsedByCount(variable);
+  const items = getVariableUsedByItems(variable);
+  const label = formatVariableMetricCountLabel(count, "Rule");
+  return renderVariableMetricPill({
+    label,
+    count,
+    tooltipItems: items,
+    tooltipCount: count,
+    singularLabel: "Rule",
+    extraClass: "is-used-by",
+  });
+}
+
+function renderVariableReferenceCell(variable) {
+  const count = getVariableReferencedByCount(variable);
+  const items = getVariableReferencedByItems(variable);
+  const label = formatVariableMetricCountLabel(count, "Variable");
+  return renderVariableMetricPill({
+    label,
+    count,
+    tooltipItems: items,
+    tooltipCount: count,
+    singularLabel: "Variable",
+    extraClass: "is-referenced-by",
+  });
+}
+
+function renderVariableValueCell(variable) {
+  const count = getVariableValueCount(variable);
+  const type = inferVariableType(variable);
+  const label = formatVariableValueCountLabel(type, count, variable);
+  const tooltipText = variable.valueTooltip || formatVariableTooltipList(getVariableValueItems(variable), count);
+  return renderVariableMetricPill({
+    label,
+    count,
+    tooltipText,
+    tooltipCount: count,
+    singularLabel: inferVariableValueUnit(variable, type),
+    extraClass: "is-values",
+  });
+}
+
+function renderVariableProjectCell(variable) {
+  const count = getVariableProjectCount(variable);
+  const items = getVariableProjectItems(variable);
+  return renderVariableMetricPill({
+    label: formatVariableMetricCountLabel(count, "Project"),
+    count,
+    tooltipItems: items,
+    tooltipCount: count,
+    singularLabel: "Project",
+    extraClass: "is-projects",
+  });
+}
+
+function formatVariableTimestampLabel(timestamp) {
+  const date = new Date(timestamp);
+  if (Number.isNaN(date.getTime())) return String(timestamp || "-");
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(date);
+}
+
+function formatVariableTimestampTooltip(timestamp) {
+  const date = new Date(timestamp);
+  if (Number.isNaN(date.getTime())) return String(timestamp || "-");
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+    timeZone: "UTC",
+    timeZoneName: "short",
+  }).format(date);
+}
+
+function renderVariableTimestampButton(timestamp, labelPrefix) {
+  const tooltipText = formatVariableTimestampTooltip(timestamp);
+  const label = formatVariableTimestampLabel(timestamp);
   return `
-    <span class="variable-usedby-cell">
-      <img class="variable-used-logo" src="${SURI_ICON_SURICATA_APP_SRC}" alt="" aria-hidden="true" />
-      <img class="variable-used-logo" src="${SURI_ICON_TELESEER_LOGO_SRC}" alt="" aria-hidden="true" />
-      <span>${escapeHtml(String(variable.usedByAlerts))} Alerts</span>
+    <button
+      type="button"
+      class="btn-reset alerts-tertiary-button btn-tertiary--info variable-timestamp-button"
+      onclick="event.stopPropagation()"
+      ${getTooltipAttributes(tooltipText)}
+      aria-label="${escapeHtml(`${labelPrefix}: ${tooltipText}`)}"
+    >
+      ${escapeHtml(label)}
+    </button>
+  `;
+}
+
+function renderVariableMetricPill({
+  label,
+  count,
+  tooltipText = "",
+  tooltipItems = [],
+  tooltipCount = null,
+  singularLabel = "",
+  extraClass = "",
+}) {
+  const safeCount = Math.max(0, Number(count) || 0);
+  const numericTotal = Number(tooltipCount);
+  const tooltip = tooltipText || formatVariableTooltipList(tooltipItems, Number.isFinite(numericTotal) ? numericTotal : safeCount);
+  const tooltipTokens = (tooltip || "").split("\n").filter(Boolean);
+  const maxCount = getVariableMetricMaxCount(singularLabel);
+  const fillPercent = safeCount > 0 ? getVariableMetricFillPercent(safeCount, maxCount) : 0;
+  const emptyClass = safeCount === 0 ? " is-empty" : "";
+  return `
+    <span class="variable-chip variable-metric-pill${extraClass ? ` ${escapeHtml(extraClass)}` : ""}${emptyClass}"${getTooltipAttributes(tooltip, { scrollable: safeCount > 8 || tooltipTokens.length > 8 })}>
+      <span class="variable-metric-fill" style="width:${fillPercent.toFixed(1)}%"></span>
+      <span class="variable-metric-value">${escapeHtml(label)}</span>
     </span>
   `;
 }
 
-function renderVariableReferenceCell(variable) {
-  if (!variable.references) {
-    return '<span class="variable-empty">-</span>';
-  }
-  return `<span class="variable-chip rule-project-chip"${getTooltipAttribute(formatTooltipItems(variable.referenceItems))}>${escapeHtml(String(variable.references))} Variables</span>`;
+function getVariableMetricMaxCount(singularLabel) {
+  const rows = ruleVariableRows.length ? ruleVariableRows : ruleVariableBaselineRows;
+  return rows.reduce((max, row) => {
+    let value = 0;
+    if (singularLabel === "Rule") {
+      value = getVariableUsedByCount(row);
+    } else if (singularLabel === "Variable") {
+      value = getVariableReferencedByCount(row);
+    } else if (singularLabel === "Project") {
+      value = getVariableProjectCount(row);
+    } else {
+      value = getVariableValueCount(row);
+    }
+    if (!Number.isFinite(value) || value < 0) return max;
+    return Math.max(max, value);
+  }, 1);
 }
 
-function renderVariableValueCell(variable) {
-  const tooltipText =
-    variable.valueTooltip || formatTooltipItems(getVariableLiteralItems(variable));
-  return `<span class="variable-chip rule-project-chip"${getTooltipAttribute(tooltipText)}>${escapeHtml(variable.valueLabel)}</span>`;
+function getVariableMetricFillPercent(value, maxValue) {
+  if (!Number.isFinite(value) || value < 0 || !Number.isFinite(maxValue) || maxValue <= 0) {
+    return 0;
+  }
+  return Math.max(10, Math.min(100, (value / maxValue) * 100));
 }
 
 function renderVariablesTable(headTable, thead, bodyTable, tbody) {
@@ -402,11 +819,21 @@ function renderVariablesTable(headTable, thead, bodyTable, tbody) {
   thead.innerHTML = renderTableHeaderRow(layoutKey, columns);
   applyTableColumnLayout(layoutKey, columns);
 
+  if (!filteredRows.length) {
+    const emptyMessage = getVariableSearchQuery() && ruleVariableRows.length
+      ? "No variables match search"
+      : "No variables";
+    tbody.innerHTML = renderVariablesEmptyStateRow(columns.length, emptyMessage);
+    applyTableRowHeights();
+    document.querySelector(".pagination")?.classList.add("hidden");
+    return;
+  }
+
   tbody.innerHTML = filteredRows
     .map(({ row, index }) => {
       const deleteDisabled = !canDeleteRuleVariable(row);
       const deleteReason =
-        "Remove all linked references and alerts before deleting this variable.";
+        "Remove linked rules, variables, and projects before deleting this variable.";
       const rowClass = [
         "variable-row",
         selectedVariableRowIndex === index ? "selected" : "",
@@ -416,14 +843,26 @@ function renderVariablesTable(headTable, thead, bodyTable, tbody) {
           <td class="col-var-name">
             <span class="variable-name">${escapeHtml(row.name)}</span>
           </td>
-          <td class="col-var-usedby">
-            ${renderVariableUsedByCell(row)}
-          </td>
-          <td class="col-var-references">
-            ${renderVariableReferenceCell(row)}
+          <td class="col-var-type">
+            <span class="variable-type">${escapeHtml(inferVariableType(row))}</span>
           </td>
           <td class="col-var-values">
             ${renderVariableValueCell(row)}
+          </td>
+          <td class="col-var-usedby">
+            ${renderVariableUsedByCell(row)}
+          </td>
+          <td class="col-var-referenced-by">
+            ${renderVariableReferenceCell(row)}
+          </td>
+          <td class="col-var-projects">
+            ${renderVariableProjectCell(row)}
+          </td>
+          <td class="col-var-created">
+            ${renderVariableTimestampButton(row.createdAt, "Created")}
+          </td>
+          <td class="col-var-updated">
+            ${renderVariableTimestampButton(row.updatedAt, "Updated")}
           </td>
           ${
             hasActionsColumn
@@ -449,6 +888,16 @@ function renderVariablesTable(headTable, thead, bodyTable, tbody) {
     .join("");
   applyTableRowHeights();
   document.querySelector(".pagination")?.classList.add("hidden");
+}
+
+function renderVariablesEmptyStateRow(columnCount, message) {
+  return `
+    <tr class="alerting-table-empty-row">
+      <td colspan="${columnCount}">
+        <div class="alerting-table-empty-copy">${escapeHtml(message)}</div>
+      </td>
+    </tr>
+  `;
 }
 
 function buildVariableHistoryChangeRows(previousRow, nextRow) {
@@ -493,6 +942,7 @@ function prependVariableHistory(previousRow, nextRow) {
 
 function sanitizeVariableDrawerState(state) {
   const nextState = cloneDrawerState(state || {});
+  const isNewVariable = variableDrawerUiState.isNew || selectedVariableRowIndex === null;
   nextState.name = String(nextState.name || "").trim() || `NEW_VAR_${ruleVariableRows.length + 1}`;
   nextState.type = normalizeVariableType(nextState.type);
   const entries = Array.isArray(nextState.valueEntries)
@@ -505,22 +955,45 @@ function sanitizeVariableDrawerState(state) {
         .filter((entry) => entry.value)
     : [];
   nextState.valueEntries = entries;
-  nextState.referenceItems = entries
-    .filter((entry) => entry.kind === "variable" && !entry.exclude)
-    .map((entry) => entry.value);
-  nextState.references = nextState.referenceItems.length;
+  nextState.referencedByItems = [];
+  nextState.referencedBy = 0;
+  nextState.references = 0;
+  nextState.usedByRuleItems = Array.isArray(nextState.usedByRuleItems)
+    ? cloneDrawerState(nextState.usedByRuleItems)
+    : [];
+  nextState.usedByRules = Number.isFinite(Number(nextState.usedByRules))
+    ? Math.max(0, Number(nextState.usedByRules))
+    : Number.isFinite(Number(nextState.usedByAlerts))
+      ? Math.max(0, Number(nextState.usedByAlerts))
+      : nextState.usedByRuleItems.length;
+  nextState.usedByAlerts = nextState.usedByRules;
+  nextState.projectItems = Array.isArray(nextState.projectItems)
+    ? cloneDrawerState(nextState.projectItems)
+    : [];
+  nextState.projects = Number.isFinite(Number(nextState.projects))
+    ? Math.max(0, Number(nextState.projects))
+    : nextState.projectItems.length;
   nextState.valueItems = entries
     .filter((entry) => entry.kind === "literal")
     .map((entry) => (entry.exclude ? `!${entry.value}` : entry.value));
-  nextState.valueTooltip = formatTooltipItems(
+  nextState.literalValues = cloneDrawerState(nextState.valueItems);
+  nextState.valueCount = countVariableLiteralValues(nextState.type, nextState.valueItems);
+  nextState.referenceItems = entries
+    .filter((entry) => entry.kind === "variable" && !entry.exclude)
+    .map((entry) => entry.value);
+  nextState.valueTooltip = formatVariableTooltipList(
     nextState.valueItems.map((item) => String(item).trim()).filter(Boolean),
-    20,
+    nextState.valueCount,
   );
   nextState.valueLabel = formatVariableValueCountLabel(
     nextState.type,
-    entries.length,
+    nextState.valueCount,
     nextState,
   );
+  nextState.updatedAt = getCurrentVariableTimestamp();
+  if (!String(nextState.createdAt || "").trim()) {
+    nextState.createdAt = nextState.updatedAt;
+  }
   nextState.historyRows = prependVariableHistory(
     selectedVariableRowIndex !== null ? ruleVariableRows[selectedVariableRowIndex] : null,
     nextState,
@@ -540,11 +1013,11 @@ function syncVariableDrawerMenu() {
     selectedVariableRowIndex !== null ? ruleVariableRows[selectedVariableRowIndex] : null;
   const deleteAllowed = !variableDrawerUiState.isNew && canDeleteRuleVariable(sourceRow);
   menu.innerHTML = `
-    <button
+      <button
       type="button"
       class="menu-item${deleteAllowed ? "" : " is-disabled"}"
       ${deleteAllowed ? 'onclick="deleteSelectedVariableFromDrawer()"' : "disabled aria-disabled=\"true\""}
-      title="${deleteAllowed ? "Delete variable" : "Remove linked references and alerts before deleting this variable."}"
+      title="${deleteAllowed ? "Delete variable" : "Remove linked rules, variables, and projects before deleting this variable."}"
     >
       <span class="menu-item-icon">${svgIcon(SURI_ICON_DELETE_SRC)}</span>
       <span class="menu-item-label">Delete Variable</span>
@@ -559,13 +1032,18 @@ function setVariableDrawerName(value) {
   if (titleEl) {
     titleEl.textContent = String(value || "").trim() || "New Variable";
   }
+  syncVariableTableRowFromDraft();
 }
 
 function setVariableDrawerType(value) {
   if (drawerVariant !== "variables" || !suricataDrawerDraft) return;
   suricataDrawerDraft.type = normalizeVariableType(value);
+  suricataDrawerDraft.valueEntries = (suricataDrawerDraft.valueEntries || []).filter(
+    (e) => e.kind !== "literal",
+  );
+  variableDrawerTypeChangePending = null;
   renderSuricataDrawerContent();
-  restoreVariableValueInputFocus();
+  syncVariableTableRowFromDraft();
 }
 
 function toggleVariableDrawerTypeMenu(event) {
@@ -579,10 +1057,44 @@ function selectVariableDrawerType(event, value) {
   event?.preventDefault?.();
   event?.stopPropagation?.();
   suricataOpenMenuKey = null;
+  if (!suricataDrawerDraft) return;
+  const newType = normalizeVariableType(value);
+  const hasLiterals = (suricataDrawerDraft.valueEntries || []).some((e) => e.kind === "literal");
+  if (hasLiterals && newType !== suricataDrawerDraft.type) {
+    variableDrawerTypeChangePending = newType;
+    renderSuricataDrawerContent();
+    return;
+  }
   setVariableDrawerType(value);
 }
 
+function confirmVariableTypeChange() {
+  if (!variableDrawerTypeChangePending) return;
+  setVariableDrawerType(variableDrawerTypeChangePending);
+}
+
+function cancelVariableTypeChange() {
+  variableDrawerTypeChangePending = null;
+  renderSuricataDrawerContent();
+}
+
 function renderVariableDrawerTypeControl(state) {
+  if (variableDrawerTypeChangePending) {
+    const literalCount = (state.valueEntries || []).filter((e) => e.kind === "literal").length;
+    const noun = literalCount === 1 ? "value" : "values";
+    return `
+      <div class="variable-type-change-confirm">
+        <span class="variable-type-change-warning">
+          ${svgIcon(SURI_ICON_WARNING_SRC, 14)}
+          Changing to <strong>${escapeHtml(variableDrawerTypeChangePending)}</strong> will clear ${literalCount} ${noun}. Continue?
+        </span>
+        <span class="variable-type-change-actions">
+          <button type="button" class="btn-reset btn-secondary size-s style-outline" onclick="confirmVariableTypeChange()">Change &amp; Clear</button>
+          <button type="button" class="btn-reset btn-secondary size-s style-outline" onclick="cancelVariableTypeChange()">Cancel</button>
+        </span>
+      </div>
+    `;
+  }
   const menuKey = "variable-drawer:type";
   const isOpen = suricataOpenMenuKey === menuKey;
   const renderedOptions = VARIABLE_DRAWER_TYPE_OPTIONS.map((option) => {
@@ -598,7 +1110,7 @@ function renderVariableDrawerTypeControl(state) {
     `;
   }).join("");
   return `
-    <div class="suri-menu" data-menu-key="${escapeHtml(menuKey)}">
+    <div class="suri-menu${isOpen ? " is-open" : ""}" data-menu-key="${escapeHtml(menuKey)}">
       <button
         type="button"
         class="suri-menu-trigger suri-dropdown"
@@ -617,10 +1129,25 @@ function renderVariableDrawerTypeControl(state) {
 }
 
 function renderVariableDrawerUsedByLink(state) {
-  if (!state.usedByAlerts) {
-    return '<span class="variable-usedby-link is-empty">0 Alerts</span>';
-  }
-  return `<span class="variable-usedby-link"${getTooltipAttribute(`${state.usedByAlerts} alerts use this variable`)}>${escapeHtml(String(state.usedByAlerts))} Alerts</span>`;
+  const count = getVariableUsedByCount(state);
+  const label = formatVariableMetricCountLabel(count, "Rule");
+  const tooltipText = formatVariableTooltipList(getVariableUsedByItems(state), count);
+  if (!count) return `<button type="button" class="variable-usedby-link is-empty" disabled>${escapeHtml(label)}</button>`;
+  return `<button type="button" class="variable-usedby-link"${getTooltipAttributes(tooltipText, { scrollable: count > 8 })}>${escapeHtml(label)}</button>`;
+}
+
+function renderVariableDrawerReferencedByLink(state) {
+  const count = Math.max(0, Number(state.referencedBy || state.references || 0));
+  const items = Array.isArray(state.referencedByItems) ? state.referencedByItems : [];
+  const label = count === 0 ? "No Variables" : formatVariableMetricCountLabel(count, "Variable");
+  const tooltipText = count > 0 ? formatVariableTooltipList(items, count) : "";
+  if (!count) return `<button type="button" class="variable-usedby-link is-empty" disabled>${escapeHtml(label)}</button>`;
+  return `<button type="button" class="variable-usedby-link"${tooltipText ? getTooltipAttributes(tooltipText, { scrollable: count > 8 }) : ""}>${escapeHtml(label)}</button>`;
+}
+
+function setVariableDrawerDescription(value) {
+  if (drawerVariant !== "variables" || !suricataDrawerDraft) return;
+  suricataDrawerDraft.description = String(value || "");
 }
 
 function getVariableValueSuggestionPool(type) {
@@ -630,7 +1157,7 @@ function getVariableValueSuggestionPool(type) {
       const normalized = String(item || "").replace(/^!/, "").trim();
       if (!normalized) return;
       const rowType = inferVariableType(row);
-      if (type === "Values" || rowType === type) {
+      if (!type || rowType === type) {
         pool.add(normalized);
       }
     });
@@ -640,25 +1167,22 @@ function getVariableValueSuggestionPool(type) {
 
 function getVariableDrawerSuggestions(state) {
   const rawQuery = String(variableDrawerUiState.query || "").trim();
-  if (!rawQuery) return [];
-  const exclude = rawQuery.startsWith("!");
-  const normalized = exclude ? rawQuery.slice(1).trim() : rawQuery;
-  const wantsVariable = normalized.startsWith("$");
-  const term = wantsVariable ? normalized.slice(1).trim().toLowerCase() : normalized.toLowerCase();
-  const currentTokens = new Set((state.valueEntries || []).map((entry) => `${entry.kind}:${entry.exclude ? "exclude" : "include"}:${entry.value}`));
-  if (wantsVariable) {
-    return ruleVariableRows
-      .map((row) => row.name)
-      .filter((name) => name !== state.name)
-      .filter((name) => !term || name.toLowerCase().includes(term))
-      .map((name) => ({
-        kind: "variable",
-        value: name,
-        label: name,
-        create: false,
-        selected: currentTokens.has(`variable:include:${name}`),
-      }));
-  }
+  const term = rawQuery.toLowerCase();
+  const entryLookup = new Map();
+  (state.valueEntries || []).forEach((entry) => {
+    entryLookup.set(`${entry.kind}:${entry.value}`, entry.exclude ? "exclude" : "include");
+  });
+  const variableSuggestions = ruleVariableRows
+    .map((row) => row.name)
+    .filter((name) => name !== state.name)
+    .filter((name) => !term || name.toLowerCase().includes(term))
+    .map((name) => ({
+      kind: "variable",
+      value: name,
+      label: name,
+      create: false,
+      selectionMode: entryLookup.get(`variable:${name}`) || "",
+    }));
   const literalSuggestions = getVariableValueSuggestionPool(state.type)
     .filter((value) => !term || value.toLowerCase().includes(term))
     .map((value) => ({
@@ -666,24 +1190,19 @@ function getVariableDrawerSuggestions(state) {
       value,
       label: value,
       create: false,
-      exclude,
-      selected: currentTokens.has(`literal:${exclude ? "exclude" : "include"}:${value}`),
+      selectionMode: entryLookup.get(`literal:${value}`) || "",
     }));
-  const exactMatch = literalSuggestions.some(
-    (item) => item.value.toLowerCase() === term && item.exclude === exclude,
-  );
-  if (!term) return literalSuggestions;
+  const exactMatch = literalSuggestions.some((item) => item.value.toLowerCase() === term);
   if (!exactMatch) {
     literalSuggestions.unshift({
       kind: "literal",
-      value: normalized,
+      value: rawQuery,
       label: `Add: ${rawQuery}`,
       create: true,
-      exclude,
-      selected: false,
+      selectionMode: "",
     });
   }
-  return literalSuggestions;
+  return [...variableSuggestions, ...literalSuggestions];
 }
 
 function renderVariableDrawerChip(entry, index) {
@@ -718,18 +1237,15 @@ function renderVariableDrawerChip(entry, index) {
 }
 
 function renderVariableDrawerSuggestions(state) {
+  if (!editMode) return "";
   const suggestions = getVariableDrawerSuggestions(state);
-  if (!suggestions.length || !variableDrawerUiState.suggestionsOpen || !editMode) {
-    return "";
-  }
-  const title = String(variableDrawerUiState.query || "").trim().startsWith("$")
-    ? "Variables"
-    : `${escapeHtml(state.type)}`;
+  if (!suggestions.length) return "";
   return `
     <div class="suri-scope-suggestion-panel" role="listbox">
-      <div class="suri-subnet-title">${title}</div>
       <div class="suri-scope-suggestion-list">
         ${suggestions.map((suggestion) => {
+          const includeAction = `selectVariableValueSuggestion(event, '${suggestion.kind}', '${escapeJsSingleQuoted(suggestion.value)}', false)`;
+          const excludeAction = `selectVariableValueSuggestion(event, '${suggestion.kind}', '${escapeJsSingleQuoted(suggestion.value)}', true)`;
           if (suggestion.create) {
             return `
               <div class="menu-item menu-item-cta suri-scope-suggestion-item suri-scope-suggestion-create has-mode-actions">
@@ -737,32 +1253,14 @@ function renderVariableDrawerSuggestions(state) {
                   <img class="suri-scope-suggestion-icon" src="${SURI_ICON_ADD_SRC}" alt="" aria-hidden="true" />
                   <span>${escapeHtml(suggestion.label)}</span>
                 </span>
-                <span class="suri-option-tail">
-                  <button
-                    type="button"
-                    class="btn-reset btn-secondary-icon size-s style-outline suri-item-action-button${suggestion.exclude ? " is-active is-exclude" : " is-active is-include"}"
-                    aria-label="Add value"
-                    onclick="selectVariableValueSuggestion(event, 'literal', '${escapeJsSingleQuoted(suggestion.value)}', ${suggestion.exclude ? "true" : "false"})"
-                  >
-                    <span class="suri-item-action-glyph" aria-hidden="true">${suggestion.exclude ? "-" : "+"}</span>
-                  </button>
-                </span>
+                <span class="suri-option-tail">${renderMenuItemModeButtons(includeAction, excludeAction, "")}</span>
               </div>
             `;
           }
           return `
-            <div class="menu-item menu-item-cta suri-scope-suggestion-item has-mode-actions${suggestion.selected ? " is-selected" : ""}">
+            <div class="menu-item menu-item-cta suri-scope-suggestion-item has-mode-actions${suggestion.selectionMode ? ` is-selected is-${suggestion.selectionMode}` : ""}">
               <span class="value">${escapeHtml(suggestion.label)}</span>
-              <span class="suri-option-tail">
-                <button
-                  type="button"
-                  class="btn-reset btn-secondary-icon size-s style-outline suri-item-action-button${suggestion.kind === "variable" || !suggestion.exclude ? " is-include" : " is-exclude"}${suggestion.selected ? " is-active" : ""}"
-                  aria-label="Add ${escapeHtml(suggestion.label)}"
-                  onclick="selectVariableValueSuggestion(event, '${suggestion.kind}', '${escapeJsSingleQuoted(suggestion.value)}', ${suggestion.exclude ? "true" : "false"})"
-                >
-                  <span class="suri-item-action-glyph" aria-hidden="true">${suggestion.kind === "variable" || !suggestion.exclude ? "+" : "-"}</span>
-                </button>
-              </span>
+              <span class="suri-option-tail">${renderMenuItemModeButtons(includeAction, excludeAction, suggestion.selectionMode)}</span>
             </div>
           `;
         }).join("")}
@@ -775,9 +1273,11 @@ function renderVariableValuesEditor(state) {
   const entries = Array.isArray(state.valueEntries) ? state.valueEntries : [];
   const hasTypedInput = String(variableDrawerUiState.query || "").trim().length > 0;
   const showInlineHelp = entries.length === 0 && !hasTypedInput;
-  const helperText = `Type a ${state.type.toLowerCase().replace(/s$/, "")} or variable. Prefix "!" to exclude`;
+  const helperUnit = inferVariableValueUnit(state, state.type).toLowerCase();
+  const helperArticle = /^[aeiou]/i.test(helperUnit) ? "an" : "a";
+  const helperText = `Type ${helperArticle} ${helperUnit} or variable name to search`;
   return `
-    <div class="suri-scope-input-shell variable-values-shell${variableDrawerUiState.suggestionsOpen && editMode ? " is-open" : ""}" data-variable-values-shell>
+    <div class="suri-scope-input-shell variable-values-shell" data-variable-values-shell>
       <div class="suri-scope-chipbox variable-values-chipbox${!editMode ? " is-readonly" : ""}" onclick="focusVariableValueInput(event)">
         ${entries.map((entry, index) => renderVariableDrawerChip(entry, index)).join("")}
         ${
@@ -792,6 +1292,7 @@ function renderVariableValuesEditor(state) {
               value="${escapeHtml(variableDrawerUiState.query)}"
               placeholder=""
               oninput="setVariableValueQuery(this.value)"
+              onfocus="syncVariableValueSuggestions()"
               onkeydown="onVariableValueInputKeydown(event)"
             />
           </div>
@@ -799,7 +1300,7 @@ function renderVariableValuesEditor(state) {
             : ""
         }
       </div>
-      ${editMode ? `<div class="variable-values-suggestion-anchor">${renderVariableDrawerSuggestions(state)}</div>` : ""}
+      ${editMode ? `<div class="suri-scope-suggestion-anchor variable-values-suggestion-anchor" data-variable-values-suggestions>${renderVariableDrawerSuggestions(state)}</div>` : ""}
     </div>
   `;
 }
@@ -921,23 +1422,16 @@ function renderVariableTagsBody(state) {
 
 function renderVariableDrawerContent(container, state) {
   if (!container || !state) return;
-  const valuesBody = renderSuricataRow("Values", renderVariableValuesEditor(state), {
+  const valuesLabel = `${state.type} Values`;
+  const valuesBody = renderSuricataRow(valuesLabel, renderVariableValuesEditor(state), {
     info: true,
     className: "is-inline-editor is-variable-values-row",
   });
-  const historyControls = `
-    <button type="button" class="btn-reset btn-secondary-icon size-m style-outline" onclick="toggleVariableHistorySearch(event)" aria-label="Search history">
-      <img src="${SURI_ICON_SEARCH_SRC}" alt="" aria-hidden="true" />
-    </button>
-  `;
-  const tagsControls = `
-    <button type="button" class="btn-reset btn-secondary-icon size-m style-outline" onclick="openVariableTagsSearch(event)" aria-label="Search tags">
-      <img src="${SURI_ICON_SEARCH_SRC}" alt="" aria-hidden="true" />
-    </button>
-    <button type="button" class="btn-reset btn-secondary size-s style-outline" onclick="openVariableTagsEditor(event)">Edit</button>
-  `;
-  const historyCount = Array.isArray(state.historyRows) ? state.historyRows.length : 0;
-  const tagsCount = Array.isArray(state.tags) ? state.tags.length : 0;
+  const descriptionRight = editMode
+    ? `<textarea class="drawer-description-input variable-description-input" oninput="setVariableDrawerDescription(this.value)" placeholder="Add a description...">${escapeHtml(state.description || "")}</textarea>`
+    : (state.description
+        ? `<div class="drawer-description-text">${escapeHtml(state.description)}</div>`
+        : renderSuricataValue("—"));
 
   container.innerHTML = [
     `<section class="card suri-card"><div class="card-body suri-card-body">${[
@@ -951,24 +1445,24 @@ function renderVariableDrawerContent(container, state) {
         "Type",
         editMode ? renderVariableDrawerTypeControl(state) : renderSuricataValue(state.type),
       ),
-      renderSuricataRow(
-        "Used By",
-        renderVariableDrawerUsedByLink(state),
-      ),
+      renderSuricataRow("Description", descriptionRight, { className: "is-variable-description-row" }),
     ].join("")}</div></section>`,
+    `<div class="variable-drawer-meta-row">${[
+      `<section class="card suri-card"><div class="card-body suri-card-body">${[
+        renderSuricataRow("Updated", renderVariableTimestampButton(state.updatedAt, "Updated")),
+        renderSuricataRow("Editor", renderSuricataValue(state.editor || "—")),
+        renderSuricataRow("Used By", renderVariableDrawerUsedByLink(state)),
+      ].join("")}</div></section>`,
+      `<section class="card suri-card"><div class="card-body suri-card-body">${[
+        renderSuricataRow("Created", renderVariableTimestampButton(state.createdAt, "Created")),
+        renderSuricataRow("Author", renderSuricataValue(state.author || "—")),
+        renderSuricataRow("Referenced By", renderVariableDrawerReferencedByLink(state)),
+      ].join("")}</div></section>`,
+    ].join("")}</div>`,
     `<section class="card suri-card"><div class="card-body suri-card-body">${valuesBody}</div></section>`,
-    renderVariableDrawerAccordionCard("History", historyCount, renderVariableHistoryBody(state), {
-      accordionId: "variableHistory",
-      headerControls: historyControls,
-    }),
-    renderVariableDrawerAccordionCard("Tags", tagsCount, renderVariableTagsBody(state), {
-      accordionId: "variableTags",
-      headerControls: tagsControls,
-    }),
   ].join("");
   requestAnimationFrame(() => {
     syncVariableDrawerMenu();
-    restoreVariableValueInputFocus(false);
   });
 }
 
@@ -981,7 +1475,7 @@ function focusVariableNameInput() {
 }
 
 function restoreVariableValueInputFocus(keepSelection = true) {
-  if (!editMode || drawerVariant !== "variables" || !variableDrawerUiState.suggestionsOpen) return;
+  if (!editMode || drawerVariant !== "variables") return;
   requestAnimationFrame(() => {
     const input = document.querySelector("[data-variable-value-input]");
     if (!input) return;
@@ -992,18 +1486,24 @@ function restoreVariableValueInputFocus(keepSelection = true) {
   });
 }
 
+function syncVariableValueSuggestions() {
+  const anchor = document.querySelector("[data-variable-values-suggestions]");
+  if (!anchor || !suricataDrawerDraft) return;
+  anchor.innerHTML = renderVariableDrawerSuggestions(suricataDrawerDraft);
+}
+
 function focusVariableValueInput(event) {
   event?.stopPropagation?.();
   if (!editMode || drawerVariant !== "variables") return;
-  variableDrawerUiState.suggestionsOpen = true;
-  renderSuricataDrawerContent();
+  const input = document.querySelector("[data-variable-value-input]");
+  if (!input) return;
+  focusTextFieldWithoutScroll(input, input.value.length);
 }
 
 function setVariableValueQuery(value) {
   if (!editMode || drawerVariant !== "variables") return;
   variableDrawerUiState.query = value;
-  variableDrawerUiState.suggestionsOpen = true;
-  renderSuricataDrawerContent();
+  syncVariableValueSuggestions();
 }
 
 function addVariableDrawerEntry(entry) {
@@ -1014,22 +1514,25 @@ function addVariableDrawerEntry(entry) {
     exclude: Boolean(entry.exclude),
   };
   if (!nextEntry.value) return;
-  const token = `${nextEntry.kind}:${nextEntry.exclude ? "exclude" : "include"}:${nextEntry.value}`;
+  const sameToken = `${nextEntry.kind}:${nextEntry.exclude ? "exclude" : "include"}:${nextEntry.value}`;
   const existingTokens = new Set(
     (suricataDrawerDraft.valueEntries || []).map(
       (item) => `${item.kind}:${item.exclude ? "exclude" : "include"}:${item.value}`,
     ),
   );
-  if (existingTokens.has(token)) {
-    variableDrawerUiState.query = "";
-    variableDrawerUiState.suggestionsOpen = false;
-    renderSuricataDrawerContent();
-    return;
+  const withoutThisValue = (suricataDrawerDraft.valueEntries || []).filter(
+    (item) => !(item.kind === nextEntry.kind && item.value === nextEntry.value),
+  );
+  if (existingTokens.has(sameToken)) {
+    suricataDrawerDraft.valueEntries = withoutThisValue;
+  } else {
+    suricataDrawerDraft.valueEntries = [...withoutThisValue, nextEntry];
   }
-  suricataDrawerDraft.valueEntries = [...(suricataDrawerDraft.valueEntries || []), nextEntry];
   variableDrawerUiState.query = "";
   variableDrawerUiState.suggestionsOpen = false;
   renderSuricataDrawerContent();
+  syncVariableTableRowFromDraft();
+  restoreVariableValueInputFocus(false);
 }
 
 function selectVariableValueSuggestion(event, kind, value, exclude = false) {
@@ -1046,25 +1549,15 @@ function removeVariableDrawerEntry(event, index) {
     (_, entryIndex) => entryIndex !== index,
   );
   renderSuricataDrawerContent();
+  syncVariableTableRowFromDraft();
+  restoreVariableValueInputFocus(false);
 }
 
 function commitVariableValueQuery() {
   if (!editMode || drawerVariant !== "variables") return;
   const rawQuery = String(variableDrawerUiState.query || "").trim();
   if (!rawQuery) return;
-  const normalized = rawQuery.startsWith("!") ? rawQuery.slice(1).trim() : rawQuery;
-  if (!normalized) return;
-  if (normalized.startsWith("$")) {
-    const variableName = normalized.slice(1).trim();
-    if (!variableName) return;
-    addVariableDrawerEntry({ kind: "variable", value: variableName, exclude: false });
-    return;
-  }
-  addVariableDrawerEntry({
-    kind: "literal",
-    value: normalized,
-    exclude: rawQuery.startsWith("!"),
-  });
+  addVariableDrawerEntry({ kind: "literal", value: rawQuery, exclude: false });
 }
 
 function onVariableValueInputKeydown(event) {
@@ -1076,8 +1569,7 @@ function onVariableValueInputKeydown(event) {
   }
   if (event.key === "Escape") {
     event.preventDefault();
-    variableDrawerUiState.suggestionsOpen = false;
-    renderSuricataDrawerContent();
+    document.querySelector("[data-variable-value-input]")?.blur();
     return;
   }
   if (
@@ -1089,14 +1581,18 @@ function onVariableValueInputKeydown(event) {
     event.preventDefault();
     suricataDrawerDraft.valueEntries.pop();
     renderSuricataDrawerContent();
+    syncVariableTableRowFromDraft();
+    restoreVariableValueInputFocus(false);
   }
 }
 
 function closeVariableValueMenu() {
-  if (drawerVariant === "variables" && variableDrawerUiState.suggestionsOpen) {
-    variableDrawerUiState.suggestionsOpen = false;
-    renderSuricataDrawerContent();
-    return;
+  if (drawerVariant === "variables") {
+    const input = document.querySelector("[data-variable-value-input]");
+    if (input && document.activeElement === input) {
+      input.blur();
+      return;
+    }
   }
   if (variableOpenMenuKey === null) return;
   variableOpenMenuKey = null;
@@ -1114,6 +1610,7 @@ function openVariableDrawer(rowIndex, options = {}) {
   const variable = ruleVariableRows[rowIndex];
   if (!variable) return;
   selectedVariableRowIndex = rowIndex;
+  if (typeof setRuleViewState === "function") setRuleViewState("drawer");
   drawerVariant = "variables";
   suricataDrawerBaseline = buildVariableDrawerState(variable);
   suricataDrawerDraft = cloneDrawerState(suricataDrawerBaseline);
@@ -1123,8 +1620,7 @@ function openVariableDrawer(rowIndex, options = {}) {
   suricataOpenMenuKey = null;
   editMode = options.startEditing !== false;
   document.getElementById("drawerTitle").textContent = variable.name;
-  document.getElementById("drawer")?.classList.add("open");
-  document.querySelector(".modal-body")?.classList.add("drawer-open");
+  if (typeof syncRuleViewChrome === "function") syncRuleViewChrome();
   syncDrawerHeaderActions();
   renderSuricataDrawerContent();
   renderRules();
@@ -1134,15 +1630,29 @@ function openVariableDrawer(rowIndex, options = {}) {
 function openNewVariableDrawer() {
   const draft = buildVariableDrawerState({
     name: `NEW_VAR_${ruleVariableRows.length + 1}`,
-    type: "Values",
+    type: "Port",
+    valueCount: 0,
+    usedByRules: 0,
     usedByAlerts: 0,
+    usedByRuleItems: [],
+    referencedBy: 0,
     references: 0,
+    referencedByItems: [],
+    projects: 0,
+    projectItems: [],
     referenceItems: [],
     valueItems: [],
+    valueTooltip: "",
     tags: [],
     historyRows: [],
+    createdAt: getCurrentVariableTimestamp(),
+    updatedAt: getCurrentVariableTimestamp(),
+    description: "",
+    author: VARIABLE_HISTORY_ACTORS[1] || "",
+    editor: VARIABLE_HISTORY_ACTORS[1] || "",
   });
   selectedVariableRowIndex = null;
+  if (typeof setRuleViewState === "function") setRuleViewState("drawer");
   drawerVariant = "variables";
   suricataDrawerBaseline = cloneDrawerState(draft);
   suricataDrawerDraft = cloneDrawerState(draft);
@@ -1152,8 +1662,7 @@ function openNewVariableDrawer() {
   suricataOpenMenuKey = null;
   editMode = true;
   document.getElementById("drawerTitle").textContent = draft.name;
-  document.getElementById("drawer")?.classList.add("open");
-  document.querySelector(".modal-body")?.classList.add("drawer-open");
+  if (typeof syncRuleViewChrome === "function") syncRuleViewChrome();
   syncDrawerHeaderActions();
   renderSuricataDrawerContent();
   renderRules();
@@ -1174,12 +1683,16 @@ function saveVariableDrawerChangesImpl() {
   if (drawerVariant !== "variables" || !suricataDrawerDraft) return false;
   const sanitized = sanitizeVariableDrawerState(suricataDrawerDraft);
   if (selectedVariableRowIndex === null) {
-    ruleVariableBaselineRows = [...ruleVariableBaselineRows, cloneDrawerState(sanitized)];
+    ruleVariableBaselineRows = deriveVariableReferenceState([
+      ...ruleVariableBaselineRows,
+      cloneDrawerState(sanitized),
+    ]);
     ruleVariableRows = cloneDrawerState(ruleVariableBaselineRows);
     selectedVariableRowIndex = ruleVariableRows.length - 1;
     variableDrawerUiState.isNew = false;
   } else {
     ruleVariableBaselineRows[selectedVariableRowIndex] = cloneDrawerState(sanitized);
+    ruleVariableBaselineRows = deriveVariableReferenceState(ruleVariableBaselineRows);
     ruleVariableRows = cloneDrawerState(ruleVariableBaselineRows);
   }
   syncSharedVariableRows();
@@ -1203,10 +1716,11 @@ function deleteSelectedVariableFromDrawer() {
   }
   const variable = ruleVariableRows[selectedVariableRowIndex];
   if (!variable || !canDeleteRuleVariable(variable)) {
-    showToast("Remove linked references and alerts before deleting this variable");
+    showToast("Remove linked rules, variables, and projects before deleting this variable");
     return;
   }
   ruleVariableBaselineRows.splice(selectedVariableRowIndex, 1);
+  ruleVariableBaselineRows = deriveVariableReferenceState(ruleVariableBaselineRows);
   ruleVariableRows = cloneDrawerState(ruleVariableBaselineRows);
   syncSharedVariableRows();
   closeDrawer();
@@ -1278,10 +1792,11 @@ function deleteRuleVariable(index) {
   const variable = ruleVariableRows[index];
   if (!variable) return;
   if (!canDeleteRuleVariable(variable)) {
-    showToast("Remove linked references and alerts before deleting this variable");
+    showToast("Remove linked rules, variables, and projects before deleting this variable");
     return;
   }
   ruleVariableBaselineRows.splice(index, 1);
+  ruleVariableBaselineRows = deriveVariableReferenceState(ruleVariableBaselineRows);
   ruleVariableRows = cloneDrawerState(ruleVariableBaselineRows);
   syncSharedVariableRows();
   if (selectedVariableRowIndex === index) {

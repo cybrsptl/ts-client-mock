@@ -1,6 +1,7 @@
 # Documentation Index
 
 ## Core Context
+- [Git Workflow](/Users/renzdupitas/Desktop/Teleseer Mockups/teleseer-dummy/docs/git-workflow.md)
 - [Teleseer Context](/Users/renzdupitas/Desktop/Teleseer Mockups/teleseer-dummy/docs/teleseer-context.md)
 - [Figma Context](/Users/renzdupitas/Desktop/Teleseer Mockups/teleseer-dummy/docs/figma-context.md)
 - [Project File Map](/Users/renzdupitas/Desktop/Teleseer Mockups/teleseer-dummy/docs/project-file-map.md)

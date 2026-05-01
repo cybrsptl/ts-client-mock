@@ -5,12 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Alert Modal</title>
 
-    <link rel="stylesheet" href="../shared/styles/base.css?v=20260425-card-semantics-1" />
-    <link rel="stylesheet" href="style.css?v=20260417-tooltip-figma-23" />
-    <link rel="stylesheet" href="../shared/styles/components/buttons.css" />
     <link
       rel="stylesheet"
-      href="../shared/styles/components/sidebar.css?v=20260413-alerting-sidebar-tree-sot-1"
+      href="../shared/styles/base.css?v=20260429-two-drawer-shells-1"
+    />
+    <link rel="stylesheet" href="style.css?v=20260429-two-drawer-shells-1" />
+    <link
+      rel="stylesheet"
+      href="../shared/styles/components/buttons.css?v=20260427-icon-colored-buttons-1"
+    />
+    <link
+      rel="stylesheet"
+      href="../shared/styles/components/sidebar.css?v=20260501-sidebar-unify-3"
     />
     <link
       rel="stylesheet"
@@ -131,62 +137,116 @@
           <!-- Main Content -->
           <div class="content-wrapper">
             <div class="main-content">
-              <div
-                class="main-dimmer"
-                id="mainDimmer"
-                onclick="closeDrawer()"
-              ></div>
-
               <div class="content-header">
                 <div class="content-breadcrumb" id="contentBreadcrumb"></div>
 
                 <div class="content-actions" style="position: relative">
-                  <div class="toolbar-menu-anchor">
+                  <div class="content-default-actions">
+                    <div class="toolbar-menu-anchor">
+                      <button
+                        class="btn-reset btn-secondary-icon size-m style-ghost modal-icon-button hidden"
+                        id="contentViewSettingsBtn"
+                        type="button"
+                        aria-label="View settings"
+                        aria-haspopup="menu"
+                        aria-expanded="false"
+                        onclick="
+                          toggleToolbarMenu(
+                            event,
+                            'viewSettingsMenu',
+                            'contentViewSettingsBtn',
+                          )
+                        "
+                      >
+                        <span
+                          class="btn-icon-slot svg-icon svg-icon-view-settings"
+                          aria-hidden="true"
+                        ></span>
+                      </button>
+                      <div
+                        class="menu-list dropdown-menu toolbar-dropdown-menu view-settings-menu"
+                        id="viewSettingsMenu"
+                      ></div>
+                    </div>
+                    <div
+                      class="drawer-actions rule-full-view-header-actions hidden"
+                      id="ruleFullViewHeaderActions"
+                    >
+                      <button
+                        class="btn-reset btn-secondary size-m style-outline"
+                        id="fullEditBtn"
+                        onclick="toggleEditMode()"
+                        type="button"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        class="btn-primary hidden"
+                        id="fullSaveBtn"
+                        onclick="saveChanges()"
+                        type="button"
+                      >
+                        Save
+                      </button>
+                      <button
+                        class="btn-reset btn-secondary size-m style-ghost hidden"
+                        id="fullCancelBtn"
+                        onclick="cancelEdit()"
+                        type="button"
+                      >
+                        Cancel
+                      </button>
+                      <div class="toolbar-menu-anchor">
+                        <button
+                          id="fullRuleMenuButton"
+                          class="btn-reset btn-secondary-icon size-m style-ghost modal-icon-button"
+                          onclick="toggleFullRuleMenu(event)"
+                          type="button"
+                          aria-label="Full rule actions"
+                          aria-haspopup="menu"
+                          aria-expanded="false"
+                        >
+                          <svg
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            aria-hidden="true"
+                          >
+                            <circle cx="12" cy="12" r="1" />
+                            <circle cx="19" cy="12" r="1" />
+                            <circle cx="5" cy="12" r="1" />
+                          </svg>
+                        </button>
+                        <div
+                          class="menu-list dropdown-menu"
+                          id="fullRuleMenu"
+                        ></div>
+                      </div>
+                    </div>
                     <button
                       class="btn-reset btn-secondary-icon size-m style-ghost modal-icon-button hidden"
-                      id="contentViewSettingsBtn"
+                      id="contentThresholdBtn"
                       type="button"
-                      aria-label="View settings"
-                      aria-haspopup="menu"
-                      aria-expanded="false"
-                      onclick="
-                        toggleToolbarMenu(
-                          event,
-                          'viewSettingsMenu',
-                          'contentViewSettingsBtn',
-                        )
-                      "
+                      aria-label="Threshold settings"
+                      onclick="openThresholdSettingsDrawer()"
                     >
                       <span
-                        class="btn-icon-slot svg-icon svg-icon-view-settings"
+                        class="btn-icon-slot svg-icon svg-icon-gear"
                         aria-hidden="true"
                       ></span>
                     </button>
-                    <div
-                      class="menu-list dropdown-menu toolbar-dropdown-menu view-settings-menu"
-                      id="viewSettingsMenu"
-                    ></div>
+                    <button
+                      class="btn-reset btn-secondary size-m style-default"
+                      id="createRuleBtn"
+                      onclick="openNewRuleDialog()"
+                      type="button"
+                    >
+                      Create New Rule
+                    </button>
                   </div>
-                  <button
-                    class="btn-reset btn-secondary-icon size-m style-ghost modal-icon-button hidden"
-                    id="contentThresholdBtn"
-                    type="button"
-                    aria-label="Threshold settings"
-                    onclick="openThresholdSettingsDrawer()"
-                  >
-                    <span
-                      class="btn-icon-slot svg-icon svg-icon-gear"
-                      aria-hidden="true"
-                    ></span>
-                  </button>
-                  <button
-                    class="btn-reset btn-secondary size-m style-default"
-                    id="createRuleBtn"
-                    onclick="openNewRuleDialog()"
-                    type="button"
-                  >
-                    Create New Rule
-                  </button>
                 </div>
               </div>
 
@@ -221,6 +281,19 @@
                   id="multiSelectRibbon"
                   aria-live="polite"
                 ></div>
+              </div>
+
+              <div class="rule-full-view hidden" id="ruleFullView">
+                <div class="rule-full-view-panel">
+                  <div
+                    class="drawer-title rule-full-view-title"
+                    id="ruleFullViewTitle"
+                  ></div>
+                  <div
+                    class="drawer-content rule-full-view-content"
+                    id="ruleFullViewContent"
+                  ></div>
+                </div>
               </div>
 
               <div class="pagination hidden">
@@ -335,7 +408,6 @@
                       >
                         Cancel
                       </button>
-
                       <div style="position: relative">
                         <button
                           id="drawerMenuButton"
@@ -360,22 +432,6 @@
                         </button>
 
                         <div class="menu-list dropdown-menu" id="drawerMenu">
-                          <button
-                            type="button"
-                            class="menu-item"
-                            onclick="triggerDrawerRename()"
-                          >
-                            <span class="menu-item-icon"
-                              ><span
-                                class="svg-icon"
-                                style="
-                                  --icon-url: url(&quot;../icons/ui_core/collection/icon_pencil.svg&quot;);
-                                "
-                              ></span
-                            ></span>
-                            <span class="menu-item-label">Rename</span>
-                          </button>
-                          <div class="dropdown-divider"></div>
                           <button
                             type="button"
                             class="menu-item"
@@ -1196,6 +1252,10 @@
             </div>
           </div>
         </div>
+        <div class="rule-preview-url" id="rulePreviewUrl" aria-hidden="true">
+          <span class="rule-preview-url-path">/rules</span>
+          <span class="rule-preview-url-comment">// preview only</span>
+        </div>
       </div>
     </div>
 
@@ -1441,32 +1501,36 @@
       defer
     ></script>
     <script
-      src="../shared/app-data.js?v=20260407-shared-app-data-1"
+      src="../shared/alerting-data.js?v=20260428-canonical-alerting-1"
       defer
     ></script>
     <script
-      src="core-runtime.js?v=20260414-suricata-toolbar-status-16"
+      src="../shared/app-data.js?v=20260407-shared-app-data-1"
       defer
     ></script>
+    <script src="core-runtime.js?v=20260429-back-button-icon-1" defer></script>
     <script
       src="table-runtime.js?v=20260414-suricata-toolbar-status-15"
       defer
     ></script>
     <script
-      src="drawer-runtime.js?v=20260415-rule-pattern-readonly-20"
+      src="drawer-runtime.js?v=20260429-full-edit-cancel-sync-1"
       defer
     ></script>
     <script
-      src="rule-scope-runtime.js?v=20260415-rule-config-readonly-19"
+      src="rule-scope-runtime.js?v=20260427-icon-colored-buttons-1"
       defer
     ></script>
-    <script src="variables-runtime.js?v=20260414-table-shell-12" defer></script>
+    <script
+      src="variables-runtime.js?v=20260429-full-view-header-3"
+      defer
+    ></script>
     <script
       src="modal-ui-runtime.js?v=20260417-tooltip-truncate-only-24"
       defer
     ></script>
     <script
-      src="content-browser-runtime.js?v=20260417-default-hits-pill-25"
+      src="content-browser-runtime.js?v=20260429-inline-actions-no-dim-1"
       defer
     ></script>
     <script src="script.js?v=20260410-inline-embed-shell-1" defer></script>

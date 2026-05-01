@@ -35,6 +35,7 @@ function getAlertingTooltipTargetFromEvent(event) {
 function hideAlertingTooltip() {
   activeAlertingTooltipTarget = null;
   alertingTooltipEl.classList.add("hidden");
+  alertingTooltipEl.classList.remove("is-scrollable");
   alertingTooltipEl.textContent = "";
   alertingTooltipEl.removeAttribute("data-placement");
 }
@@ -110,6 +111,10 @@ function showAlertingTooltip(target) {
   ensureAlertingTooltipMount(target);
   activeAlertingTooltipTarget = target;
   alertingTooltipEl.textContent = tooltipText;
+  alertingTooltipEl.classList.toggle(
+    "is-scrollable",
+    target.hasAttribute("data-tooltip-scrollable"),
+  );
   alertingTooltipEl.classList.remove("hidden");
   positionAlertingTooltip();
 }
@@ -178,6 +183,13 @@ function onAlertingModalDocumentClick(event) {
 
 document.addEventListener("click", onAlertingModalDocumentClick);
 document.addEventListener("mouseover", (event) => {
+  if (
+    event.target &&
+    typeof event.target.closest === "function" &&
+    event.target.closest(".alerting-global-tooltip")
+  ) {
+    return;
+  }
   const tooltipTarget = getAlertingTooltipTargetFromEvent(event);
   if (!tooltipTarget) {
     hideAlertingTooltip();
@@ -198,7 +210,8 @@ document.addEventListener("mouseout", (event) => {
   if (
     relatedTarget &&
     typeof relatedTarget.closest === "function" &&
-    relatedTarget.closest("[data-tooltip]") === activeAlertingTooltipTarget
+    (relatedTarget.closest("[data-tooltip]") === activeAlertingTooltipTarget ||
+      relatedTarget.closest(".alerting-global-tooltip") === alertingTooltipEl)
   ) {
     return;
   }
@@ -228,7 +241,8 @@ document.addEventListener("focusout", (event) => {
   if (
     relatedTarget &&
     typeof relatedTarget.closest === "function" &&
-    relatedTarget.closest("[data-tooltip]") === activeAlertingTooltipTarget
+    (relatedTarget.closest("[data-tooltip]") === activeAlertingTooltipTarget ||
+      relatedTarget.closest(".alerting-global-tooltip") === alertingTooltipEl)
   ) {
     return;
   }

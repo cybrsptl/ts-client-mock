@@ -11,6 +11,11 @@ const SURI_RULES_EXPORT_ICON_SRC = resolveIconPath("icon_export_file.svg");
 const SURI_RULES_MEATBALL_ICON_SRC = resolveIconPath("icon_meatball.svg");
 const RULE_SELECTION_RIBBON_MENU_ID = "multiSelectRibbonMenu";
 const RULE_SELECTION_RIBBON_MENU_BUTTON_ID = "multiSelectRibbonMenuButton";
+const sharedAlertingData = window.TeleseerAppData?.alerting || null;
+const sharedAlertingCatalogCounts =
+  sharedAlertingData?.catalogCounts ||
+  sharedAlertingData?.manageAlerts?.catalogCounts ||
+  {};
 
 function createTreeNode(config) {
   return {
@@ -60,17 +65,83 @@ const suricataRoots = [
         readOnly: true,
         allowChildren: true,
         children: [
-          createTreeNode({ id: "suricata-etp-active-threats-malware", label: "Malware", count: "", source: "Emerging Threats PRO", readOnly: true }),
-          createTreeNode({ id: "suricata-etp-active-threats-exploit", label: "Exploit", count: "", source: "Emerging Threats PRO", readOnly: true }),
-          createTreeNode({ id: "suricata-etp-active-threats-exploit-kit", label: "Exploit-Kit", count: "", source: "Emerging Threats PRO", readOnly: true }),
-          createTreeNode({ id: "suricata-etp-active-threats-phishing", label: "Phishing", count: "", source: "Emerging Threats PRO", readOnly: true }),
-          createTreeNode({ id: "suricata-etp-active-threats-botcc", label: "Botcc", count: "", source: "Emerging Threats PRO", readOnly: true }),
-          createTreeNode({ id: "suricata-etp-active-threats-botcc-portgrouped", label: "Botcc Portgrouped", count: "", source: "Emerging Threats PRO", readOnly: true }),
-          createTreeNode({ id: "suricata-etp-active-threats-worm", label: "Worm", count: "", source: "Emerging Threats PRO", readOnly: true }),
-          createTreeNode({ id: "suricata-etp-active-threats-shellcode", label: "Shellcode", count: "", source: "Emerging Threats PRO", readOnly: true }),
-          createTreeNode({ id: "suricata-etp-active-threats-mobile-malware", label: "Mobile Malware", count: "", source: "Emerging Threats PRO", readOnly: true }),
-          createTreeNode({ id: "suricata-etp-active-threats-coinmining", label: "Coinmining", count: "", source: "Emerging Threats PRO", readOnly: true }),
-          createTreeNode({ id: "suricata-etp-active-threats-compromised", label: "Compromised", count: "", source: "Emerging Threats PRO", readOnly: true }),
+          createTreeNode({
+            id: "suricata-etp-active-threats-malware",
+            label: "Malware",
+            count: "",
+            source: "Emerging Threats PRO",
+            readOnly: true,
+          }),
+          createTreeNode({
+            id: "suricata-etp-active-threats-exploit",
+            label: "Exploit",
+            count: "",
+            source: "Emerging Threats PRO",
+            readOnly: true,
+          }),
+          createTreeNode({
+            id: "suricata-etp-active-threats-exploit-kit",
+            label: "Exploit-Kit",
+            count: "",
+            source: "Emerging Threats PRO",
+            readOnly: true,
+          }),
+          createTreeNode({
+            id: "suricata-etp-active-threats-phishing",
+            label: "Phishing",
+            count: "",
+            source: "Emerging Threats PRO",
+            readOnly: true,
+          }),
+          createTreeNode({
+            id: "suricata-etp-active-threats-botcc",
+            label: "Botcc",
+            count: "",
+            source: "Emerging Threats PRO",
+            readOnly: true,
+          }),
+          createTreeNode({
+            id: "suricata-etp-active-threats-botcc-portgrouped",
+            label: "Botcc Portgrouped",
+            count: "",
+            source: "Emerging Threats PRO",
+            readOnly: true,
+          }),
+          createTreeNode({
+            id: "suricata-etp-active-threats-worm",
+            label: "Worm",
+            count: "",
+            source: "Emerging Threats PRO",
+            readOnly: true,
+          }),
+          createTreeNode({
+            id: "suricata-etp-active-threats-shellcode",
+            label: "Shellcode",
+            count: "",
+            source: "Emerging Threats PRO",
+            readOnly: true,
+          }),
+          createTreeNode({
+            id: "suricata-etp-active-threats-mobile-malware",
+            label: "Mobile Malware",
+            count: "",
+            source: "Emerging Threats PRO",
+            readOnly: true,
+          }),
+          createTreeNode({
+            id: "suricata-etp-active-threats-coinmining",
+            label: "Coinmining",
+            count: "",
+            source: "Emerging Threats PRO",
+            readOnly: true,
+          }),
+          createTreeNode({
+            id: "suricata-etp-active-threats-compromised",
+            label: "Compromised",
+            count: "",
+            source: "Emerging Threats PRO",
+            readOnly: true,
+          }),
         ],
       }),
       createTreeNode({
@@ -81,11 +152,41 @@ const suricataRoots = [
         readOnly: true,
         allowChildren: true,
         children: [
-          createTreeNode({ id: "suricata-etp-c2-ciarmy", label: "CIArmy", count: "", source: "Emerging Threats PRO", readOnly: true }),
-          createTreeNode({ id: "suricata-etp-c2-drop-spamhaus", label: "Drop (Spamhaus)", count: "", source: "Emerging Threats PRO", readOnly: true }),
-          createTreeNode({ id: "suricata-etp-c2-dshield", label: "Dshield", count: "", source: "Emerging Threats PRO", readOnly: true }),
-          createTreeNode({ id: "suricata-etp-c2-tor", label: "TOR", count: "", source: "Emerging Threats PRO", readOnly: true }),
-          createTreeNode({ id: "suricata-etp-c2-threatview-cs-c2", label: "Threatview_CS_c2", count: "", source: "Emerging Threats PRO", readOnly: true }),
+          createTreeNode({
+            id: "suricata-etp-c2-ciarmy",
+            label: "CIArmy",
+            count: "",
+            source: "Emerging Threats PRO",
+            readOnly: true,
+          }),
+          createTreeNode({
+            id: "suricata-etp-c2-drop-spamhaus",
+            label: "Drop (Spamhaus)",
+            count: "",
+            source: "Emerging Threats PRO",
+            readOnly: true,
+          }),
+          createTreeNode({
+            id: "suricata-etp-c2-dshield",
+            label: "Dshield",
+            count: "",
+            source: "Emerging Threats PRO",
+            readOnly: true,
+          }),
+          createTreeNode({
+            id: "suricata-etp-c2-tor",
+            label: "TOR",
+            count: "",
+            source: "Emerging Threats PRO",
+            readOnly: true,
+          }),
+          createTreeNode({
+            id: "suricata-etp-c2-threatview-cs-c2",
+            label: "Threatview_CS_c2",
+            count: "",
+            source: "Emerging Threats PRO",
+            readOnly: true,
+          }),
         ],
       }),
       createTreeNode({
@@ -96,9 +197,27 @@ const suricataRoots = [
         readOnly: true,
         allowChildren: true,
         children: [
-          createTreeNode({ id: "suricata-etp-scanning-dos-scan", label: "SCAN", count: "", source: "Emerging Threats PRO", readOnly: true }),
-          createTreeNode({ id: "suricata-etp-scanning-dos-dos", label: "DOS", count: "", source: "Emerging Threats PRO", readOnly: true }),
-          createTreeNode({ id: "suricata-etp-scanning-dos-attack-response", label: "Attack Response", count: "", source: "Emerging Threats PRO", readOnly: true }),
+          createTreeNode({
+            id: "suricata-etp-scanning-dos-scan",
+            label: "SCAN",
+            count: "",
+            source: "Emerging Threats PRO",
+            readOnly: true,
+          }),
+          createTreeNode({
+            id: "suricata-etp-scanning-dos-dos",
+            label: "DOS",
+            count: "",
+            source: "Emerging Threats PRO",
+            readOnly: true,
+          }),
+          createTreeNode({
+            id: "suricata-etp-scanning-dos-attack-response",
+            label: "Attack Response",
+            count: "",
+            source: "Emerging Threats PRO",
+            readOnly: true,
+          }),
         ],
       }),
       createTreeNode({
@@ -109,9 +228,27 @@ const suricataRoots = [
         readOnly: true,
         allowChildren: true,
         children: [
-          createTreeNode({ id: "suricata-etp-web-client", label: "Web Client", count: "", source: "Emerging Threats PRO", readOnly: true }),
-          createTreeNode({ id: "suricata-etp-web-server", label: "Web Server", count: "", source: "Emerging Threats PRO", readOnly: true }),
-          createTreeNode({ id: "suricata-etp-web-specific-apps", label: "Web Specific Apps", count: "", source: "Emerging Threats PRO", readOnly: true }),
+          createTreeNode({
+            id: "suricata-etp-web-client",
+            label: "Web Client",
+            count: "",
+            source: "Emerging Threats PRO",
+            readOnly: true,
+          }),
+          createTreeNode({
+            id: "suricata-etp-web-server",
+            label: "Web Server",
+            count: "",
+            source: "Emerging Threats PRO",
+            readOnly: true,
+          }),
+          createTreeNode({
+            id: "suricata-etp-web-specific-apps",
+            label: "Web Specific Apps",
+            count: "",
+            source: "Emerging Threats PRO",
+            readOnly: true,
+          }),
         ],
       }),
       createTreeNode({
@@ -122,19 +259,97 @@ const suricataRoots = [
         readOnly: true,
         allowChildren: true,
         children: [
-          createTreeNode({ id: "suricata-etp-network-services-dns", label: "DNS", count: "", source: "Emerging Threats PRO", readOnly: true }),
-          createTreeNode({ id: "suricata-etp-network-services-smtp", label: "SMTP", count: "", source: "Emerging Threats PRO", readOnly: true }),
-          createTreeNode({ id: "suricata-etp-network-services-ftp", label: "FTP", count: "", source: "Emerging Threats PRO", readOnly: true }),
-          createTreeNode({ id: "suricata-etp-network-services-netbios", label: "NETBIOS", count: "", source: "Emerging Threats PRO", readOnly: true }),
-          createTreeNode({ id: "suricata-etp-network-services-rpc", label: "RPC", count: "", source: "Emerging Threats PRO", readOnly: true }),
-          createTreeNode({ id: "suricata-etp-network-services-voip", label: "VOIP", count: "", source: "Emerging Threats PRO", readOnly: true }),
-          createTreeNode({ id: "suricata-etp-network-services-sql", label: "SQL", count: "", source: "Emerging Threats PRO", readOnly: true }),
-          createTreeNode({ id: "suricata-etp-network-services-snmp", label: "SNMP", count: "", source: "Emerging Threats PRO", readOnly: true }),
-          createTreeNode({ id: "suricata-etp-network-services-imap", label: "IMAP", count: "", source: "Emerging Threats PRO", readOnly: true }),
-          createTreeNode({ id: "suricata-etp-network-services-pop3", label: "POP3", count: "", source: "Emerging Threats PRO", readOnly: true }),
-          createTreeNode({ id: "suricata-etp-network-services-icmp", label: "ICMP", count: "", source: "Emerging Threats PRO", readOnly: true }),
-          createTreeNode({ id: "suricata-etp-network-services-telnet", label: "TELNET", count: "", source: "Emerging Threats PRO", readOnly: true }),
-          createTreeNode({ id: "suricata-etp-network-services-tftp", label: "TFTP", count: "", source: "Emerging Threats PRO", readOnly: true }),
+          createTreeNode({
+            id: "suricata-etp-network-services-dns",
+            label: "DNS",
+            count: "",
+            source: "Emerging Threats PRO",
+            readOnly: true,
+          }),
+          createTreeNode({
+            id: "suricata-etp-network-services-smtp",
+            label: "SMTP",
+            count: "",
+            source: "Emerging Threats PRO",
+            readOnly: true,
+          }),
+          createTreeNode({
+            id: "suricata-etp-network-services-ftp",
+            label: "FTP",
+            count: "",
+            source: "Emerging Threats PRO",
+            readOnly: true,
+          }),
+          createTreeNode({
+            id: "suricata-etp-network-services-netbios",
+            label: "NETBIOS",
+            count: "",
+            source: "Emerging Threats PRO",
+            readOnly: true,
+          }),
+          createTreeNode({
+            id: "suricata-etp-network-services-rpc",
+            label: "RPC",
+            count: "",
+            source: "Emerging Threats PRO",
+            readOnly: true,
+          }),
+          createTreeNode({
+            id: "suricata-etp-network-services-voip",
+            label: "VOIP",
+            count: "",
+            source: "Emerging Threats PRO",
+            readOnly: true,
+          }),
+          createTreeNode({
+            id: "suricata-etp-network-services-sql",
+            label: "SQL",
+            count: "",
+            source: "Emerging Threats PRO",
+            readOnly: true,
+          }),
+          createTreeNode({
+            id: "suricata-etp-network-services-snmp",
+            label: "SNMP",
+            count: "",
+            source: "Emerging Threats PRO",
+            readOnly: true,
+          }),
+          createTreeNode({
+            id: "suricata-etp-network-services-imap",
+            label: "IMAP",
+            count: "",
+            source: "Emerging Threats PRO",
+            readOnly: true,
+          }),
+          createTreeNode({
+            id: "suricata-etp-network-services-pop3",
+            label: "POP3",
+            count: "",
+            source: "Emerging Threats PRO",
+            readOnly: true,
+          }),
+          createTreeNode({
+            id: "suricata-etp-network-services-icmp",
+            label: "ICMP",
+            count: "",
+            source: "Emerging Threats PRO",
+            readOnly: true,
+          }),
+          createTreeNode({
+            id: "suricata-etp-network-services-telnet",
+            label: "TELNET",
+            count: "",
+            source: "Emerging Threats PRO",
+            readOnly: true,
+          }),
+          createTreeNode({
+            id: "suricata-etp-network-services-tftp",
+            label: "TFTP",
+            count: "",
+            source: "Emerging Threats PRO",
+            readOnly: true,
+          }),
         ],
       }),
       createTreeNode({
@@ -145,18 +360,90 @@ const suricataRoots = [
         readOnly: true,
         allowChildren: true,
         children: [
-          createTreeNode({ id: "suricata-etp-policy-visibility-infor", label: "Infor", count: "", source: "Emerging Threats PRO", readOnly: true }),
-          createTreeNode({ id: "suricata-etp-policy-visibility-hunting", label: "Hunting", count: "", source: "Emerging Threats PRO", readOnly: true }),
-          createTreeNode({ id: "suricata-etp-policy-visibility-p2p", label: "P2P", count: "", source: "Emerging Threats PRO", readOnly: true }),
-          createTreeNode({ id: "suricata-etp-policy-visibility-chat", label: "Chat", count: "", source: "Emerging Threats PRO", readOnly: true }),
-          createTreeNode({ id: "suricata-etp-policy-visibility-games", label: "Games", count: "", source: "Emerging Threats PRO", readOnly: true }),
-          createTreeNode({ id: "suricata-etp-policy-visibility-user-agents", label: "User Agents", count: "", source: "Emerging Threats PRO", readOnly: true }),
-          createTreeNode({ id: "suricata-etp-policy-visibility-file-sharing", label: "FILE_SHARING", count: "", source: "Emerging Threats PRO", readOnly: true }),
-          createTreeNode({ id: "suricata-etp-policy-visibility-remote-access", label: "REMOTE_ACCESS", count: "", source: "Emerging Threats PRO", readOnly: true }),
-          createTreeNode({ id: "suricata-etp-policy-visibility-dyn-dns", label: "DYN_DNS", count: "", source: "Emerging Threats PRO", readOnly: true }),
-          createTreeNode({ id: "suricata-etp-policy-visibility-abused-service", label: "TA_ABUSED_SERVICE", count: "", source: "Emerging Threats PRO", readOnly: true }),
-          createTreeNode({ id: "suricata-etp-policy-visibility-inappropriate", label: "Inappropriate", count: "", source: "Emerging Threats PRO", readOnly: true }),
-          createTreeNode({ id: "suricata-etp-policy-visibility-policy", label: "Policy", count: "", source: "Emerging Threats PRO", readOnly: true }),
+          createTreeNode({
+            id: "suricata-etp-policy-visibility-infor",
+            label: "Infor",
+            count: "",
+            source: "Emerging Threats PRO",
+            readOnly: true,
+          }),
+          createTreeNode({
+            id: "suricata-etp-policy-visibility-hunting",
+            label: "Hunting",
+            count: "",
+            source: "Emerging Threats PRO",
+            readOnly: true,
+          }),
+          createTreeNode({
+            id: "suricata-etp-policy-visibility-p2p",
+            label: "P2P",
+            count: "",
+            source: "Emerging Threats PRO",
+            readOnly: true,
+          }),
+          createTreeNode({
+            id: "suricata-etp-policy-visibility-chat",
+            label: "Chat",
+            count: "",
+            source: "Emerging Threats PRO",
+            readOnly: true,
+          }),
+          createTreeNode({
+            id: "suricata-etp-policy-visibility-games",
+            label: "Games",
+            count: "",
+            source: "Emerging Threats PRO",
+            readOnly: true,
+          }),
+          createTreeNode({
+            id: "suricata-etp-policy-visibility-user-agents",
+            label: "User Agents",
+            count: "",
+            source: "Emerging Threats PRO",
+            readOnly: true,
+          }),
+          createTreeNode({
+            id: "suricata-etp-policy-visibility-file-sharing",
+            label: "FILE_SHARING",
+            count: "",
+            source: "Emerging Threats PRO",
+            readOnly: true,
+          }),
+          createTreeNode({
+            id: "suricata-etp-policy-visibility-remote-access",
+            label: "REMOTE_ACCESS",
+            count: "",
+            source: "Emerging Threats PRO",
+            readOnly: true,
+          }),
+          createTreeNode({
+            id: "suricata-etp-policy-visibility-dyn-dns",
+            label: "DYN_DNS",
+            count: "",
+            source: "Emerging Threats PRO",
+            readOnly: true,
+          }),
+          createTreeNode({
+            id: "suricata-etp-policy-visibility-abused-service",
+            label: "TA_ABUSED_SERVICE",
+            count: "",
+            source: "Emerging Threats PRO",
+            readOnly: true,
+          }),
+          createTreeNode({
+            id: "suricata-etp-policy-visibility-inappropriate",
+            label: "Inappropriate",
+            count: "",
+            source: "Emerging Threats PRO",
+            readOnly: true,
+          }),
+          createTreeNode({
+            id: "suricata-etp-policy-visibility-policy",
+            label: "Policy",
+            count: "",
+            source: "Emerging Threats PRO",
+            readOnly: true,
+          }),
         ],
       }),
       createTreeNode({
@@ -167,8 +454,20 @@ const suricataRoots = [
         readOnly: true,
         allowChildren: true,
         children: [
-          createTreeNode({ id: "suricata-etp-industrial-scada-scada", label: "SCADA", count: "", source: "Emerging Threats PRO", readOnly: true }),
-          createTreeNode({ id: "suricata-etp-industrial-scada-special", label: "SCADA_special", count: "", source: "Emerging Threats PRO", readOnly: true }),
+          createTreeNode({
+            id: "suricata-etp-industrial-scada-scada",
+            label: "SCADA",
+            count: "",
+            source: "Emerging Threats PRO",
+            readOnly: true,
+          }),
+          createTreeNode({
+            id: "suricata-etp-industrial-scada-special",
+            label: "SCADA_special",
+            count: "",
+            source: "Emerging Threats PRO",
+            readOnly: true,
+          }),
         ],
       }),
       createTreeNode({
@@ -179,14 +478,50 @@ const suricataRoots = [
         readOnly: true,
         allowChildren: true,
         children: [
-          createTreeNode({ id: "suricata-etp-operational-current-events", label: "Current Events", count: "", source: "Emerging Threats PRO", readOnly: true }),
-          createTreeNode({ id: "suricata-etp-operational-ja3", label: "JA3", count: "", source: "Emerging Threats PRO", readOnly: true }),
-          createTreeNode({ id: "suricata-etp-operational-misc", label: "Misc", count: "", source: "Emerging Threats PRO", readOnly: true }),
-          createTreeNode({ id: "suricata-etp-operational-activex", label: "ActiveX", count: "", source: "Emerging Threats PRO", readOnly: true }),
-          createTreeNode({ id: "suricata-etp-operational-adware-pup", label: "Adware-PUP", count: "", source: "Emerging Threats PRO", readOnly: true }),
+          createTreeNode({
+            id: "suricata-etp-operational-current-events",
+            label: "Current Events",
+            count: "",
+            source: "Emerging Threats PRO",
+            readOnly: true,
+          }),
+          createTreeNode({
+            id: "suricata-etp-operational-ja3",
+            label: "JA3",
+            count: "",
+            source: "Emerging Threats PRO",
+            readOnly: true,
+          }),
+          createTreeNode({
+            id: "suricata-etp-operational-misc",
+            label: "Misc",
+            count: "",
+            source: "Emerging Threats PRO",
+            readOnly: true,
+          }),
+          createTreeNode({
+            id: "suricata-etp-operational-activex",
+            label: "ActiveX",
+            count: "",
+            source: "Emerging Threats PRO",
+            readOnly: true,
+          }),
+          createTreeNode({
+            id: "suricata-etp-operational-adware-pup",
+            label: "Adware-PUP",
+            count: "",
+            source: "Emerging Threats PRO",
+            readOnly: true,
+          }),
         ],
       }),
-      createTreeNode({ id: "suricata-etp-inactive", label: "Inactive", count: "", source: "Emerging Threats PRO", readOnly: true }),
+      createTreeNode({
+        id: "suricata-etp-inactive",
+        label: "Inactive",
+        count: "",
+        source: "Emerging Threats PRO",
+        readOnly: true,
+      }),
     ],
   }),
   createTreeNode({
@@ -197,13 +532,62 @@ const suricataRoots = [
     editable: true,
     allowChildren: true,
     children: [
-      createTreeNode({ id: "suricata-custom-policy-enforcement", label: "Policy Enforcement", count: "", source: "Custom Detection", editable: true, allowChildren: true }),
-      createTreeNode({ id: "suricata-custom-rmf-compliance", label: "RMF Compliance", count: "", source: "Custom Detection", editable: true, allowChildren: true }),
-      createTreeNode({ id: "suricata-custom-network-hygiene", label: "Network Hygiene", count: "", source: "Custom Detection", editable: true, allowChildren: true }),
-      createTreeNode({ id: "suricata-custom-command-control", label: "Command & Control", count: "", source: "Custom Detection", editable: true, allowChildren: true }),
-      createTreeNode({ id: "suricata-custom-dns-monitoring", label: "DNS Monitoring", count: "", source: "Custom Detection", editable: true, allowChildren: true }),
-      createTreeNode({ id: "suricata-custom-app-performance", label: "App Performance", count: "", source: "Custom Detection", editable: true, allowChildren: true }),
-      createTreeNode({ id: "suricata-custom-operational-visibility", label: "Operational Visibility", count: "", source: "Custom Detection", editable: true, allowChildren: true }),
+      createTreeNode({
+        id: "suricata-custom-policy-enforcement",
+        label: "Policy Enforcement",
+        count: "",
+        source: "Custom Detection",
+        editable: true,
+        allowChildren: true,
+      }),
+      createTreeNode({
+        id: "suricata-custom-rmf-compliance",
+        label: "RMF Compliance",
+        count: "",
+        source: "Custom Detection",
+        editable: true,
+        allowChildren: true,
+      }),
+      createTreeNode({
+        id: "suricata-custom-network-hygiene",
+        label: "Network Hygiene",
+        count: "",
+        source: "Custom Detection",
+        editable: true,
+        allowChildren: true,
+      }),
+      createTreeNode({
+        id: "suricata-custom-command-control",
+        label: "Command & Control",
+        count: "",
+        source: "Custom Detection",
+        editable: true,
+        allowChildren: true,
+      }),
+      createTreeNode({
+        id: "suricata-custom-dns-monitoring",
+        label: "DNS Monitoring",
+        count: "",
+        source: "Custom Detection",
+        editable: true,
+        allowChildren: true,
+      }),
+      createTreeNode({
+        id: "suricata-custom-app-performance",
+        label: "App Performance",
+        count: "",
+        source: "Custom Detection",
+        editable: true,
+        allowChildren: true,
+      }),
+      createTreeNode({
+        id: "suricata-custom-operational-visibility",
+        label: "Operational Visibility",
+        count: "",
+        source: "Custom Detection",
+        editable: true,
+        allowChildren: true,
+      }),
     ],
   }),
   createTreeNode({
@@ -245,6 +629,8 @@ const SURI_SORT_COLUMN_OPTIONS = [
   { value: "speed", label: "Speed" },
   { value: "lastSeen", label: "Last Seen" },
   { value: "hits", label: "Hits" },
+  { value: "created", label: "Created" },
+  { value: "updated", label: "Updated" },
 ];
 const SURI_SORT_DIRECTION_OPTIONS = [
   { value: "asc", label: "Ascending", meta: "A → Z" },
@@ -265,6 +651,8 @@ const SURI_VIEW_SETTING_COLUMNS = [
   { key: "speed", label: "Speed" },
   { key: "lastSeen", label: "Last Hit" },
   { key: "status", label: "Status" },
+  { key: "created", label: "Created" },
+  { key: "updated", label: "Updated" },
 ];
 const suricataViewSettingsState = {
   sid: true,
@@ -275,6 +663,8 @@ const suricataViewSettingsState = {
   lastSeen: true,
   hits: true,
   status: true,
+  created: true,
+  updated: true,
 };
 
 function collectLeafTreeNodes(node) {
@@ -285,7 +675,7 @@ function collectLeafTreeNodes(node) {
 
 function hashTreeValue(value = "") {
   return Array.from(String(value)).reduce(
-    (hash, character) => ((hash * 33) + character.charCodeAt(0)) >>> 0,
+    (hash, character) => (hash * 33 + character.charCodeAt(0)) >>> 0,
     5381,
   );
 }
@@ -478,33 +868,123 @@ const SURI_DUPLICATED_RULE_SOURCE_NODES = new Set([
 
 function getEtpRuleProfile(nodeId) {
   if (nodeId.includes("active-threats")) {
-    return { family: "active-threats", classType: "Trojan Activity", action: "Alert", rulesPerLeaf: 56, hitsBase: 120, hitsRange: 880, speedBase: 6, speedRange: 96 };
+    return {
+      family: "active-threats",
+      classType: "Trojan Activity",
+      action: "Alert",
+      rulesPerLeaf: 56,
+      hitsBase: 120,
+      hitsRange: 880,
+      speedBase: 6,
+      speedRange: 96,
+    };
   }
   if (nodeId.includes("c2-")) {
-    return { family: "c2", classType: "Bad Known", action: "Alert", rulesPerLeaf: 36, hitsBase: 80, hitsRange: 520, speedBase: 4, speedRange: 42 };
+    return {
+      family: "c2",
+      classType: "Bad Known",
+      action: "Alert",
+      rulesPerLeaf: 36,
+      hitsBase: 80,
+      hitsRange: 520,
+      speedBase: 4,
+      speedRange: 42,
+    };
   }
   if (nodeId.includes("scanning-dos")) {
-    return { family: "scanning", classType: "Attempted Recon", action: "Alert", rulesPerLeaf: 32, hitsBase: 44, hitsRange: 390, speedBase: 6, speedRange: 48 };
+    return {
+      family: "scanning",
+      classType: "Attempted Recon",
+      action: "Alert",
+      rulesPerLeaf: 32,
+      hitsBase: 44,
+      hitsRange: 390,
+      speedBase: 6,
+      speedRange: 48,
+    };
   }
   if (nodeId.includes("web-")) {
-    return { family: "web", classType: "Web Application Attack", action: "Alert", rulesPerLeaf: 44, hitsBase: 70, hitsRange: 610, speedBase: 8, speedRange: 74 };
+    return {
+      family: "web",
+      classType: "Web Application Attack",
+      action: "Alert",
+      rulesPerLeaf: 44,
+      hitsBase: 70,
+      hitsRange: 610,
+      speedBase: 8,
+      speedRange: 74,
+    };
   }
   if (nodeId.includes("network-services")) {
-    return { family: "network-services", classType: "Protocol Command Decode", action: "Alert", rulesPerLeaf: 42, hitsBase: 30, hitsRange: 240, speedBase: 5, speedRange: 38 };
+    return {
+      family: "network-services",
+      classType: "Protocol Command Decode",
+      action: "Alert",
+      rulesPerLeaf: 42,
+      hitsBase: 30,
+      hitsRange: 240,
+      speedBase: 5,
+      speedRange: 38,
+    };
   }
   if (nodeId.includes("policy-visibility")) {
-    return { family: "policy", classType: "Policy Violation", action: "Alert", rulesPerLeaf: 38, hitsBase: 18, hitsRange: 190, speedBase: 6, speedRange: 34 };
+    return {
+      family: "policy",
+      classType: "Policy Violation",
+      action: "Alert",
+      rulesPerLeaf: 38,
+      hitsBase: 18,
+      hitsRange: 190,
+      speedBase: 6,
+      speedRange: 34,
+    };
   }
   if (nodeId.includes("industrial-scada")) {
-    return { family: "scada", classType: "Attempted Information Leak", action: "Alert", rulesPerLeaf: 20, hitsBase: 5, hitsRange: 42, speedBase: 10, speedRange: 54 };
+    return {
+      family: "scada",
+      classType: "Attempted Information Leak",
+      action: "Alert",
+      rulesPerLeaf: 20,
+      hitsBase: 5,
+      hitsRange: 42,
+      speedBase: 10,
+      speedRange: 54,
+    };
   }
   if (nodeId.includes("operational")) {
-    return { family: "operational", classType: "Misc Activity", action: "Alert", rulesPerLeaf: 28, hitsBase: 16, hitsRange: 144, speedBase: 4, speedRange: 28 };
+    return {
+      family: "operational",
+      classType: "Misc Activity",
+      action: "Alert",
+      rulesPerLeaf: 28,
+      hitsBase: 16,
+      hitsRange: 144,
+      speedBase: 4,
+      speedRange: 28,
+    };
   }
   if (nodeId.includes("inactive")) {
-    return { family: "inactive", classType: "Misc Activity", action: "Pass", rulesPerLeaf: 16, hitsBase: 1, hitsRange: 6, speedBase: 3, speedRange: 14 };
+    return {
+      family: "inactive",
+      classType: "Misc Activity",
+      action: "Pass",
+      rulesPerLeaf: 16,
+      hitsBase: 1,
+      hitsRange: 6,
+      speedBase: 3,
+      speedRange: 14,
+    };
   }
-  return { family: "misc", classType: "Misc Activity", action: "Alert", rulesPerLeaf: 20, hitsBase: 10, hitsRange: 80, speedBase: 5, speedRange: 20 };
+  return {
+    family: "misc",
+    classType: "Misc Activity",
+    action: "Alert",
+    rulesPerLeaf: 20,
+    hitsBase: 10,
+    hitsRange: 80,
+    speedBase: 5,
+    speedRange: 20,
+  };
 }
 
 const ETP_RULE_TITLE_PREFIXES = [
@@ -625,11 +1105,14 @@ function buildEtpRuleTitle(node, family, index, specificTitles = []) {
   }
   const generatedIndex = index - specificTitles.length;
   const baseTitle = buildGenericEtpRuleTitle(node, family, generatedIndex % 2);
-  const suffixes = ETP_RULE_TITLE_SUFFIXES[family] || ETP_RULE_TITLE_SUFFIXES.misc;
+  const suffixes =
+    ETP_RULE_TITLE_SUFFIXES[family] || ETP_RULE_TITLE_SUFFIXES.misc;
   const suffix = suffixes[generatedIndex % suffixes.length];
-  const prefix = ETP_RULE_TITLE_PREFIXES[
-    Math.floor(generatedIndex / suffixes.length) % ETP_RULE_TITLE_PREFIXES.length
-  ];
+  const prefix =
+    ETP_RULE_TITLE_PREFIXES[
+      Math.floor(generatedIndex / suffixes.length) %
+        ETP_RULE_TITLE_PREFIXES.length
+    ];
   return `${prefix} ${baseTitle} ${suffix}`;
 }
 
@@ -711,16 +1194,30 @@ function buildEtProRuleSeeds() {
     const profile = getEtpRuleProfile(node.id);
     const specificTitles = SURI_ETP_SPECIFIC_TITLES[node.id] || [];
     return Array.from({ length: profile.rulesPerLeaf }, (_, index) => {
-      const title = buildEtpRuleTitle(node, profile.family, index, specificTitles);
+      const title = buildEtpRuleTitle(
+        node,
+        profile.family,
+        index,
+        specificTitles,
+      );
       const seed = hashTreeValue(`${node.id}:${index}`);
-      const minutes = profile.family === "inactive"
-        ? 2880 + (seed % 12000)
-        : seed % 960;
+      const minutes =
+        profile.family === "inactive" ? 2880 + (seed % 12000) : seed % 960;
       const totalHits = profile.hitsBase + (seed % profile.hitsRange);
       const speedValue = profile.speedBase + (seed % profile.speedRange);
       const relatedSid = sidCounter++;
       const sid = sidCounter++;
-      const enabled = (seed % 4) !== 0;
+      const enabled = seed % 4 !== 0;
+      const createdAt =
+        new Date((1672531200 + (seed % (2 * 365 * 24 * 3600))) * 1000)
+          .toISOString()
+          .slice(0, 19) + "Z";
+      const updatedAt =
+        new Date(
+          (1735689600 + (((seed * 1000003) >>> 0) % (365 * 24 * 3600))) * 1000,
+        )
+          .toISOString()
+          .slice(0, 19) + "Z";
       return {
         id: sid,
         folderNodeId: node.id,
@@ -742,6 +1239,8 @@ function buildEtProRuleSeeds() {
         ruleStateTags: getEtpRuleStateTags(node, profile.family, seed),
         statusDot: enabled ? "green" : "gray",
         folderLabel: getDisplayFolderLabel(node.id),
+        createdAt,
+        updatedAt,
       };
     });
   });
@@ -755,7 +1254,8 @@ function buildImportedRuleSeeds() {
       originFolderNodeId: "suricata-imported-root",
       source: "Imported 2025-03-01",
       name: "Community DNS tunneling candidate over TXT burst",
-      description: "Imported community rule retained for triage against suspicious DNS tunneling activity.",
+      description:
+        "Imported community rule retained for triage against suspicious DNS tunneling activity.",
       action: "Alert",
       sid: 3200001,
       relatedSid: 2054011,
@@ -769,6 +1269,8 @@ function buildImportedRuleSeeds() {
       ruleStateTags: [],
       statusDot: "gray",
       folderLabel: "Imported 2025-03-01",
+      createdAt: "2025-03-01T09:14:22Z",
+      updatedAt: "2025-03-01T09:14:22Z",
     },
     {
       id: 3200002,
@@ -776,7 +1278,8 @@ function buildImportedRuleSeeds() {
       originFolderNodeId: "suricata-etp-network-services-dns",
       source: "Imported 2025-03-01",
       name: "DNS beaconing pattern retained for workspace tuning",
-      description: "Imported rule preserved from a managed DNS signature for workspace review and exception tracking.",
+      description:
+        "Imported rule preserved from a managed DNS signature for workspace review and exception tracking.",
       action: "Alert",
       sid: 3200002,
       relatedSid: 2026901,
@@ -790,6 +1293,8 @@ function buildImportedRuleSeeds() {
       ruleStateTags: [],
       statusDot: "green",
       folderLabel: "Imported 2025-03-01",
+      createdAt: "2025-03-01T09:14:22Z",
+      updatedAt: "2026-02-11T14:38:05Z",
     },
     {
       id: 3200003,
@@ -797,7 +1302,8 @@ function buildImportedRuleSeeds() {
       originFolderNodeId: "suricata-etp-web-server",
       source: "Imported 2025-03-01",
       name: "IIS short-name enumeration imported for environment-specific exclusions",
-      description: "Imported web rule retained from an upstream signature for workspace-specific review and exclusion planning.",
+      description:
+        "Imported web rule retained from an upstream signature for workspace-specific review and exclusion planning.",
       action: "Alert",
       sid: 3200003,
       relatedSid: 2026914,
@@ -811,6 +1317,8 @@ function buildImportedRuleSeeds() {
       ruleStateTags: [],
       statusDot: "green",
       folderLabel: "Imported 2025-03-01",
+      createdAt: "2025-03-01T09:14:22Z",
+      updatedAt: "2026-04-03T07:51:19Z",
     },
     {
       id: 3200004,
@@ -818,7 +1326,8 @@ function buildImportedRuleSeeds() {
       originFolderNodeId: "suricata-imported-root",
       source: "Imported 2025-03-01",
       name: "Legacy SMB worm heuristic awaiting cleanup",
-      description: "Imported rule left disabled pending review of a stale community feed set.",
+      description:
+        "Imported rule left disabled pending review of a stale community feed set.",
       action: "Pass",
       sid: 3200004,
       relatedSid: 2100456,
@@ -832,6 +1341,8 @@ function buildImportedRuleSeeds() {
       ruleStateTags: [],
       statusDot: "gray",
       folderLabel: "Imported 2025-03-01",
+      createdAt: "2025-03-01T09:14:22Z",
+      updatedAt: "2025-03-01T09:14:22Z",
     },
   ];
 }
@@ -844,7 +1355,8 @@ function buildCustomRuleSeeds() {
       originFolderNodeId: "suricata-etp-policy-visibility-policy",
       source: "Custom Detection",
       name: "Outbound remote admin over non-standard port",
-      description: "Local policy rule copied from ET visibility coverage and tuned for privileged admin subnets.",
+      description:
+        "Local policy rule copied from ET visibility coverage and tuned for privileged admin subnets.",
       action: "Alert",
       sid: 3301001,
       relatedSid: 2024985,
@@ -859,6 +1371,8 @@ function buildCustomRuleSeeds() {
       ruleStateTags: [],
       statusDot: "green",
       folderLabel: "Policy Enforcement",
+      createdAt: "2025-08-14T11:02:33Z",
+      updatedAt: "2026-04-01T08:17:44Z",
     },
     {
       id: 3301002,
@@ -866,7 +1380,8 @@ function buildCustomRuleSeeds() {
       originFolderNodeId: "suricata-etp-policy-visibility-remote-access",
       source: "Custom Detection",
       name: "Unauthorized admin tooling crossing enclave boundary",
-      description: "Compliance-focused rule tuned for remote administration outside approved RMF windows.",
+      description:
+        "Compliance-focused rule tuned for remote administration outside approved RMF windows.",
       action: "Alert",
       sid: 3301002,
       relatedSid: 2024969,
@@ -881,6 +1396,8 @@ function buildCustomRuleSeeds() {
       ruleStateTags: [],
       statusDot: "green",
       folderLabel: "RMF Compliance",
+      createdAt: "2025-09-22T15:44:09Z",
+      updatedAt: "2026-03-18T10:29:51Z",
     },
     {
       id: 3301003,
@@ -888,7 +1405,8 @@ function buildCustomRuleSeeds() {
       originFolderNodeId: "suricata-etp-scanning-dos-scan",
       source: "Custom Detection",
       name: "Exposed infrastructure scan over weekend maintenance window",
-      description: "Operational hygiene rule for repeated exposure scans that violate maintenance baselines.",
+      description:
+        "Operational hygiene rule for repeated exposure scans that violate maintenance baselines.",
       action: "Alert",
       sid: 3301003,
       relatedSid: 2024865,
@@ -903,6 +1421,8 @@ function buildCustomRuleSeeds() {
       ruleStateTags: [],
       statusDot: "green",
       folderLabel: "Network Hygiene",
+      createdAt: "2025-11-05T07:31:18Z",
+      updatedAt: "2026-04-09T16:03:22Z",
     },
     {
       id: 3301004,
@@ -910,7 +1430,8 @@ function buildCustomRuleSeeds() {
       originFolderNodeId: "suricata-etp-c2-threatview-cs-c2",
       source: "Custom Detection",
       name: "Beacon callback to previously triaged relay",
-      description: "Custom control-channel rule narrowed from an upstream C2 signature for local command-and-control detection.",
+      description:
+        "Custom control-channel rule narrowed from an upstream C2 signature for local command-and-control detection.",
       action: "Alert",
       sid: 3301004,
       relatedSid: 2024861,
@@ -925,6 +1446,8 @@ function buildCustomRuleSeeds() {
       ruleStateTags: [],
       statusDot: "green",
       folderLabel: "Command & Control",
+      createdAt: "2026-01-07T19:55:04Z",
+      updatedAt: "2026-04-21T12:41:37Z",
     },
     {
       id: 3301005,
@@ -932,7 +1455,8 @@ function buildCustomRuleSeeds() {
       originFolderNodeId: "suricata-etp-network-services-dns",
       source: "Custom Detection",
       name: "Rare TXT-answer burst to watched domain set",
-      description: "Custom DNS monitor for workspace-owned domains with repeated TXT-answer anomalies.",
+      description:
+        "Custom DNS monitor for workspace-owned domains with repeated TXT-answer anomalies.",
       action: "Alert",
       sid: 3301005,
       relatedSid: 2024889,
@@ -947,6 +1471,8 @@ function buildCustomRuleSeeds() {
       ruleStateTags: [],
       statusDot: "green",
       folderLabel: "DNS Monitoring",
+      createdAt: "2025-10-30T13:08:47Z",
+      updatedAt: "2026-03-27T09:14:02Z",
     },
     {
       id: 3301006,
@@ -954,7 +1480,8 @@ function buildCustomRuleSeeds() {
       originFolderNodeId: "suricata-etp-web-client",
       source: "Custom Detection",
       name: "Slow API abuse on customer checkout path",
-      description: "Performance-oriented rule for abusive API patterns affecting checkout transactions.",
+      description:
+        "Performance-oriented rule for abusive API patterns affecting checkout transactions.",
       action: "Pass",
       sid: 3301006,
       relatedSid: 2024877,
@@ -969,6 +1496,8 @@ function buildCustomRuleSeeds() {
       ruleStateTags: [],
       statusDot: "gray",
       folderLabel: "App Performance",
+      createdAt: "2025-12-19T06:22:58Z",
+      updatedAt: "2025-12-19T06:22:58Z",
     },
     {
       id: 3301007,
@@ -976,7 +1505,8 @@ function buildCustomRuleSeeds() {
       originFolderNodeId: "suricata-etp-operational-ja3",
       source: "Custom Detection",
       name: "Rare JA3 handshake from vendor jump host",
-      description: "Visibility rule for uncommon TLS fingerprints on approved operational jump hosts.",
+      description:
+        "Visibility rule for uncommon TLS fingerprints on approved operational jump hosts.",
       action: "Alert",
       sid: 3301007,
       relatedSid: 2025001,
@@ -991,6 +1521,8 @@ function buildCustomRuleSeeds() {
       ruleStateTags: [{ label: "Broken", tone: "danger" }],
       statusDot: "green",
       folderLabel: "Operational Visibility",
+      createdAt: "2026-02-03T10:17:29Z",
+      updatedAt: "2026-04-14T18:06:53Z",
     },
   ];
 }
@@ -1007,7 +1539,8 @@ const DEFAULT_ALERT_RULES = [
     source: "Teleseer",
     category: "Default Alerts",
     name: "Brute Force Authentication",
-    description: "Rapid repeated authentication attempts across multiple services.",
+    description:
+      "Rapid repeated authentication attempts across multiple services.",
     classType: "policy-violation",
     totalHits: 18200,
     enabled: true,
@@ -1033,7 +1566,8 @@ const DEFAULT_ALERT_RULES = [
     source: "Teleseer",
     category: "Default Alerts",
     name: "Suspicious DNS Query",
-    description: "High-entropy DNS lookups associated with tunneling heuristics.",
+    description:
+      "High-entropy DNS lookups associated with tunneling heuristics.",
     classType: "bad-known",
     totalHits: 7400,
     enabled: true,
@@ -1058,8 +1592,16 @@ const DEFAULT_ALERT_RULES = [
 
 let nextGeneratedRuleId = 4000000;
 let nextCustomNodeId = 1;
-let suricataRuleDb = SURICATA_RULE_SEEDS.map((rule) => normalizeSuricataRule(rule));
-let teleseerRuleDb = DEFAULT_ALERT_RULES.map((rule) => ({ ...rule }));
+let suricataRuleDb = sharedAlertingData?.manageAlerts?.suricataRules
+  ? sharedAlertingData.manageAlerts.suricataRules.map((rule) =>
+      normalizeSuricataRule(rule),
+    )
+  : SURICATA_RULE_SEEDS.map((rule) => normalizeSuricataRule(rule));
+let teleseerRuleDb = sharedAlertingData?.manageAlerts?.teleseerRules
+  ? sharedAlertingData.manageAlerts.teleseerRules.map((rule) =>
+      normalizeDefaultAlertRule(rule),
+    )
+  : DEFAULT_ALERT_RULES.map((rule) => normalizeDefaultAlertRule(rule));
 let allRules = [];
 let currentRules = [];
 let activeCategory = sidebarState.selectedCategory;
@@ -1087,10 +1629,10 @@ function normalizeSuricataRule(rule) {
     enabled: Boolean(rule.enabled),
     projects: [],
     ruleStateTags: [],
-    statusDot: "gray",
+    statusDot: Boolean(rule.enabled) ? "green" : "gray",
     folderNodeId: "",
-    originFolderNodeId: rule.folderNodeId,
-    relatedSid: rule.sid,
+    originFolderNodeId: rule.originFolderNodeId || rule.folderNodeId,
+    relatedSid: rule.relatedSid || rule.sid,
     speed: "-",
     speedValue: Number.POSITIVE_INFINITY,
     lastSeen: "-",
@@ -1099,19 +1641,44 @@ function normalizeSuricataRule(rule) {
     source: "Emerging Threats PRO",
     ...rule,
   };
-  normalized.ruleStateTags = normalized.ruleStateTags
+  const brokenTags = normalized.ruleStateTags
     .filter((tag) => String(tag?.label || "").toLowerCase() === "broken")
     .map(() => ({ label: "Broken", tone: "danger" }));
+  normalized.ruleStateTags = brokenTags.length
+    ? brokenTags
+    : !normalized.enabled
+      ? [{ label: "Broken", tone: "danger" }]
+      : [];
   return normalized;
+}
+
+function normalizeDefaultAlertRule(rule) {
+  return {
+    enabled: Boolean(rule?.enabled),
+    editable: Boolean(rule?.editable),
+    projects: [],
+    ruleStateTags: [],
+    source: "Teleseer",
+    ...rule,
+  };
 }
 
 function getSharedAlertingProjectPool() {
   const sharedProjects = window.TeleseerAppData?.projects?.catalog;
   if (Array.isArray(sharedProjects) && sharedProjects.length) {
-    return sharedProjects
-      .map((project) => project?.name)
-      .filter((name) => typeof name === "string" && name.trim().length > 0);
+    const projectNames = sharedProjects
+      .map((project) => String(project?.name || "").trim())
+      .filter(Boolean);
+    if (projectNames.length) return projectNames;
   }
+
+  const sharedPool = Array.isArray(sharedAlertingData?.projectPool)
+    ? sharedAlertingData.projectPool
+        .map((project) => String(project || "").trim())
+        .filter(Boolean)
+    : [];
+  if (sharedPool.length) return sharedPool;
+
   return [
     "teleseer-dummy",
     "Site Julio",
@@ -1122,8 +1689,498 @@ function getSharedAlertingProjectPool() {
   ];
 }
 
+function buildAlertingReferenceRows(items = []) {
+  return items.map(([title, url]) => ({ title, url }));
+}
+
+function createScopeSelection({
+  includeVariables = [],
+  excludeVariables = [],
+  includeChecked = [],
+  excludeChecked = [],
+  includeManual = [],
+  excludeManual = [],
+} = {}) {
+  return {
+    includeVariables: [...includeVariables],
+    excludeVariables: [...excludeVariables],
+    includeChecked: [...includeChecked],
+    excludeChecked: [...excludeChecked],
+    includeManual: [...includeManual],
+    excludeManual: [...excludeManual],
+  };
+}
+
+function buildSuricataRuleProtocolHint(rule) {
+  const sourceText = [
+    rule?.folderNodeId,
+    rule?.originFolderNodeId,
+    rule?.folderLabel,
+    rule?.name,
+    rule?.description,
+    rule?.classType,
+    rule?.source,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
+  if (
+    /(modbus|scada|plc|industrial|ot[-\s]?control|bacnet|ethernet\/ip)/.test(
+      sourceText,
+    )
+  )
+    return "MODBUS";
+  if (/dnp3/.test(sourceText)) return "DNP3";
+  if (/(dns|txt|domain|beacon)/.test(sourceText)) return "DNS";
+  if (/(smtp|mail)/.test(sourceText)) return "SMTP";
+  if (/ftp/.test(sourceText)) return "FTP";
+  if (/(ssh|admin tooling|bastion|jump host|remote admin)/.test(sourceText))
+    return "SSH";
+  if (/(rdp|terminal services)/.test(sourceText)) return "RDP";
+  if (/(smb|netbios|rpc|named pipe)/.test(sourceText)) return "SMB";
+  if (
+    /(ja3|tls|ssl|https|certificate|proxy|portal|relay|c2|tor)/.test(sourceText)
+  )
+    return "TLS";
+  if (
+    /(icmp|scan|worm|dos|exploit|apache|iis|php|web|http|uri|login|api)/.test(
+      sourceText,
+    )
+  )
+    return "HTTP";
+  return "HTTP";
+}
+
+function buildSuricataRulePatternSeed(protocol, rule, seed) {
+  const slug =
+    String(rule?.name || "rule")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 24) || "rule";
+
+  if (protocol === "DNS") {
+    return {
+      contentMatch: ['"TXT"', "fast_pattern"],
+      dnsQuery: `${slug}.watchlist.internal`,
+      caseSensitive: false,
+    };
+  }
+  if (protocol === "SMTP") {
+    return {
+      contentMatch: ['"EHLO"', '"AUTH"', "nocase"],
+      httpHeader: "",
+      httpUri: "",
+      dnsQuery: "",
+    };
+  }
+  if (protocol === "FTP") {
+    return {
+      contentMatch: ['"USER "', '"PASS "', "nocase"],
+      httpHeader: "",
+      httpUri: "",
+      dnsQuery: "",
+    };
+  }
+  if (protocol === "SSH") {
+    return {
+      contentMatch: ['"SSH-"', "fast_pattern"],
+      httpHeader: "",
+      httpUri: "",
+      dnsQuery: "",
+    };
+  }
+  if (protocol === "RDP") {
+    return {
+      contentMatch: ['"Cookie: mstshash="', "nocase"],
+      httpHeader: "",
+      httpUri: "",
+      dnsQuery: "",
+    };
+  }
+  if (protocol === "SMB") {
+    return {
+      contentMatch: ['"\\\\PIPE\\\\"', "nocase"],
+      httpHeader: "",
+      httpUri: "",
+      dnsQuery: "",
+    };
+  }
+  if (protocol === "MODBUS") {
+    return {
+      rulePatterns: [{ type: "modbusFunction", value: "Read Coils" }],
+      contentMatch: [],
+      httpHeader: "",
+      httpUri: "",
+      dnsQuery: "",
+    };
+  }
+  if (protocol === "DNP3") {
+    return {
+      rulePatterns: [{ type: "dnp3Function", value: "Confirm" }],
+      contentMatch: [],
+      httpHeader: "",
+      httpUri: "",
+      dnsQuery: "",
+    };
+  }
+  if (protocol === "TLS") {
+    return {
+      contentMatch: ['"client_hello"', "fast_pattern"],
+      regexPattern: `/ja3_${seed % 97}/`,
+      modifiers: "",
+      httpHeader: "",
+      httpUri: "",
+      dnsQuery: "",
+    };
+  }
+  return {
+    contentMatch: ['"index.php"', '"?id="', "fast_pattern", "nocase"],
+    regexPattern: `/${slug}/`,
+    modifiers: "",
+    httpUri: `/${slug.split("-")[0] || "admin"}/login`,
+    httpHeader: "curl",
+    httpHeaderField: "User-Agent",
+    dnsQuery: "",
+  };
+}
+
+function buildSuricataReferenceSeed(protocol, rule) {
+  const sid = String(rule?.sid || "");
+  const protocolDocs = {
+    DNS: buildAlertingReferenceRows([
+      [
+        `SID ${sid} Reference`,
+        `https://rules.emergingthreats.net/open/suricata-${sid}`,
+      ],
+      [
+        "CISA DNS Tunneling Guidance",
+        "https://www.cisa.gov/news-events/cybersecurity-advisories",
+      ],
+      [
+        "MITRE T1071.004 - DNS",
+        "https://attack.mitre.org/techniques/T1071/004/",
+      ],
+    ]),
+    HTTP: buildAlertingReferenceRows([
+      [
+        `SID ${sid} Reference`,
+        `https://rules.emergingthreats.net/open/suricata-${sid}`,
+      ],
+      [
+        "MITRE T1190 - Exploit Public-Facing Application",
+        "https://attack.mitre.org/techniques/T1190/",
+      ],
+      ["OWASP Web Attack Guidance", "https://owasp.org/www-project-top-ten/"],
+    ]),
+    TLS: buildAlertingReferenceRows([
+      [
+        `SID ${sid} Reference`,
+        `https://rules.emergingthreats.net/open/suricata-${sid}`,
+      ],
+      [
+        "MITRE T1573 - Encrypted Channel",
+        "https://attack.mitre.org/techniques/T1573/",
+      ],
+      ["JA3 Fingerprinting Reference", "https://github.com/salesforce/ja3"],
+    ]),
+    SMTP: buildAlertingReferenceRows([
+      [
+        `SID ${sid} Reference`,
+        `https://rules.emergingthreats.net/open/suricata-${sid}`,
+      ],
+      ["MITRE T1566 - Phishing", "https://attack.mitre.org/techniques/T1566/"],
+      [
+        "Microsoft Mail Flow Security",
+        "https://learn.microsoft.com/exchange/mail-flow-best-practices/",
+      ],
+    ]),
+    MODBUS: buildAlertingReferenceRows([
+      [
+        `SID ${sid} Reference`,
+        `https://rules.emergingthreats.net/open/suricata-${sid}`,
+      ],
+      ["MITRE ATT&CK for ICS", "https://attack.mitre.org/matrices/ics/"],
+      ["CISA ICS Advisory", "https://www.cisa.gov/news-events/ics-advisories"],
+    ]),
+    DNP3: buildAlertingReferenceRows([
+      [
+        `SID ${sid} Reference`,
+        `https://rules.emergingthreats.net/open/suricata-${sid}`,
+      ],
+      ["MITRE ATT&CK for ICS", "https://attack.mitre.org/matrices/ics/"],
+      ["DNP3 Secure Authentication Overview", "https://www.dnp.org/"],
+    ]),
+  };
+  return (
+    protocolDocs[protocol] ||
+    buildAlertingReferenceRows([
+      [
+        `SID ${sid} Reference`,
+        `https://rules.emergingthreats.net/open/suricata-${sid}`,
+      ],
+      ["Emerging Threats Rule Reference", "https://doc.emergingthreats.net/"],
+    ])
+  );
+}
+
+function buildCanonicalSuricataRuleState(rule) {
+  const seed = hashTreeValue(`${rule?.id}:${rule?.sid}:${rule?.name}`);
+  const protocol = buildSuricataRuleProtocolHint(rule);
+  const protocolPatterns = buildSuricataRulePatternSeed(protocol, rule, seed);
+  const isScada = protocol === "MODBUS" || protocol === "DNP3";
+  const isDns = protocol === "DNS";
+  const isRemoteAdmin = protocol === "SSH" || protocol === "RDP";
+  const isTls = protocol === "TLS";
+  const normalizedClass = String(rule?.classType || "").toLowerCase();
+  const priorityMap = {
+    "trojan activity": "1 · High",
+    "trojan-activity": "1 · High",
+    "web application attack": "1 · High",
+    "policy violation": "2 · Medium",
+    "policy-violation": "2 · Medium",
+    "attempted recon": "2 · Medium",
+    "attempted-recon": "2 · Medium",
+    "potentially bad traffic": "2 · Medium",
+    "bad-known": "2 · Medium",
+    "misc activity": "3 · Low",
+  };
+
+  return {
+    version: "v4 Latest",
+    priority: priorityMap[normalizedClass] || "2 · Medium",
+    protocols: protocol,
+    directionality: seed % 5 === 0 ? "Bidirectional" : "Unidirectional",
+    flow:
+      isDns || isScada
+        ? "To Server"
+        : seed % 3 === 0
+          ? "To Client"
+          : "To Server",
+    state: isScada
+      ? "Stateless"
+      : seed % 4 === 0
+        ? "Not Established"
+        : "Established",
+    subnetFilters: {
+      sourceSubnets: createScopeSelection(
+        isScada
+          ? {
+              includeVariables: ["HOME_NET"],
+              includeChecked: ["10.20.0.0/24", "10.20.8.0/24"],
+            }
+          : {
+              includeVariables: ["HOME_NET"],
+              includeChecked: ["192.168.10.0/24", "10.10.8.0/24"],
+              excludeChecked: isTls ? ["198.51.100.0/24"] : [],
+            },
+      ),
+      destinationSubnets: createScopeSelection(
+        isDns
+          ? {
+              includeVariables: ["DNS_SERVERS", "EXTERNAL_NET"],
+              includeChecked: ["172.18.31.0/24"],
+            }
+          : isRemoteAdmin
+            ? {
+                includeVariables: ["DMZ_NET"],
+                includeChecked: ["192.168.50.0/24"],
+              }
+            : isScada
+              ? {
+                  includeChecked: ["172.24.7.0/24"],
+                  includeManual: ["10.66.19.0/24"],
+                }
+              : {
+                  includeVariables: ["EXTERNAL_NET"],
+                  includeChecked: ["172.18.31.0/24"],
+                },
+      ),
+    },
+    portFilters: {
+      sourcePorts: createScopeSelection(
+        isRemoteAdmin
+          ? {
+              excludeVariables: ["HOME_PORTS"],
+              excludeChecked: ["22"],
+              excludeManual: ["1024:65535"],
+            }
+          : {
+              excludeVariables: ["HOME_PORTS"],
+              excludeChecked: ["80", "443"],
+              excludeManual: ["1024:65535"],
+            },
+      ),
+      destinationPorts: createScopeSelection(
+        isDns
+          ? { includeChecked: ["53"], includeManual: ["5353"] }
+          : isTls
+            ? {
+                includeVariables: ["HTTPS_PORTS"],
+                includeChecked: ["443", "8443"],
+              }
+            : isRemoteAdmin
+              ? {
+                  includeVariables: [
+                    protocol === "SSH" ? "SSH_PORTS" : "HOME_PORTS",
+                  ],
+                  includeChecked: [protocol === "SSH" ? "22" : "3389"],
+                }
+              : isScada
+                ? {
+                    includeVariables: ["OT_CONTROL_PORTS"],
+                    includeChecked: [protocol === "DNP3" ? "20000" : "502"],
+                  }
+                : {
+                    includeVariables: ["HTTP_PORTS"],
+                    includeChecked: ["80", "8080"],
+                  },
+      ),
+    },
+    behaviorTriggerWord: "after",
+    limitEnabled: seed % 6 !== 0,
+    limitCount: 1 + (seed % 3),
+    rateLimiting: seed % 6 !== 0,
+    trackBy: isScada ? "Destination Host" : "Source Host",
+    count: 3 + (seed % 6),
+    seconds: 30 + (seed % 4) * 30,
+    minutes: 15 + (seed % 4) * 15,
+    hours: 1 + (seed % 12),
+    behaviorWindowUnit: isScada ? "minutes" : "seconds",
+    behaviorWindowValue: isScada ? 30 + (seed % 3) * 15 : 30 + (seed % 4) * 30,
+    references: buildSuricataReferenceSeed(protocol, rule),
+    ...protocolPatterns,
+  };
+}
+
+function buildDefaultAlertFilterSelection(values = {}, excluded = {}) {
+  const selection = {};
+  Object.entries(values).forEach(([field, includeChecked]) => {
+    selection[field] = {
+      includeChecked: [...(includeChecked || [])],
+      excludeChecked: [...(excluded[field] || [])],
+      entryOrder: [
+        ...(includeChecked || []),
+        ...(excluded[field] || []).filter(
+          (entry) => !(includeChecked || []).includes(entry),
+        ),
+      ],
+    };
+  });
+  return selection;
+}
+
+function buildDefaultAlertRuleProfile(rule) {
+  const profiles = {
+    20001: {
+      schedule: "Auto",
+      timeRange: "Last 15m",
+      threshold: 8,
+      quota: 2500,
+      filterSelections: buildDefaultAlertFilterSelection(
+        {
+          protocols: ["RDP", "SSH", "SMB"],
+          hosts: ["HQ-SRV-AD-01", "VPN-GW-01"],
+          sourceHosts: ["VPN-GW-01"],
+          destinationHosts: ["HQ-SRV-AD-01"],
+          destinationPorts: ["22", "3389", "445"],
+          subnets: ["10.10.8.0/24", "172.18.31.0/24"],
+        },
+        { ports: ["80"] },
+      ),
+      references: buildAlertingReferenceRows([
+        [
+          "MITRE T1110 - Brute Force",
+          "https://attack.mitre.org/techniques/T1110/",
+        ],
+        [
+          "Microsoft Password Spray Guidance",
+          "https://learn.microsoft.com/security/",
+        ],
+        [
+          "CISA Brute Force Advisory",
+          "https://www.cisa.gov/news-events/cybersecurity-advisories",
+        ],
+      ]),
+    },
+    20002: {
+      schedule: "Auto",
+      timeRange: "Last 5m",
+      threshold: 20,
+      quota: 9000,
+      filterSelections: buildDefaultAlertFilterSelection({
+        protocols: ["RDP", "SMB", "SSH"],
+        sourceHosts: ["VPN-GW-01"],
+        destinationHosts: ["HQ-SRV-AD-01", "DMZ-WEB-02", "DB-PRD-01"],
+        destinationPorts: ["22", "3389", "445"],
+        subnets: ["10.10.4.0/24", "10.10.8.0/24", "172.18.31.0/24"],
+      }),
+      references: buildAlertingReferenceRows([
+        [
+          "MITRE T1046 - Network Service Discovery",
+          "https://attack.mitre.org/techniques/T1046/",
+        ],
+        ["CISA Network Recon Guidance", "https://www.cisa.gov/"],
+      ]),
+    },
+    20003: {
+      schedule: "Auto",
+      timeRange: "Last 30m",
+      threshold: 6,
+      quota: 5000,
+      filterSelections: buildDefaultAlertFilterSelection({
+        protocols: ["DNS", "TLS"],
+        hosts: ["DMZ-WEB-02", "HQ-SRV-AD-01"],
+        destinationPorts: ["53", "443"],
+        subnets: ["172.18.31.0/24", "198.18.12.0/23"],
+      }),
+      references: buildAlertingReferenceRows([
+        [
+          "MITRE T1071.004 - DNS",
+          "https://attack.mitre.org/techniques/T1071/004/",
+        ],
+        ["CISA DNS Security Guidance", "https://www.cisa.gov/"],
+      ]),
+    },
+    20004: {
+      schedule: "Auto",
+      timeRange: "Last 1h",
+      threshold: 3,
+      quota: 1200,
+      filterSelections: buildDefaultAlertFilterSelection({
+        protocols: ["HTTP", "TLS", "SMB"],
+        sourceHosts: ["DB-PRD-01", "MAIL-EX-01"],
+        destinationHosts: ["VPN-GW-01"],
+        destinationPorts: ["443", "445"],
+        subnets: ["10.10.8.0/24", "192.168.50.0/24"],
+      }),
+      references: buildAlertingReferenceRows([
+        [
+          "MITRE T1041 - Exfiltration Over C2 Channel",
+          "https://attack.mitre.org/techniques/T1041/",
+        ],
+        ["NIST Data Exfiltration Guidance", "https://www.nist.gov/"],
+      ]),
+    },
+  };
+  return {
+    version: "v4 Latest",
+    selectedVersionId: "",
+    schedule: "Auto",
+    timeRange: "Auto",
+    threshold: 1,
+    quota: 10000,
+    filterSelections: buildDefaultAlertFilterSelection({}),
+    references: buildAlertingReferenceRows([]),
+    ...(profiles[rule?.id] || {}),
+  };
+}
+
 function getSearchQuery() {
-  return (document.getElementById("ruleSearch")?.value || "").trim().toLowerCase();
+  return (document.getElementById("ruleSearch")?.value || "")
+    .trim()
+    .toLowerCase();
 }
 
 function getAllSidebarNodes() {
@@ -1152,13 +2209,19 @@ function findSidebarNode(nodeId, nodes = [...teleseerNodes, ...suricataRoots]) {
 }
 
 function findNodeByLabelAndSource(label, source) {
-  return getAllSidebarNodes().find((node) => node.label === label && node.source === source) || null;
+  return (
+    getAllSidebarNodes().find(
+      (node) => node.label === label && node.source === source,
+    ) || null
+  );
 }
 
 function collectDescendantNodeIds(node) {
   if (!node) return [];
   const ids = [node.id];
-  (node.children || []).forEach((child) => ids.push(...collectDescendantNodeIds(child)));
+  (node.children || []).forEach((child) =>
+    ids.push(...collectDescendantNodeIds(child)),
+  );
   return ids;
 }
 
@@ -1188,7 +2251,9 @@ function getDisplayFolderLabel(nodeId) {
 }
 
 function getCustomRootNode() {
-  return suricataRoots.find((node) => node.id === "suricata-custom-root") || null;
+  return (
+    suricataRoots.find((node) => node.id === "suricata-custom-root") || null
+  );
 }
 
 function getEditableCustomTargetNodes() {
@@ -1207,7 +2272,8 @@ function getEditableCustomTargetNodes() {
 function formatCompactCount(value) {
   if (!Number.isFinite(value) || value <= 0) return "0";
   if (value >= 1000) {
-    const compact = value >= 100000 ? Math.round(value / 1000) : (value / 1000).toFixed(1);
+    const compact =
+      value >= 100000 ? Math.round(value / 1000) : (value / 1000).toFixed(1);
     return `${compact}k`;
   }
   return String(value);
@@ -1215,11 +2281,16 @@ function formatCompactCount(value) {
 
 function getNodeCountValue(node) {
   if (!node) return 0;
+  const catalogCount = sharedAlertingCatalogCounts?.[node.id];
+  if (Number.isFinite(Number(catalogCount))) {
+    return Number(catalogCount);
+  }
   if (node.source === "Teleseer") {
     return teleseerRuleDb.filter((rule) => rule.category === node.label).length;
   }
   const descendantIds = new Set(collectDescendantNodeIds(node));
-  return suricataRuleDb.filter((rule) => descendantIds.has(rule.folderNodeId)).length;
+  return suricataRuleDb.filter((rule) => descendantIds.has(rule.folderNodeId))
+    .length;
 }
 
 function getNodeDisplayCount(node) {
@@ -1242,13 +2313,14 @@ function getSectionDisplayCount(sectionKey) {
 
 function getSidebarTreeLevel(depth) {
   if (sidebarSOT && typeof sidebarSOT.rowLevelFromVariant === "function") {
-    const variant = depth <= 0
-      ? "item"
-      : depth === 1
-      ? "subitem"
-      : depth === 2
-      ? "subsubitem"
-      : "subsubsubitem";
+    const variant =
+      depth <= 0
+        ? "item"
+        : depth === 1
+          ? "subitem"
+          : depth === 2
+            ? "subsubitem"
+            : "subsubsubitem";
     return sidebarSOT.rowLevelFromVariant(variant);
   }
   if (depth <= 0) return "item";
@@ -1297,6 +2369,7 @@ function getCurrentSelectionRules() {
 }
 
 function getRuleSearchHaystack(rule) {
+  const statusLabels = getRuleStatusTags(rule).map((tag) => tag.label);
   return [
     rule.name,
     rule.description,
@@ -1306,6 +2379,13 @@ function getRuleSearchHaystack(rule) {
     rule.relatedSid,
     rule.folderLabel,
     getDisplayFolderLabel(rule.originFolderNodeId || rule.folderNodeId),
+    rule.enabled ? "enabled" : "disabled",
+    rule.totalHits,
+    rule.speed,
+    rule.lastSeen,
+    rule.createdAt,
+    rule.updatedAt,
+    statusLabels.join(" "),
     (rule.projects || []).join(" "),
   ]
     .join(" ")
@@ -1322,7 +2402,11 @@ function getFilteredRules(rules) {
 
 function sortRules(rules) {
   const sorted = [...rules];
-  if (toolbarState.sortColumn === "none" || toolbarState.sortDirection === "none") return sorted;
+  if (
+    toolbarState.sortColumn === "none" ||
+    toolbarState.sortDirection === "none"
+  )
+    return sorted;
   const direction = toolbarState.sortDirection === "asc" ? 1 : -1;
   sorted.sort((a, b) => {
     let result = 0;
@@ -1340,14 +2424,29 @@ function sortRules(rules) {
         result = String(a.action || "").localeCompare(String(b.action || ""));
         break;
       case "class":
-        result = String(a.classType || "").localeCompare(String(b.classType || ""));
+        result = String(a.classType || "").localeCompare(
+          String(b.classType || ""),
+        );
         break;
       case "speed":
-        result = Number(a.speedValue || Infinity) - Number(b.speedValue || Infinity);
+        result =
+          Number(a.speedValue || Infinity) - Number(b.speedValue || Infinity);
+        break;
+      case "created":
+        result = String(a.createdAt || "").localeCompare(
+          String(b.createdAt || ""),
+        );
+        break;
+      case "updated":
+        result = String(a.updatedAt || "").localeCompare(
+          String(b.updatedAt || ""),
+        );
         break;
       case "lastSeen":
       default:
-        result = Number(a.lastSeenValue || Infinity) - Number(b.lastSeenValue || Infinity);
+        result =
+          Number(a.lastSeenValue || Infinity) -
+          Number(b.lastSeenValue || Infinity);
         break;
     }
     return result * direction;
@@ -1431,22 +2530,58 @@ function renderSidebarSection({
   `;
 }
 
+function renderSidebarVariablesQuickAction() {
+  const isActive = sidebarState.selectedQuickAction === "Variables";
+  return `
+    <button
+      type="button"
+      class="btn-reset side-row sidebar-item-row sidebar-item side-quick-row side-quick-row-variables${isActive ? " is-active" : ""}"
+      data-sidebar-kind="item"
+      data-sidebar-level="item"
+      data-sidebar-active="${isActive ? "true" : "false"}"
+      data-sidebar-expanded="false"
+      onclick="selectQuickAction('Variables')"
+    >
+      <span class="row-content">
+        <span class="row-main">
+          <span class="item-label-group with-gap">
+            <span class="tree-icon" aria-hidden="true">
+              <span class="svg-icon side-icon-rule-variables"></span>
+            </span>
+            <span class="row-label">Variables</span>
+          </span>
+        </span>
+      </span>
+    </button>
+    <div class="side-actions-divider" aria-hidden="true"></div>
+  `;
+}
+
 function syncAlertingSidebarSemantics(root = document) {
   if (!sidebarSOT || typeof sidebarSOT.applyRowSemantics !== "function") return;
-  root.querySelectorAll(".alerting-sidebar .sidebar-item-row").forEach((row) => {
-    sidebarSOT.applyRowSemantics(row, {
-      kind: row.dataset.sidebarKind === "section" ? "section" : "item",
-      level: row.dataset.sidebarLevel || "item",
-      active: row.dataset.sidebarActive === "true" || row.classList.contains("is-active"),
-      expanded: row.dataset.sidebarExpanded === "true" || row.classList.contains("is-expanded"),
-      hasHoverCta: row.dataset.sidebarHoverCta === "true",
-      hasCount: row.dataset.sidebarHasCount === "true" || Boolean(row.querySelector(".count-container")),
+  root
+    .querySelectorAll(".alerting-sidebar .sidebar-item-row")
+    .forEach((row) => {
+      sidebarSOT.applyRowSemantics(row, {
+        kind: row.dataset.sidebarKind === "section" ? "section" : "item",
+        level: row.dataset.sidebarLevel || "item",
+        active:
+          row.dataset.sidebarActive === "true" ||
+          row.classList.contains("is-active"),
+        expanded:
+          row.dataset.sidebarExpanded === "true" ||
+          row.classList.contains("is-expanded"),
+        hasHoverCta: row.dataset.sidebarHoverCta === "true",
+        hasCount:
+          row.dataset.sidebarHasCount === "true" ||
+          Boolean(row.querySelector(".count-container")),
+      });
     });
-  });
 }
 
 function renderSidebarLabel(node, isRenaming) {
-  if (!isRenaming) return `<span class="row-label">${escapeHtml(node.label)}</span>`;
+  if (!isRenaming)
+    return `<span class="row-label">${escapeHtml(node.label)}</span>`;
   return `
     <input
       class="sidebar-rename-input"
@@ -1461,11 +2596,18 @@ function renderSidebarLabel(node, isRenaming) {
 }
 
 function renderTreeNodeIconMarkup(node, hasChildren, isRootNode) {
-  const defaultIconMarkup = !isRootNode && node.source !== "Teleseer"
-    ? renderSidebarImageIcon(SURI_ICON_FOLDER_SRC, "side-icon icon-default")
-    : node.source === "Teleseer"
-      ? renderSidebarIcon(getSidebarContextIconClass(node.label, node.source), "side-icon icon-default")
-      : renderSidebarImageIcon(SURI_ICON_SURICATA_APP_SRC, "side-icon icon-default");
+  const defaultIconMarkup =
+    !isRootNode && node.source !== "Teleseer"
+      ? renderSidebarImageIcon(SURI_ICON_FOLDER_SRC, "side-icon icon-default")
+      : node.source === "Teleseer"
+        ? renderSidebarIcon(
+            getSidebarContextIconClass(node.label, node.source),
+            "side-icon icon-default",
+          )
+        : renderSidebarImageIcon(
+            SURI_ICON_SURICATA_APP_SRC,
+            "side-icon icon-default",
+          );
 
   if (!hasChildren) {
     return defaultIconMarkup;
@@ -1499,9 +2641,13 @@ function handleTreeNodeArrowClick(event, nodeId) {
 }
 
 function renderTreeNode(node, depth = 0) {
-  const isActive = sidebarState.selectedNodeId === node.id;
+  const isActive =
+    !sidebarState.selectedQuickAction &&
+    sidebarState.selectedNodeId === node.id;
   const hasChildren = Array.isArray(node.children) && node.children.length > 0;
-  const isExpanded = hasChildren ? Boolean(sidebarState.expandedTreeNodes[node.id]) : false;
+  const isExpanded = hasChildren
+    ? Boolean(sidebarState.expandedTreeNodes[node.id])
+    : false;
   const isRootNode = suricataRoots.some((root) => root.id === node.id);
   const iconMarkup = renderTreeNodeIconMarkup(node, hasChildren, isRootNode);
   const isRenaming = sidebarState.renameNodeId === node.id;
@@ -1509,35 +2655,38 @@ function renderTreeNode(node, depth = 0) {
   const level = getSidebarTreeLevel(depth);
   const trackCount = getSidebarTreeTrackCount(depth);
   const tracksMarkup = trackCount
-    ? `<span class="indent-tracks">${Array.from({ length: trackCount }).map(() => '<span class="indent-track" aria-hidden="true"></span>').join("")}</span>`
+    ? `<span class="indent-tracks">${Array.from({ length: trackCount })
+        .map(() => '<span class="indent-track" aria-hidden="true"></span>')
+        .join("")}</span>`
     : "";
-  const readonlyBadge = node.readOnly &&
-      depth === 0 &&
-      node.id !== "suricata-etp-root" &&
-      node.id !== "suricata-imported-root"
-    ? '<span class="side-tree-badge">Read-only</span>'
-    : '';
+  const readonlyBadge =
+    node.readOnly &&
+    depth === 0 &&
+    node.id !== "suricata-etp-root" &&
+    node.id !== "suricata-imported-root"
+      ? '<span class="side-tree-badge">Read-only</span>'
+      : "";
 
   return `
-    <div class="side-tree-node tree-node depth-${depth}${isExpanded ? ' is-expanded' : ''}${isActive ? ' is-active' : ''}" data-node-id="${escapeHtml(node.id)}">
+    <div class="side-tree-node tree-node depth-${depth}${isExpanded ? " is-expanded" : ""}${isActive ? " is-active" : ""}" data-node-id="${escapeHtml(node.id)}">
       <div
-        class="side-row sidebar-item-row sidebar-item side-tree-row${isActive ? ' is-active' : ''}${isExpanded ? ' is-expanded' : ''}${node.readOnly ? ' is-readonly' : ''}${node.editable ? ' is-editable' : ''}${hasChildren ? ' has-children' : ''}"
+        class="side-row sidebar-item-row sidebar-item side-tree-row${isActive ? " is-active" : ""}${isExpanded ? " is-expanded" : ""}${node.readOnly ? " is-readonly" : ""}${node.editable ? " is-editable" : ""}${hasChildren ? " has-children" : ""}"
         role="button"
         tabindex="0"
         data-node-row="${escapeHtml(node.id)}"
         data-sidebar-kind="item"
         data-sidebar-level="${escapeHtml(level)}"
-        data-sidebar-active="${isActive ? 'true' : 'false'}"
-        data-sidebar-expanded="${isExpanded ? 'true' : 'false'}"
-        data-sidebar-has-count="${count ? 'true' : 'false'}"
-        data-sidebar-hover-cta="${hasChildren ? 'true' : 'false'}"
-        aria-expanded="${hasChildren ? (isExpanded ? 'true' : 'false') : 'false'}"
+        data-sidebar-active="${isActive ? "true" : "false"}"
+        data-sidebar-expanded="${isExpanded ? "true" : "false"}"
+        data-sidebar-has-count="${count ? "true" : "false"}"
+        data-sidebar-hover-cta="${hasChildren ? "true" : "false"}"
+        aria-expanded="${hasChildren ? (isExpanded ? "true" : "false") : "false"}"
         onclick="handleTreeNodeRowClick('${escapeJsSingleQuoted(node.id)}')"
         onkeydown="handleTreeNodeRowKeydown(event, '${escapeJsSingleQuoted(node.id)}')"
         ondblclick="startSidebarRename('${escapeJsSingleQuoted(node.id)}', event)"
       >
         <span class="row-content">
-          <span class="row-main${trackCount ? ' nested' : ''}">
+          <span class="row-main${trackCount ? " nested" : ""}">
             ${tracksMarkup}
             <span class="item-label-group with-gap">
               <span class="tree-icon"${hasChildren ? "" : ' aria-hidden="true"'}>${iconMarkup}</span>
@@ -1550,7 +2699,7 @@ function renderTreeNode(node, depth = 0) {
       </div>
       ${
         hasChildren
-          ? `<div class="side-tree-children${isExpanded ? '' : ' is-collapsed'}" data-node-children="${escapeHtml(node.id)}" aria-hidden="${isExpanded ? 'false' : 'true'}"><div class="side-tree-children-inner">${node.children.map((child) => renderTreeNode(child, depth + 1)).join("")}</div></div>`
+          ? `<div class="side-tree-children${isExpanded ? "" : " is-collapsed"}" data-node-children="${escapeHtml(node.id)}" aria-hidden="${isExpanded ? "false" : "true"}"><div class="side-tree-children-inner">${node.children.map((child) => renderTreeNode(child, depth + 1)).join("")}</div></div>`
           : ""
       }
     </div>
@@ -1565,8 +2714,12 @@ function renderSidebar() {
     return;
   }
 
-  const teleseerRows = sidebarData.teleseer.items.map((node) => renderTreeNode(node, 0)).join("");
-  const suricataRows = sidebarData.suricata.roots.map((node) => renderTreeNode(node, 0)).join("");
+  const teleseerRows = sidebarData.teleseer.items
+    .map((node) => renderTreeNode(node, 0))
+    .join("");
+  const suricataRows = sidebarData.suricata.roots
+    .map((node) => renderTreeNode(node, 0))
+    .join("");
 
   container.innerHTML = `
     ${renderSidebarSection({
@@ -1584,7 +2737,7 @@ function renderSidebar() {
       title: "Suricata",
       isExpanded: sidebarState.suricataExpanded,
       toggleKey: "suricataExpanded",
-      bodyMarkup: suricataRows,
+      bodyMarkup: `${renderSidebarVariablesQuickAction()}${suricataRows}`,
       count: getSectionDisplayCount("suricata"),
     })}
   `;
@@ -1594,9 +2747,19 @@ function renderSidebar() {
 function renderBreadcrumb(name, source) {
   const breadcrumbEl = document.getElementById("contentBreadcrumb");
   if (!breadcrumbEl) return;
+  if (typeof isRuleFullViewActive === "function" && isRuleFullViewActive()) {
+    breadcrumbEl.innerHTML =
+      typeof renderFullViewBackControl === "function"
+        ? renderFullViewBackControl()
+        : "";
+    return;
+  }
   const selectedNode = getCurrentSelectionNode();
   const count = formatCompactCount(currentRules.length);
-  const subtitle = selectedNode?.source === "Custom Detection" ? '<span class="content-breadcrumb-subtitle">Editable</span>' : '';
+  const subtitle =
+    selectedNode?.source === "Custom Detection"
+      ? '<span class="content-breadcrumb-subtitle">Editable</span>'
+      : "";
   breadcrumbEl.innerHTML = `
     <span class="content-title-row">
       <span class="source-root">${escapeHtml(name)}</span>
@@ -1607,6 +2770,19 @@ function renderBreadcrumb(name, source) {
 }
 
 function isSuricataColumnVisible(columnKey) {
+  const compactDrawerHiddenColumns = new Set([
+    "sid",
+    "class",
+    "created",
+    "updated",
+  ]);
+  if (
+    typeof isRuleDrawerViewActive === "function" &&
+    isRuleDrawerViewActive() &&
+    compactDrawerHiddenColumns.has(columnKey)
+  ) {
+    return false;
+  }
   if (columnKey === "select" || columnKey === "led" || columnKey === "hits") {
     return true;
   }
@@ -1616,13 +2792,19 @@ function isSuricataColumnVisible(columnKey) {
 window.isSuricataColumnVisible = isSuricataColumnVisible;
 
 function closeToolbarMenus() {
-  document.querySelectorAll(".toolbar-dropdown-menu, .multi-select-ribbon-overflow-menu").forEach((menu) => {
-    menu.classList.remove("open");
-  });
-  document.querySelectorAll(".toolbar-menu-anchor > [aria-haspopup='menu']").forEach((button) => {
-    button.classList.remove("active", "is-active");
-    button.setAttribute("aria-expanded", "false");
-  });
+  document
+    .querySelectorAll(
+      ".toolbar-dropdown-menu, .multi-select-ribbon-overflow-menu",
+    )
+    .forEach((menu) => {
+      menu.classList.remove("open");
+    });
+  document
+    .querySelectorAll(".toolbar-menu-anchor > [aria-haspopup='menu']")
+    .forEach((button) => {
+      button.classList.remove("active", "is-active");
+      button.setAttribute("aria-expanded", "false");
+    });
 }
 
 function getToolbarOptionLabel(options, value, fallback) {
@@ -1675,6 +2857,21 @@ function renderToolbarMenuItem({
 function renderViewSettingsMenu() {
   return `
     <div class="view-settings-menu-body">
+      ${renderToolbarMenuSectionLabel("Rule detail view")}
+      ${renderToolbarMenuItem({
+        label: "Drawer",
+        active: getRuleViewPreference() === "drawer",
+        onClick: "setRuleViewPreference('drawer')",
+        iconSrc: SURI_ICON_MINIMIZE_WINDOW_SRC,
+      })}
+      ${renderToolbarMenuItem({
+        label: "Full View",
+        active: getRuleViewPreference() === "full",
+        onClick: "setRuleViewPreference('full')",
+        iconSrc: SURI_ICON_MAXIMIZE_WINDOW_SRC,
+      })}
+      ${renderToolbarMenuDivider()}
+      ${renderToolbarMenuSectionLabel("Columns")}
       ${SURI_VIEW_SETTING_COLUMNS.map(
         (column) => `
           <button
@@ -1712,17 +2909,22 @@ function renderToolbarMenus() {
             meta: option.meta,
             active: toolbarState.sortDirection === option.value,
             onClick: `setRuleSortDirection('${escapeJsSingleQuoted(option.value)}')`,
-            iconSrc: option.value === "asc" ? SURI_ICON_SORT_ASCENDING_SRC : SURI_ICON_SORT_DESCENDING_SRC,
-          })
+            iconSrc:
+              option.value === "asc"
+                ? SURI_ICON_SORT_ASCENDING_SRC
+                : SURI_ICON_SORT_DESCENDING_SRC,
+          }),
         ).join("")}
         ${renderToolbarMenuDivider()}
         ${renderToolbarMenuSectionLabel("Column")}
         ${SURI_SORT_COLUMN_OPTIONS.map((option) =>
           renderToolbarMenuItem({
             label: option.label,
-            active: toolbarState.sortColumn === option.value && toolbarState.sortDirection !== "none",
+            active:
+              toolbarState.sortColumn === option.value &&
+              toolbarState.sortDirection !== "none",
             onClick: `setRuleSortColumn('${escapeJsSingleQuoted(option.value)}')`,
-          })
+          }),
         ).join("")}
       </div>
     `;
@@ -1738,13 +2940,15 @@ function renderToolbarMenus() {
         })}
         ${renderToolbarMenuDivider()}
         ${renderToolbarMenuSectionLabel("Group by")}
-        ${SURI_GROUP_OPTIONS.filter((option) => option.value !== "none").map((option) =>
-          renderToolbarMenuItem({
-            label: option.label,
-            active: toolbarState.group === option.value,
-            onClick: `setRuleGroup('${escapeJsSingleQuoted(option.value)}')`,
-          })
-        ).join("")}
+        ${SURI_GROUP_OPTIONS.filter((option) => option.value !== "none")
+          .map((option) =>
+            renderToolbarMenuItem({
+              label: option.label,
+              active: toolbarState.group === option.value,
+              onClick: `setRuleGroup('${escapeJsSingleQuoted(option.value)}')`,
+            }),
+          )
+          .join("")}
       </div>
     `;
   }
@@ -1790,13 +2994,36 @@ function updateHeaderActionState() {
   const viewSettingsButton = document.getElementById("contentViewSettingsBtn");
   const toolbarControls = document.getElementById("modalToolbarControls");
   if (!createButton) return;
+  if (isVariablesViewActive()) {
+    if (toolbarControls) toolbarControls.classList.add("hidden");
+    if (thresholdButton) thresholdButton.classList.add("hidden");
+    if (viewSettingsButton) viewSettingsButton.classList.add("hidden");
+    createButton.classList.add("hidden");
+    return;
+  }
   const selectedNode = getCurrentSelectionNode();
-  const isSuricataView = Boolean(selectedNode && selectedNode.source !== "Teleseer");
-  if (toolbarControls) toolbarControls.classList.toggle("hidden", !isSuricataView);
-  if (thresholdButton) thresholdButton.classList.toggle("hidden", !isSuricataView);
-  if (viewSettingsButton) viewSettingsButton.classList.toggle("hidden", !isSuricataView);
+  const isSuricataView = Boolean(
+    selectedNode && selectedNode.source !== "Teleseer",
+  );
+  const ruleViewMode =
+    typeof isRuleFullViewActive === "function" && isRuleFullViewActive()
+      ? "full"
+      : typeof isRuleDrawerViewActive === "function" && isRuleDrawerViewActive()
+        ? "drawer"
+        : "list";
+  if (toolbarControls)
+    toolbarControls.classList.toggle("hidden", !isSuricataView);
+  if (thresholdButton)
+    thresholdButton.classList.toggle("hidden", !isSuricataView);
+  if (viewSettingsButton)
+    viewSettingsButton.classList.toggle("hidden", !isSuricataView);
   createButton.disabled = false;
   if (selectedNode?.source === "Teleseer") {
+    createButton.classList.add("hidden");
+    return;
+  }
+  if (ruleViewMode === "full") {
+    thresholdButton?.classList.add("hidden");
     createButton.classList.add("hidden");
     return;
   }
@@ -1829,12 +3056,18 @@ function selectSidebarNodeById(nodeId, options = {}) {
 }
 
 function selectCategory(name, source) {
-  const node = findNodeByLabelAndSource(name, source) || findNodeByLabelAndSource(name, sidebarState.selectedSource) || findNodeByLabelAndSource(name, "Teleseer");
+  const node =
+    findNodeByLabelAndSource(name, source) ||
+    findNodeByLabelAndSource(name, sidebarState.selectedSource) ||
+    findNodeByLabelAndSource(name, "Teleseer");
   if (!node) return;
   selectSidebarNodeById(node.id);
 }
 
-function expandSidebarPathToNode(nodeId, nodes = [...teleseerNodes, ...suricataRoots]) {
+function expandSidebarPathToNode(
+  nodeId,
+  nodes = [...teleseerNodes, ...suricataRoots],
+) {
   for (const node of nodes) {
     if (node.id === nodeId) return true;
     if (Array.isArray(node.children) && node.children.length) {
@@ -1852,6 +3085,7 @@ function selectQuickAction(name) {
   if (isWorkspaceVariablesModal()) return;
   if (name !== "Variables" && name !== "Variable") return;
   sidebarState.selectedCategory = "";
+  sidebarState.selectedNodeId = null;
   sidebarState.selectedQuickAction = "Variables";
   clearRuleSelection();
   resetRuleVariablesViewState();
@@ -1876,9 +3110,17 @@ function toggleTreeNode(nodeId) {
 }
 
 function syncSidebarActiveNodeDom(previousNodeId, nextNodeId) {
+  if (sidebarState.selectedQuickAction) {
+    return;
+  }
+  clearSidebarQuickActionActiveDom();
   if (previousNodeId) {
-    const prevWrapper = document.querySelector(`.side-tree-node[data-node-id="${CSS.escape(previousNodeId)}"]`);
-    const prevRow = document.querySelector(`.side-tree-row[data-node-row="${CSS.escape(previousNodeId)}"]`);
+    const prevWrapper = document.querySelector(
+      `.side-tree-node[data-node-id="${CSS.escape(previousNodeId)}"]`,
+    );
+    const prevRow = document.querySelector(
+      `.side-tree-row[data-node-row="${CSS.escape(previousNodeId)}"]`,
+    );
     prevWrapper?.classList.remove("is-active");
     if (prevRow) {
       prevRow.classList.remove("is-active", "active");
@@ -1886,8 +3128,12 @@ function syncSidebarActiveNodeDom(previousNodeId, nextNodeId) {
     }
   }
   if (nextNodeId) {
-    const nextWrapper = document.querySelector(`.side-tree-node[data-node-id="${CSS.escape(nextNodeId)}"]`);
-    const nextRow = document.querySelector(`.side-tree-row[data-node-row="${CSS.escape(nextNodeId)}"]`);
+    const nextWrapper = document.querySelector(
+      `.side-tree-node[data-node-id="${CSS.escape(nextNodeId)}"]`,
+    );
+    const nextRow = document.querySelector(
+      `.side-tree-row[data-node-row="${CSS.escape(nextNodeId)}"]`,
+    );
     nextWrapper?.classList.add("is-active");
     if (nextRow) {
       nextRow.classList.add("is-active", "active");
@@ -1896,10 +3142,27 @@ function syncSidebarActiveNodeDom(previousNodeId, nextNodeId) {
   }
 }
 
+function clearSidebarQuickActionActiveDom() {
+  document
+    .querySelectorAll(".alerting-sidebar .side-quick-row")
+    .forEach((row) => {
+      if (document.activeElement === row) row.blur();
+      row.classList.remove("is-active", "active");
+      row.dataset.sidebarActive = "false";
+      row.removeAttribute("aria-current");
+    });
+}
+
 function syncSidebarTreeNodeDom(nodeId, isExpanded) {
-  const wrapper = document.querySelector(`.side-tree-node[data-node-id="${CSS.escape(nodeId)}"]`);
-  const row = document.querySelector(`.side-tree-row[data-node-row="${CSS.escape(nodeId)}"]`);
-  const children = document.querySelector(`.side-tree-children[data-node-children="${CSS.escape(nodeId)}"]`);
+  const wrapper = document.querySelector(
+    `.side-tree-node[data-node-id="${CSS.escape(nodeId)}"]`,
+  );
+  const row = document.querySelector(
+    `.side-tree-row[data-node-row="${CSS.escape(nodeId)}"]`,
+  );
+  const children = document.querySelector(
+    `.side-tree-children[data-node-children="${CSS.escape(nodeId)}"]`,
+  );
   if (!wrapper && !row && !children) return false;
   wrapper?.classList.toggle("is-expanded", isExpanded);
   if (row) {
@@ -1935,7 +3198,8 @@ function syncSidebarSectionDom(sectionKey, isExpanded) {
   if (!sectionEl && !bodyEl && !toggleEl) return false;
   if (sectionEl) sectionEl.classList.toggle("is-collapsed", !isExpanded);
   if (bodyEl) bodyEl.classList.toggle("is-collapsed", !isExpanded);
-  if (toggleEl) toggleEl.setAttribute("aria-expanded", isExpanded ? "true" : "false");
+  if (toggleEl)
+    toggleEl.setAttribute("aria-expanded", isExpanded ? "true" : "false");
   return true;
 }
 
@@ -1978,7 +3242,10 @@ function commitSidebarRename(nodeId) {
   sidebarState.renameNodeId = null;
   sidebarState.renameDraft = "";
   renderSidebar();
-  renderBreadcrumb(getCurrentSelectionNode()?.label || activeCategory, getCurrentSelectionNode()?.source || sidebarState.selectedSource);
+  renderBreadcrumb(
+    getCurrentSelectionNode()?.label || activeCategory,
+    getCurrentSelectionNode()?.source || sidebarState.selectedSource,
+  );
   renderRules();
 }
 
@@ -2001,17 +3268,21 @@ function createNewCustomNode(parentId, name) {
 }
 
 function addNewCustomRule(targetNodeId = null) {
-  const targetNode = findSidebarNode(targetNodeId) || getCustomRootNode()?.children?.[0] || getCustomRootNode();
+  const targetNode =
+    findSidebarNode(targetNodeId) ||
+    getCustomRootNode()?.children?.[0] ||
+    getCustomRootNode();
   if (!targetNode) return;
+  const nextId = nextGeneratedRuleId++;
   const nextRule = normalizeSuricataRule({
-    id: nextGeneratedRuleId++,
+    id: nextId,
     folderNodeId: targetNode.id,
     source: "Custom Detection",
-    name: `New Custom Detection ${nextGeneratedRuleId % 1000}`,
+    name: `New Custom Detection ${nextId % 1000}`,
     description: "New custom detection awaiting tuning.",
     action: "Alert",
-    sid: nextGeneratedRuleId,
-    relatedSid: nextGeneratedRuleId,
+    sid: nextId,
+    relatedSid: nextId,
     classType: "Attempted Admin",
     speed: "-",
     speedValue: -1,
@@ -2021,7 +3292,7 @@ function addNewCustomRule(targetNodeId = null) {
     enabled: true,
     editable: true,
     ruleStateTags: [],
-    statusDot: "gray",
+    statusDot: "green",
     folderLabel: getDisplayFolderLabel(targetNode.id),
   });
   suricataRuleDb.unshift(nextRule);
@@ -2036,27 +3307,39 @@ function duplicateRuleToCustomTarget(ruleId, targetNodeId, options = {}) {
     teleseerRuleDb.find((rule) => rule.id === ruleId);
   const targetNode = findSidebarNode(targetNodeId);
   if (!sourceRule || !targetNode || !targetNode.editable) return null;
-  const copyIndex = suricataRuleDb.filter((rule) => rule.name === sourceRule.name && rule.folderNodeId === targetNodeId).length + 1;
-  const copyName = copyIndex > 1 ? `${sourceRule.name} Copy ${copyIndex}` : `${sourceRule.name} Copy`;
+  const copyIndex =
+    suricataRuleDb.filter(
+      (rule) =>
+        rule.name === sourceRule.name && rule.folderNodeId === targetNodeId,
+    ).length + 1;
+  const copyName =
+    copyIndex > 1
+      ? `${sourceRule.name} Copy ${copyIndex}`
+      : `${sourceRule.name} Copy`;
   const preservedTags = Array.isArray(sourceRule.ruleStateTags)
     ? sourceRule.ruleStateTags.filter((tag) => {
         const label = String(tag?.label || "").toLowerCase();
         return label === "broken";
       })
     : [];
+  const nextId = nextGeneratedRuleId++;
+  const sourceSid = Number(
+    sourceRule.sid || sourceRule.relatedSid || sourceRule.id || nextId,
+  );
   const duplicate = normalizeSuricataRule({
     ...sourceRule,
-    id: nextGeneratedRuleId++,
+    id: nextId,
     name: copyName,
     source: "Custom Detection",
     editable: true,
     enabled: true,
     folderNodeId: targetNode.id,
-    originFolderNodeId: sourceRule.originFolderNodeId || sourceRule.folderNodeId,
-    relatedSid: sourceRule.sid || sourceRule.relatedSid || sourceRule.id,
-    sid: nextGeneratedRuleId,
+    originFolderNodeId:
+      sourceRule.originFolderNodeId || sourceRule.folderNodeId,
+    relatedSid: sourceSid,
+    sid: nextId,
     ruleStateTags: preservedTags,
-    statusDot: "gray",
+    statusDot: "green",
     folderLabel: getDisplayFolderLabel(targetNode.id),
   });
   suricataRuleDb.unshift(duplicate);
@@ -2089,7 +3372,9 @@ function triggerSidebarAction(actionName) {
     return;
   }
   if (actionName === "Export") {
-    showToast(`Exported ${currentRules.length} visible rule${currentRules.length === 1 ? "" : "s"}`);
+    showToast(
+      `Exported ${currentRules.length} visible rule${currentRules.length === 1 ? "" : "s"}`,
+    );
     return;
   }
   showToast(`${actionName} action`);
@@ -2121,7 +3406,9 @@ function setRuleSortColumn(value) {
     toolbarState.sortDirection = "none";
   } else if (toolbarState.sortDirection === "none") {
     // Column clicked while no direction was active — auto-activate a sensible default
-    toolbarState.sortDirection = getDefaultSortDirectionForColumn(toolbarState.sortColumn);
+    toolbarState.sortDirection = getDefaultSortDirectionForColumn(
+      toolbarState.sortColumn,
+    );
   }
   closeToolbarMenus();
   refreshRuleCollections({ preservePage: false });
@@ -2165,7 +3452,9 @@ function getVisibleSuricataPageRules() {
 
 function getVisibleSuricataPageSelectionState() {
   const pageRules = getVisibleSuricataPageRules();
-  const selectedCount = pageRules.filter((rule) => selectedRuleIds.has(rule.id)).length;
+  const selectedCount = pageRules.filter((rule) =>
+    selectedRuleIds.has(rule.id),
+  ).length;
   const total = pageRules.length;
   return {
     total,
@@ -2213,7 +3502,8 @@ function renderSuricataHeaderSelectionControl() {
   `;
 }
 
-window.renderSuricataHeaderSelectionControl = renderSuricataHeaderSelectionControl;
+window.renderSuricataHeaderSelectionControl =
+  renderSuricataHeaderSelectionControl;
 
 function getSelectedRules() {
   const selection = new Set(selectedRuleIds);
@@ -2325,7 +3615,11 @@ function renderRuleSelectionRibbonOverflowMenu(summary, ribbonState) {
     </button>
   `);
 
-  if (ribbonState === "smallest" && summary.bulkToggleAction && summary.bulkToggleCount) {
+  if (
+    ribbonState === "smallest" &&
+    summary.bulkToggleAction &&
+    summary.bulkToggleCount
+  ) {
     const toggleLabel = `${summary.bulkToggleAction === "enable" ? "Enable" : "Disable"} ${formatSelectedRuleCountLabel(summary.bulkToggleCount)}`;
     const toggleIsOn = summary.bulkToggleAction === "disable";
     menuRows.push(`
@@ -2344,7 +3638,9 @@ function renderRuleSelectionRibbonOverflowMenu(summary, ribbonState) {
     `);
   }
 
-  return menuRows.join('\n<div class="toolbar-menu-divider" aria-hidden="true"></div>\n');
+  return menuRows.join(
+    '\n<div class="toolbar-menu-divider" aria-hidden="true"></div>\n',
+  );
 }
 
 function renderRuleSelectionRibbonInlineToggle(summary) {
@@ -2418,13 +3714,17 @@ function renderRuleSelectionRibbonMarkup(ribbon, summary, ribbonState) {
       ribbonActions.push(inlineToggle);
     }
   } else if (ribbonState === "compact") {
-    ribbonActions.push(renderRuleSelectionRibbonOverflowButton(summary, ribbonState));
+    ribbonActions.push(
+      renderRuleSelectionRibbonOverflowButton(summary, ribbonState),
+    );
     const inlineToggle = renderRuleSelectionRibbonInlineToggle(summary);
     if (inlineToggle) {
       ribbonActions.push(inlineToggle);
     }
   } else {
-    ribbonActions.push(renderRuleSelectionRibbonOverflowButton(summary, ribbonState));
+    ribbonActions.push(
+      renderRuleSelectionRibbonOverflowButton(summary, ribbonState),
+    );
   }
 
   ribbon.innerHTML = `
@@ -2476,26 +3776,32 @@ function deleteSelectedRules() {
   refreshRuleCollections({ preservePage: true });
   renderSidebar();
   renderRules();
-  showToast(`Deleted ${editableRules.length} rule${editableRules.length === 1 ? "" : "s"}`);
+  showToast(
+    `Deleted ${editableRules.length} rule${editableRules.length === 1 ? "" : "s"}`,
+  );
 }
 
 function setSelectedRulesEnabled(nextEnabled) {
   const summary = getSelectedRuleSummary();
   if (!summary.bulkToggleAction || !summary.bulkToggleCount) return;
   const targetRules = summary.editableRules.filter((rule) =>
-    nextEnabled ? !rule.enabled : rule.enabled
+    nextEnabled ? !rule.enabled : rule.enabled,
   );
   if (!targetRules.length) return;
   const selectedIds = new Set(targetRules.map((rule) => rule.id));
   suricataRuleDb = suricataRuleDb.map((rule) =>
     selectedIds.has(rule.id)
-      ? { ...rule, enabled: nextEnabled, statusDot: nextEnabled ? "green" : "gray" }
-      : rule
+      ? {
+          ...rule,
+          enabled: nextEnabled,
+          statusDot: nextEnabled ? "green" : "gray",
+        }
+      : rule,
   );
   refreshRuleCollections({ preservePage: true });
   renderRules();
   showToast(
-    `${nextEnabled ? "Enabled" : "Disabled"} ${targetRules.length} rule${targetRules.length === 1 ? "" : "s"}`
+    `${nextEnabled ? "Enabled" : "Disabled"} ${targetRules.length} rule${targetRules.length === 1 ? "" : "s"}`,
   );
 }
 
@@ -2524,7 +3830,10 @@ function copyLinkSelectedRules() {
   const payload = rules.map((rule) => `${rule.source}:${rule.sid}`).join("\n");
   if (navigator.clipboard?.writeText) {
     navigator.clipboard.writeText(payload).then(
-      () => showToast(`Copied ${rules.length} link${rules.length === 1 ? "" : "s"}`),
+      () =>
+        showToast(
+          `Copied ${rules.length} link${rules.length === 1 ? "" : "s"}`,
+        ),
       () => showToast("Could not copy links"),
     );
     return;
@@ -2544,7 +3853,7 @@ function duplicateSelectedRules() {
         enterEditMode: false,
         syncSelection: false,
         render: false,
-      })
+      }),
     )
     .filter(Boolean);
   if (!duplicates.length) return;
@@ -2552,7 +3861,7 @@ function duplicateSelectedRules() {
   selectedRuleIds = new Set(duplicates.map((rule) => rule.id));
   renderRules();
   showToast(
-    `Duplicated ${duplicates.length} rule${duplicates.length === 1 ? "" : "s"} to Custom Detection`
+    `Duplicated ${duplicates.length} rule${duplicates.length === 1 ? "" : "s"} to Custom Detection`,
   );
 }
 
@@ -2573,7 +3882,9 @@ function resolveReferencedOriginalRule(rule) {
   );
   const candidates = candidatesBySid.length
     ? candidatesBySid
-    : suricataRuleDb.filter((item) => Number(item?.relatedSid) === referenceSid);
+    : suricataRuleDb.filter(
+        (item) => Number(item?.relatedSid) === referenceSid,
+      );
   if (!candidates.length) return null;
   return (
     candidates.find(
@@ -2589,7 +3900,9 @@ function resolveReferencedOriginalRule(rule) {
         (item.folderNodeId === originFolderNodeId ||
           item.originFolderNodeId === originFolderNodeId),
     ) ||
-    candidates.find((item) => item.id !== rule.id && isReadonlySuricataRule(item)) ||
+    candidates.find(
+      (item) => item.id !== rule.id && isReadonlySuricataRule(item),
+    ) ||
     candidates.find((item) => item.id !== rule.id) ||
     candidates[0]
   );
@@ -2659,7 +3972,8 @@ function splitStatusTagsForCell(tags) {
 
 function renderStatusTags(rule) {
   const tags = getRuleStatusTags(rule);
-  if (!tags.length) return '<div class="rule-status-stack"><span class="variable-empty">-</span></div>';
+  if (!tags.length)
+    return '<div class="rule-status-stack"><span class="variable-empty">-</span></div>';
   const { visible, hidden } = splitStatusTagsForCell(tags);
   const hiddenTooltip = hidden.length
     ? getTooltipAttribute(formatTooltipItems(hidden.map((tag) => tag.label)))
@@ -2669,11 +3983,20 @@ function renderStatusTags(rule) {
       ${visible.map((tag) => `<span class="status-pill tone-${escapeHtml(tag.tone || "neutral")}">${escapeHtml(tag.label)}</span>`).join("")}
       ${
         hidden.length
-          ? `<span class="variable-chip rule-project-chip status-pill-overflow"${hiddenTooltip}>+${hidden.length}</span>`
+          ? `<span class="variable-chip status-overflow-chip status-pill-overflow"${hiddenTooltip}>+${hidden.length}</span>`
           : ""
       }
     </div>
   `;
+}
+
+function getPrimaryRuleStatusLabel(rule) {
+  const tags = getRuleStatusTags(rule);
+  const broken = tags.find(
+    (tag) => String(tag?.label || "").toLowerCase() === "broken",
+  );
+  if (broken) return broken.label;
+  return tags[0]?.label || "";
 }
 
 function renderGroupedRuleRows(pageRules, metricState = currentRenderMetrics) {
@@ -2688,16 +4011,18 @@ function renderGroupedRuleRows(pageRules, metricState = currentRenderMetrics) {
     } else if (toolbarState.group === "class") {
       key = String(rule.classType || "Unknown");
     } else if (toolbarState.group === "status") {
-      key = getRuleStatusTags(rule)[0]?.label || "No Status";
+      key = getPrimaryRuleStatusLabel(rule) || "No Status";
     }
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key).push(rule);
   });
   return Array.from(groups.entries())
-    .map(([groupName, rules]) => `
+    .map(
+      ([groupName, rules]) => `
       <tr class="rules-group-row"><td colspan="${getTableLayoutColumns("suricata").length}">${escapeHtml(groupName)} <span>${rules.length}</span></td></tr>
       ${rules.map((rule) => renderRuleRow(rule, metricState)).join("")}
-    `)
+    `,
+    )
     .join("");
 }
 
@@ -2711,7 +4036,12 @@ function getRuleMetricMax(metricKey) {
 }
 
 function getRuleMetricFillPercent(value, maxValue) {
-  if (!Number.isFinite(value) || value < 0 || !Number.isFinite(maxValue) || maxValue <= 0) {
+  if (
+    !Number.isFinite(value) ||
+    value < 0 ||
+    !Number.isFinite(maxValue) ||
+    maxValue <= 0
+  ) {
     return 0;
   }
   return Math.max(10, Math.min(100, (value / maxValue) * 100));
@@ -2763,7 +4093,7 @@ function buildSuricataRenderModel(pageRules) {
       } else if (groupBy === "class") {
         key = String(rule.classType || "Unknown");
       } else if (groupBy === "status") {
-        key = getRuleStatusTags(rule)[0]?.label || "No Status";
+        key = getPrimaryRuleStatusLabel(rule) || "No Status";
       }
       if (!groups.has(key)) groups.set(key, []);
       groups.get(key).push(rule);
@@ -2826,7 +4156,9 @@ function findSuricataRenderEndIndex(endY) {
 
 function renderSpacerRow(spacerHeight, columnsLength, spacerClass = "") {
   if (spacerHeight <= 0) return "";
-  const className = spacerClass ? `rules-table-spacer ${spacerClass}` : "rules-table-spacer";
+  const className = spacerClass
+    ? `rules-table-spacer ${spacerClass}`
+    : "rules-table-spacer";
   return `
     <tr class="${className}" aria-hidden="true" style="height:${spacerHeight}px">
       <td colspan="${columnsLength}" style="height:${spacerHeight}px;padding:0;border:0;line-height:0;font-size:0"></td>
@@ -2840,7 +4172,10 @@ function renderSuricataVirtualRows() {
   if (!tbody || !container) return;
   const columns = getSuricataTableColumns();
   if (!currentRenderItems.length) {
-    tbody.innerHTML = "";
+    const query = getSearchQuery();
+    const message =
+      query && allRules.length ? "No rules match search" : "No rules";
+    tbody.innerHTML = renderRulesEmptyStateRow(columns.length, message);
     const paginationStartEl = document.getElementById("paginationStart");
     const paginationEndEl = document.getElementById("paginationEnd");
     if (paginationStartEl) paginationStartEl.textContent = "0";
@@ -2854,17 +4189,25 @@ function renderSuricataVirtualRows() {
     container.scrollTop = maxScrollTop;
   }
   const scrollTop = Math.max(0, container.scrollTop || 0);
-  const overscan = SURICATA_TABLE_VIEWPORT.overscanRows * SURICATA_TABLE_VIEWPORT.rowHeight;
+  const overscan =
+    SURICATA_TABLE_VIEWPORT.overscanRows * SURICATA_TABLE_VIEWPORT.rowHeight;
   const startY = Math.max(0, scrollTop - overscan);
-  const endY = Math.min(currentRenderTotalHeight, scrollTop + viewportHeight + overscan);
+  const endY = Math.min(
+    currentRenderTotalHeight,
+    scrollTop + viewportHeight + overscan,
+  );
   const startIndex = findSuricataRenderStartIndex(startY);
   const endIndex = findSuricataRenderEndIndex(endY);
   const firstIndex = Math.min(startIndex, currentRenderItems.length - 1);
-  const lastIndex = Math.max(firstIndex, Math.min(endIndex, currentRenderItems.length - 1));
+  const lastIndex = Math.max(
+    firstIndex,
+    Math.min(endIndex, currentRenderItems.length - 1),
+  );
   const topSpacer = currentRenderOffsets[firstIndex] || 0;
   const bottomSpacer = Math.max(
     0,
-    currentRenderTotalHeight - (currentRenderOffsets[lastIndex + 1] || currentRenderTotalHeight),
+    currentRenderTotalHeight -
+      (currentRenderOffsets[lastIndex + 1] || currentRenderTotalHeight),
   );
 
   const visibleMarkup = currentRenderItems
@@ -2891,8 +4234,10 @@ function renderSuricataVirtualRows() {
 
   const paginationStartEl = document.getElementById("paginationStart");
   const paginationEndEl = document.getElementById("paginationEnd");
-  if (paginationStartEl) paginationStartEl.textContent = String(currentRules.length ? 1 : 0);
-  if (paginationEndEl) paginationEndEl.textContent = String(currentRules.length);
+  if (paginationStartEl)
+    paginationStartEl.textContent = String(currentRules.length ? 1 : 0);
+  if (paginationEndEl)
+    paginationEndEl.textContent = String(currentRules.length);
 }
 
 function scheduleSuricataVirtualRowsRender() {
@@ -2901,6 +4246,49 @@ function scheduleSuricataVirtualRowsRender() {
     suricataVirtualRenderFrame = 0;
     renderSuricataVirtualRows();
   });
+}
+
+function formatRuleTimestampLabel(timestamp) {
+  const date = new Date(timestamp);
+  if (Number.isNaN(date.getTime())) return String(timestamp || "-");
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(date);
+}
+
+function formatRuleTimestampTooltip(timestamp) {
+  const date = new Date(timestamp);
+  if (Number.isNaN(date.getTime())) return String(timestamp || "-");
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+    timeZone: "UTC",
+    timeZoneName: "short",
+  }).format(date);
+}
+
+function renderRuleTimestampButton(timestamp, labelPrefix) {
+  const tooltipText = formatRuleTimestampTooltip(timestamp);
+  const label = formatRuleTimestampLabel(timestamp);
+  return `
+    <button
+      type="button"
+      class="btn-reset alerts-tertiary-button btn-tertiary--info variable-timestamp-button"
+      onclick="event.stopPropagation()"
+      ${getTooltipAttributes(tooltipText)}
+      aria-label="${escapeHtml(`${labelPrefix}: ${tooltipText}`)}"
+    >
+      ${escapeHtml(label)}
+    </button>
+  `;
 }
 
 function renderRuleMetricPill(label, fillPercent, extraClass = "") {
@@ -2916,8 +4304,11 @@ function renderRuleMetricPill(label, fillPercent, extraClass = "") {
 }
 
 function renderRuleRow(rule, metricState = currentRenderMetrics) {
-  const secondaryFolder = getDisplayFolderLabel(rule.originFolderNodeId || rule.folderNodeId);
-  const speedMax = Number(metricState?.speedMax) || getRuleMetricMax("speedValue");
+  const secondaryFolder = getDisplayFolderLabel(
+    rule.originFolderNodeId || rule.folderNodeId,
+  );
+  const speedMax =
+    Number(metricState?.speedMax) || getRuleMetricMax("speedValue");
   const hitsMax = Number(metricState?.hitsMax) || getRuleMetricMax("totalHits");
   const speedLabel = rule.speed || "-";
   const speedFill = getRuleMetricFillPercent(Number(rule.speedValue), speedMax);
@@ -2925,9 +4316,10 @@ function renderRuleRow(rule, metricState = currentRenderMetrics) {
   const hitsFill = getRuleMetricFillPercent(Number(rule.totalHits), hitsMax);
   const isBulkSelected = selectedRuleIds.has(rule.id);
   const statusTone = rule.enabled ? "is-green" : "is-gray";
-  const nameTooltip = (rule.name || "")
-    ? `${getTooltipAttribute(rule.name)} data-tooltip-overflow`
-    : "";
+  const nameTooltip =
+    rule.name || ""
+      ? `${getTooltipAttribute(rule.name)} data-tooltip-overflow`
+      : "";
   const showDerivedMeta = !isReadonlySuricataRule(rule);
   const metaLine = showDerivedMeta
     ? `
@@ -2959,10 +4351,14 @@ function renderRuleRow(rule, metricState = currentRenderMetrics) {
     `,
   ];
   if (isSuricataColumnVisible("sid")) {
-    cells.push(`<td class="col-sid">${escapeHtml(String(rule.sid || "-"))}</td>`);
+    cells.push(
+      `<td class="col-sid">${escapeHtml(String(rule.sid || "-"))}</td>`,
+    );
   }
   if (isSuricataColumnVisible("action")) {
-    cells.push(`<td class="col-action"><span class="rule-action-pill ${getActionToneClass(rule.action)}">${escapeHtml(rule.action || "Alert")}</span></td>`);
+    cells.push(
+      `<td class="col-action"><span class="rule-action-pill ${getActionToneClass(rule.action)}">${escapeHtml(rule.action || "Alert")}</span></td>`,
+    );
   }
   if (isSuricataColumnVisible("name")) {
     cells.push(`
@@ -2975,15 +4371,33 @@ function renderRuleRow(rule, metricState = currentRenderMetrics) {
     `);
   }
   if (isSuricataColumnVisible("class")) {
-    cells.push(`<td class="col-class"><span class="rule-class">${escapeHtml(rule.classType || "-")}</span></td>`);
+    cells.push(
+      `<td class="col-class"><span class="rule-class">${escapeHtml(rule.classType || "-")}</span></td>`,
+    );
   }
   if (isSuricataColumnVisible("speed")) {
-    cells.push(`<td class="col-speed">${renderRuleMetricPill(speedLabel, speedFill, "is-speed")}</td>`);
+    cells.push(
+      `<td class="col-speed">${renderRuleMetricPill(speedLabel, speedFill, "is-speed")}</td>`,
+    );
   }
   if (isSuricataColumnVisible("lastSeen")) {
-    cells.push(`<td class="col-last-seen">${escapeHtml(rule.lastSeen || "-")}</td>`);
+    cells.push(
+      `<td class="col-last-seen">${escapeHtml(rule.lastSeen || "-")}</td>`,
+    );
   }
-  cells.push(`<td class="col-hits">${renderRuleMetricPill(hitsLabel, hitsFill, "is-hits")}</td>`);
+  cells.push(
+    `<td class="col-hits">${renderRuleMetricPill(hitsLabel, hitsFill, "is-hits")}</td>`,
+  );
+  if (isSuricataColumnVisible("created")) {
+    cells.push(
+      `<td class="col-created">${renderRuleTimestampButton(rule.createdAt, "Created")}</td>`,
+    );
+  }
+  if (isSuricataColumnVisible("updated")) {
+    cells.push(
+      `<td class="col-updated">${renderRuleTimestampButton(rule.updatedAt, "Updated")}</td>`,
+    );
+  }
   if (isSuricataColumnVisible("status")) {
     cells.push(`<td class="col-status">${renderStatusTags(rule)}</td>`);
   }
@@ -2995,13 +4409,15 @@ function renderRuleRow(rule, metricState = currentRenderMetrics) {
 }
 
 function renderDefaultAlertRow(rule) {
-  const projects = Array.isArray(rule.projects) ? rule.projects.filter(Boolean) : [];
+  const projects = Array.isArray(rule.projects)
+    ? rule.projects.filter(Boolean)
+    : [];
   const projectsLabel = projects.length
     ? `${projects.length} ${projects.length === 1 ? "Project" : "Projects"}`
     : "-";
   const projectTooltip = getTooltipAttribute(formatTooltipItems(projects));
   const projectChip = projects.length
-    ? `<span class="variable-chip rule-project-chip"${projectTooltip}>${escapeHtml(projectsLabel)}</span>`
+    ? `<span class="variable-chip project-count-chip"${projectTooltip}>${escapeHtml(projectsLabel)}</span>`
     : '<span class="variable-empty">-</span>';
   const hitsMax = getRuleMetricMax("totalHits");
   const hitsLabel = formatHitCount(rule.totalHits || 0);
@@ -3023,9 +4439,20 @@ function renderDefaultAlertRow(rule) {
 
 function updateRuleCounts() {
   const ruleCountEl = document.getElementById("ruleCount");
-  if (ruleCountEl) ruleCountEl.textContent = formatCompactCount(currentRules.length);
+  if (ruleCountEl)
+    ruleCountEl.textContent = formatCompactCount(currentRules.length);
   const totalEl = document.getElementById("paginationTotal");
   if (totalEl) totalEl.textContent = formatCompactCount(currentRules.length);
+}
+
+function renderRulesEmptyStateRow(columnCount, message) {
+  return `
+    <tr class="alerting-table-empty-row">
+      <td colspan="${columnCount}">
+        <div class="alerting-table-empty-copy">${escapeHtml(message)}</div>
+      </td>
+    </tr>
+  `;
 }
 
 function renderRules(options = {}) {
@@ -3039,6 +4466,17 @@ function renderRules(options = {}) {
   renderSidebarFooterActions();
   applyToolbarUi();
   updateHeaderActionState();
+  const searchInput = document.getElementById("ruleSearch");
+  if (searchInput) {
+    const variablesViewActive = isVariablesViewActive();
+    searchInput.placeholder = variablesViewActive
+      ? "Search variables"
+      : "Search...";
+    searchInput.setAttribute(
+      "aria-label",
+      variablesViewActive ? "Search variables" : "Search",
+    );
+  }
 
   if (isVariablesViewActive()) {
     renderVariablesTable(headTable, thead, bodyTable, tbody);
@@ -3047,7 +4485,10 @@ function renderRules(options = {}) {
 
   const selectedNode = getCurrentSelectionNode();
   refreshRuleCollections({ preservePage: true });
-  renderBreadcrumb(selectedNode?.label || activeCategory, selectedNode?.source || sidebarState.selectedSource);
+  renderBreadcrumb(
+    selectedNode?.label || activeCategory,
+    selectedNode?.source || sidebarState.selectedSource,
+  );
   updateRuleCounts();
 
   const isDefaultAlertsTable = selectedNode?.source === "Teleseer";
@@ -3062,7 +4503,10 @@ function renderRules(options = {}) {
   if (!isDefaultAlertsTable && resetScroll && bodyContainer) {
     bodyContainer.scrollTop = 0;
   }
-  bodyTable.classList.toggle("is-selection-active", !isDefaultAlertsTable && isRuleSelectionActive());
+  bodyTable.classList.toggle(
+    "is-selection-active",
+    !isDefaultAlertsTable && isRuleSelectionActive(),
+  );
   thead.innerHTML = renderTableHeaderRow(layoutKey, columns);
   applyTableColumnLayout(layoutKey, columns);
   renderRuleSelectionRibbon();
@@ -3073,7 +4517,13 @@ function renderRules(options = {}) {
     currentRenderOffsets = [];
     currentRenderTotalHeight = 0;
     currentRenderMetrics = { speedMax: 1, hitsMax: 1 };
-    tbody.innerHTML = pageRules.map((rule) => renderDefaultAlertRow(rule)).join("");
+    const emptyMessage =
+      getSearchQuery() && allRules.length
+        ? "No rules match search"
+        : "No rules";
+    tbody.innerHTML = pageRules.length
+      ? pageRules.map((rule) => renderDefaultAlertRow(rule)).join("")
+      : renderRulesEmptyStateRow(columns.length, emptyMessage);
     applyTableRowHeights();
   } else {
     currentRenderMetrics = {
@@ -3088,8 +4538,10 @@ function renderRules(options = {}) {
   const paginationEndEl = document.getElementById("paginationEnd");
   const prevPageEl = document.getElementById("prevPage");
   const nextPageEl = document.getElementById("nextPage");
-  if (paginationStartEl) paginationStartEl.textContent = String(currentRules.length ? 1 : 0);
-  if (paginationEndEl) paginationEndEl.textContent = String(currentRules.length);
+  if (paginationStartEl)
+    paginationStartEl.textContent = String(currentRules.length ? 1 : 0);
+  if (paginationEndEl)
+    paginationEndEl.textContent = String(currentRules.length);
   if (prevPageEl) prevPageEl.disabled = true;
   if (nextPageEl) nextPageEl.disabled = true;
 }

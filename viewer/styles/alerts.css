@@ -105,7 +105,7 @@ body {
   top: 0;
   z-index: 7;
   height: 40px;
-  border-bottom: 1px solid var(--fill-menu-item-active);
+  border-bottom: 1px solid var(--divider-menu-list);
   color: var(--text-tertiary);
   font-size: 13px;
   line-height: 16px;
@@ -141,7 +141,7 @@ body {
   line-height: 16px;
   font-weight: 600;
   padding-left: 16px;
-  border-right: 1px solid var(--fill-tab-active);
+  border-right: 1px solid var(--divider-table-default);
 }
 
 .alerts-table-header > .alerts-tableitem-container:last-child,
@@ -739,7 +739,7 @@ body {
 
 .alerts-events-header {
   height: 40px;
-  border-bottom: 1px solid var(--fill-menu-item-active);
+  border-bottom: 1px solid var(--divider-menu-list);
   color: var(--text-tertiary);
   font-size: 13px;
   line-height: 16px;
@@ -902,7 +902,7 @@ body {
   position: relative;
   width: 100%;
   min-height: 44px;
-  border-top: 1px solid var(--fill-menu-item-active);
+  border-top: 1px solid var(--divider-menu-list);
   padding: 8px;
   display: flex;
   align-items: center;
@@ -1195,7 +1195,7 @@ body {
 
 .alerts-rule-sidebar {
   min-height: 0;
-  border-right: 1px solid var(--fill-menu-item-active);
+  border-right: 1px solid var(--divider-menu-list);
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
 }
@@ -1203,7 +1203,7 @@ body {
 .alerts-rule-sidebar-search {
   min-height: 40px;
   padding: 6px;
-  border-bottom: 1px solid var(--fill-menu-item-active);
+  border-bottom: 1px solid var(--divider-menu-list);
   display: flex;
   align-items: center;
   gap: 6px;
@@ -1236,7 +1236,7 @@ body {
 .alerts-rule-group {
   width: 100%;
   min-height: 40px;
-  border: 1px solid var(--fill-tab-active);
+  border: 1px solid var(--material-medium-white);
   background: var(--material-ultra-thin-white);
   color: var(--text-secondary);
   display: grid;
@@ -1314,7 +1314,7 @@ body {
   align-items: center;
   gap: 8px;
   padding: 6px;
-  border-bottom: 1px solid var(--fill-menu-item-active);
+  border-bottom: 1px solid var(--divider-menu-list);
 }
 
 .alerts-rule-main-search {
@@ -1390,7 +1390,7 @@ body {
   top: 0;
   z-index: 4;
   height: 38px;
-  border-bottom: 1px solid var(--fill-menu-item-active);
+  border-bottom: 1px solid var(--divider-menu-list);
   background: var(--surface-tooltip-host-background);
   color: var(--text-tertiary);
   font-size: 11px;
@@ -1664,7 +1664,7 @@ body {
 .alerts-drawer-card-header {
   min-height: 34px;
   padding: 0 10px;
-  border-bottom: 1px solid var(--fill-menu-item-active);
+  border-bottom: 1px solid var(--divider-menu-list);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1688,7 +1688,7 @@ body {
 
 .alerts-drawer-row {
   min-height: 36px;
-  border-bottom: 1px solid var(--fill-tab-active);
+  border-bottom: 1px solid var(--divider-table-default);
   display: grid;
   grid-template-columns: 170px minmax(0, 1fr);
   align-items: center;
@@ -1944,7 +1944,7 @@ body {
 .alerts-subnet-mode {
   min-height: 32px;
   padding: 4px 10px 8px;
-  border-bottom: 1px solid var(--fill-menu-item-active);
+  border-bottom: 1px solid var(--divider-menu-list);
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 6px;
@@ -1975,7 +1975,7 @@ body {
 .alerts-subnet-search {
   min-height: 38px;
   padding: 0 10px;
-  border-bottom: 1px solid var(--fill-menu-item-active);
+  border-bottom: 1px solid var(--divider-menu-list);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -1998,7 +1998,7 @@ body {
 
 .alerts-subnet-select-all {
   min-height: 40px;
-  border-bottom: 1px solid var(--fill-menu-item-active);
+  border-bottom: 1px solid var(--divider-menu-list);
   display: flex;
   align-items: center;
   gap: 10px;
@@ -2032,7 +2032,7 @@ body {
 .alerts-subnet-applied-title {
   min-height: 34px;
   padding: 0 10px;
-  border-bottom: 1px solid var(--fill-menu-item-active);
+  border-bottom: 1px solid var(--divider-menu-list);
   display: flex;
   align-items: center;
   color: var(--text-tertiary);
@@ -2042,7 +2042,7 @@ body {
 .alerts-subnet-project-list {
   max-height: 220px;
   overflow: auto;
-  border-bottom: 1px solid var(--fill-menu-item-active);
+  border-bottom: 1px solid var(--divider-menu-list);
 }
 
 .alerts-subnet-project-option {
@@ -2070,7 +2070,7 @@ body {
 
 .alerts-subnet-jump-panel {
   min-height: 30px;
-  border-bottom: 1px solid var(--fill-menu-item-active);
+  border-bottom: 1px solid var(--divider-menu-list);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2267,7 +2267,7 @@ body {
   .alerts-rule-sidebar {
     max-height: 180px;
     border-right: 0;
-    border-bottom: 1px solid var(--fill-menu-item-active);
+    border-bottom: 1px solid var(--divider-menu-list);
   }
 
   .alerts-rule-drawer {
@@ -2307,7 +2307,7 @@ body {
   align-items: flex-start;
   gap: 12px;
   padding: 18px 20px 14px;
-  border-bottom: 1px solid var(--fill-menu-item-active);
+  border-bottom: 1px solid var(--divider-menu-list);
   flex-shrink: 0;
 }
 
@@ -2352,7 +2352,7 @@ body {
 }
 
 .feed-subscribe-stat {
-  border: 1px solid var(--fill-menu-item-active);
+  border: 1px solid var(--material-medium-white);
   border-radius: 8px;
   background: var(--material-ultra-thin-white);
   padding: 10px 12px;
@@ -2376,7 +2376,7 @@ body {
 }
 
 .feed-subscribe-note {
-  border: 1px solid var(--fill-menu-item-active);
+  border: 1px solid var(--material-medium-white);
   border-radius: 8px;
   background: var(--material-ultra-thin-white);
   padding: 10px 12px;
@@ -2409,7 +2409,7 @@ body {
   align-items: flex-start;
   gap: 12px;
   padding: 12px;
-  border: 1px solid var(--fill-menu-item-active);
+  border: 1px solid var(--material-medium-white);
   border-radius: 10px;
   background: var(--material-ultra-thin-white);
   cursor: pointer;
@@ -2458,7 +2458,7 @@ body {
   padding: 3px 8px;
   border-radius: 999px;
   background: var(--material-xtra-thin-white);
-  border: 1px solid var(--fill-menu-item-active);
+  border: 1px solid var(--material-medium-white);
 }
 
 .feed-subscribe-source {
@@ -2480,7 +2480,7 @@ body {
   min-height: 22px;
   padding: 4px 8px;
   border-radius: 999px;
-  border: 1px solid var(--fill-menu-item-active);
+  border: 1px solid var(--material-medium-white);
   background: var(--material-ultra-thin-white);
   color: var(--text-tertiary);
   font-size: 11px;
@@ -2500,7 +2500,7 @@ body {
   justify-content: flex-end;
   gap: 8px;
   padding: 12px 20px;
-  border-top: 1px solid var(--fill-menu-item-active);
+  border-top: 1px solid var(--divider-menu-list);
   flex-shrink: 0;
 }
 

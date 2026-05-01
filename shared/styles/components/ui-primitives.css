@@ -167,7 +167,7 @@ details.suri-card[open] > .suri-card-header .suri-card-chevron-icon {
   justify-content: space-between;
   gap: 12px;
   padding: 8px 8px 8px 14px;
-  border-bottom: 0.5px solid var(--fill-menu-item-active);
+  border-bottom: 0.5px solid var(--divider-menu-list);
 }
 
 .card-row:last-child,
@@ -303,7 +303,7 @@ textarea.edit-control:focus,
   box-shadow: var(--modal-shell-shadow);
   backdrop-filter: var(--modal-shell-backdrop-filter);
   -webkit-backdrop-filter: var(--modal-shell-backdrop-filter);
-  padding: 24px;
+  padding: 18px 22px 22px 22px;
   max-width: 400px;
   width: 90%;
 }
@@ -327,7 +327,7 @@ textarea.edit-control:focus,
 .dialog-title {
   font-size: 16px;
   font-weight: 600;
-  margin-bottom: 8px;
+  margin-bottom: 18px;
 }
 
 .dialog-description {
@@ -339,6 +339,7 @@ textarea.edit-control:focus,
 
 .dialog-actions {
   display: flex;
+  margin-top: 22px;
   gap: 8px;
   justify-content: flex-end;
 }
@@ -564,7 +565,7 @@ select.edit-control,
 
 .dropdown-divider {
   height: 1px;
-  background: var(--material-medium-white);
+  background: var(--divider-menu-list);
   margin: 2px 0;
 }
 

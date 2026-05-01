@@ -1,4 +1,6 @@
 (function initLauncherTableSOT(global) {
+  const COLUMN_WIDTH_STORAGE_KEY = "teleseer.launcher.tableColumnWidths.v1";
+
   const ICON_CLASS_BY_KEY = {
     "icon_arrow_head_down.svg": "launcher-icon-arrow-down",
     "icon_sort_arrows.svg": "launcher-icon-sort-arrows",
@@ -17,7 +19,33 @@
     "icon_play.svg": "launcher-icon-play",
     "icon_download.svg": "launcher-icon-download",
     "icon_arrow_short_down.svg": "launcher-icon-arrow-short-down",
+    "icon_view_settings.svg": "svg-icon-view-settings",
   };
+
+  function loadColumnWidths() {
+    try {
+      const parsed = JSON.parse(
+        global.localStorage?.getItem(COLUMN_WIDTH_STORAGE_KEY) || "{}",
+      );
+      return parsed && typeof parsed === "object" ? parsed : {};
+    } catch (error) {
+      return {};
+    }
+  }
+
+  const columnWidthsByTable = loadColumnWidths();
+  let activeColumnResize = null;
+
+  function persistColumnWidths() {
+    try {
+      global.localStorage?.setItem(
+        COLUMN_WIDTH_STORAGE_KEY,
+        JSON.stringify(columnWidthsByTable),
+      );
+    } catch (error) {
+      // Storage may be unavailable in local file contexts; resizing still works in-memory.
+    }
+  }
 
   const STATUS_TONE_TO_BADGE_CLASS = {
     active: "status-active",
@@ -68,9 +96,71 @@
       .replace(/[^a-z0-9]+/g, "-");
   }
 
+  function escapeCssIdentifier(value) {
+    if (global.CSS && typeof global.CSS.escape === "function") {
+      return global.CSS.escape(String(value));
+    }
+    return String(value).replace(/["\\]/g, "\\$&");
+  }
+
   function resolveStatusBadgeClass(tone) {
     const key = normalizeClassSuffix(tone);
     return STATUS_TONE_TO_BADGE_CLASS[key] || "status-disabled";
+  }
+
+  function parseColumnWidth(value, fallback = 96) {
+    if (typeof value === "number" && Number.isFinite(value)) return value;
+    if (typeof value !== "string") return fallback;
+    const parsed = Number.parseFloat(value);
+    return Number.isFinite(parsed) ? parsed : fallback;
+  }
+
+  function getColumnDefaultWidth(column) {
+    return parseColumnWidth(column.defaultWidth ?? column.width, 96);
+  }
+
+  function getColumnMinWidth(column) {
+    return parseColumnWidth(column.minWidth, Math.min(getColumnDefaultWidth(column), 96));
+  }
+
+  function getColumnWidth(tableKey, column) {
+    const tableWidths = columnWidthsByTable[tableKey] || {};
+    const stored = Number(tableWidths[column.key]);
+    const min = getColumnMinWidth(column);
+    const fallback = getColumnDefaultWidth(column);
+    return Math.max(min, Number.isFinite(stored) ? stored : fallback);
+  }
+
+  function setColumnWidth(tableKey, columnKey, width) {
+    if (!columnWidthsByTable[tableKey]) columnWidthsByTable[tableKey] = {};
+    columnWidthsByTable[tableKey][columnKey] = width;
+    persistColumnWidths();
+  }
+
+  function applyColumnWidth(tableEl, columnKey, width) {
+    if (!tableEl) return;
+    tableEl
+      .querySelectorAll(`col[data-col-key="${escapeCssIdentifier(columnKey)}"]`)
+      .forEach((colEl) => {
+        colEl.style.width = `${width}px`;
+      });
+    tableEl
+      .querySelectorAll(`[data-col-key="${escapeCssIdentifier(columnKey)}"]`)
+      .forEach((cellEl) => {
+        cellEl.style.width = `${width}px`;
+        cellEl.style.minWidth = `${width}px`;
+      });
+  }
+
+  function isColumnVisible(column, columnVisibility) {
+    if (column.type === "disclosure") return false;
+    if (column.hideable === false) return true;
+    if (!columnVisibility || typeof columnVisibility !== "object") return true;
+    return columnVisibility[column.key] !== false;
+  }
+
+  function getDisplayColumns(columns, columnVisibility) {
+    return columns.filter((column) => isColumnVisible(column, columnVisibility));
   }
 
   function createDisclosureButton(row, onToggleDisclosure) {
@@ -136,7 +226,7 @@
       stackEl.appendChild(nameEl);
     }
 
-    if (row.showSubtext !== false && row.subtext) {
+    if (options.showSubtext !== false && row.showSubtext !== false && row.subtext) {
       const subtextEl = document.createElement("span");
       subtextEl.className = "launcher-subtext";
       subtextEl.textContent = row.subtext;
@@ -414,6 +504,7 @@
         createNameCellContent(cellEl, row, {
           includeDisclosure: !!callbacks.hasDisclosure,
           onToggleDisclosure: callbacks.onToggleDisclosure,
+          showSubtext: column.showSubtext,
         });
         return;
       case "pill": {
@@ -503,6 +594,58 @@
     thEl.appendChild(buttonEl);
   }
 
+  function createResizeHandle(tableKey, column, width, tableEl) {
+    if (column.resizable === false) return null;
+    const handleEl = document.createElement("button");
+    handleEl.type = "button";
+    handleEl.className = "btn-reset launcher-col-resize-handle";
+    handleEl.setAttribute("aria-label", `Resize ${column.label || "column"} column`);
+    handleEl.addEventListener("mousedown", (event) => {
+      if (event.button !== 0) return;
+      activeColumnResize = {
+        tableKey,
+        columnKey: column.key,
+        startX: event.clientX,
+        startWidth: width,
+        minWidth: getColumnMinWidth(column),
+        tableEl,
+      };
+      document.body.classList.add("launcher-column-resize-active");
+      event.currentTarget.closest("th")?.classList.add("is-resizing");
+      global.addEventListener("mousemove", onColumnResizeDrag);
+      global.addEventListener("mouseup", stopColumnResize);
+      event.preventDefault();
+      event.stopPropagation();
+    });
+    handleEl.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+    });
+    return handleEl;
+  }
+
+  function onColumnResizeDrag(event) {
+    if (!activeColumnResize) return;
+    const { tableKey, columnKey, startX, startWidth, minWidth } = activeColumnResize;
+    const nextWidth = Math.max(
+      minWidth,
+      Math.round(startWidth + (event.clientX - startX)),
+    );
+    setColumnWidth(tableKey, columnKey, nextWidth);
+    applyColumnWidth(activeColumnResize.tableEl, columnKey, nextWidth);
+  }
+
+  function stopColumnResize() {
+    if (!activeColumnResize) return;
+      activeColumnResize.tableEl
+      ?.querySelector(`th[data-col-key="${escapeCssIdentifier(activeColumnResize.columnKey)}"]`)
+      ?.classList.remove("is-resizing");
+    activeColumnResize = null;
+    document.body.classList.remove("launcher-column-resize-active");
+    global.removeEventListener("mousemove", onColumnResizeDrag);
+    global.removeEventListener("mouseup", stopColumnResize);
+  }
+
   function renderFixedTable(options) {
     const {
       headEl,
@@ -517,10 +660,31 @@
       getExpandedRowMarkup,
       allRowsSelected = false,
       someRowsSelected = false,
+      tableKey = "default",
+      columnVisibility = {},
     } = options;
 
-    const displayColumns = columns.filter((column) => column.type !== "disclosure");
-    const hasDisclosure = displayColumns.length !== columns.length;
+    const displayColumns = getDisplayColumns(columns, columnVisibility);
+    const hasDisclosure = columns.some((column) => column.type === "disclosure");
+    const tableEl = headEl.closest("table") || bodyEl.closest("table");
+
+    if (tableEl) {
+      let colgroupEl = tableEl.querySelector("colgroup");
+      if (!colgroupEl) {
+        colgroupEl = document.createElement("colgroup");
+        tableEl.insertBefore(colgroupEl, headEl);
+      } else if (colgroupEl.nextSibling !== headEl) {
+        tableEl.insertBefore(colgroupEl, headEl);
+      }
+      colgroupEl.innerHTML = "";
+      displayColumns.forEach((column) => {
+        const width = getColumnWidth(tableKey, column);
+        const colEl = document.createElement("col");
+        colEl.dataset.colKey = column.key;
+        colEl.style.width = `${width}px`;
+        colgroupEl.appendChild(colEl);
+      });
+    }
 
     headEl.innerHTML = "";
     bodyEl.innerHTML = "";
@@ -529,16 +693,11 @@
     displayColumns.forEach((column) => {
       const thEl = document.createElement("th");
       const isSelectColumn = column.type === "select";
-      const selectCellWidth = "28px";
+      const width = getColumnWidth(tableKey, column);
+      thEl.dataset.colKey = column.key;
 
-      if (isSelectColumn) {
-        thEl.style.width = selectCellWidth;
-        thEl.style.minWidth = selectCellWidth;
-        thEl.style.padding = "0 4px";
-      } else if (column.width) {
-        thEl.style.width = column.width;
-        thEl.style.minWidth = column.width;
-      }
+      thEl.style.width = `${width}px`;
+      thEl.style.minWidth = `${width}px`;
 
       if (column.align) {
         thEl.style.textAlign = column.align;
@@ -559,6 +718,12 @@
         renderHeaderCell(thEl, column, { sort });
       }
 
+      const resizeHandleEl = createResizeHandle(tableKey, column, width, tableEl);
+      if (resizeHandleEl) {
+        thEl.classList.add("is-resizable");
+        thEl.appendChild(resizeHandleEl);
+      }
+
       headerRowEl.appendChild(thEl);
     });
     headEl.appendChild(headerRowEl);
@@ -572,17 +737,11 @@
 
       displayColumns.forEach((column) => {
         const cellEl = document.createElement("td");
-        const isSelectColumn = column.type === "select";
-        const selectCellWidth = "28px";
+        const width = getColumnWidth(tableKey, column);
+        cellEl.dataset.colKey = column.key;
 
-        if (isSelectColumn) {
-          cellEl.style.width = selectCellWidth;
-          cellEl.style.minWidth = selectCellWidth;
-          cellEl.style.padding = "0 4px";
-        } else if (column.width) {
-          cellEl.style.width = column.width;
-          cellEl.style.minWidth = column.width;
-        }
+        cellEl.style.width = `${width}px`;
+        cellEl.style.minWidth = `${width}px`;
 
         if (column.align) {
           cellEl.style.textAlign = column.align;

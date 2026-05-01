@@ -168,17 +168,19 @@ function clearSidebarFlyoutTimers() {
 }
 
 function syncSidebarFlyoutPosition() {
-  if (!sidebarFlyoutPanelEl || !toggleSidebarTopEl) return;
-  const rect = toggleSidebarTopEl.getBoundingClientRect();
-  const viewportPadding = 8;
-  const top = Math.max(viewportPadding, rect.bottom + 14);
-  const left = Math.max(viewportPadding, rect.left - 6);
-  sidebarFlyoutPanelEl.style.top = `${Math.round(top)}px`;
-  sidebarFlyoutPanelEl.style.left = `${Math.round(left)}px`;
-  sidebarFlyoutPanelEl.style.setProperty(
-    "--sidebar-flyout-top",
-    `${Math.round(top)}px`,
-  );
+  if (!sidebarFlyoutPanelEl) return;
+  sidebarFlyoutPanelEl.style.removeProperty("top");
+  sidebarFlyoutPanelEl.style.removeProperty("left");
+  sidebarFlyoutPanelEl.style.removeProperty("--sidebar-flyout-top");
+}
+
+function syncSidebarWidth() {
+  if (!appEl) return;
+  const nextWidth = clampSidebarWidth(state.sidebarWidth);
+  if (nextWidth !== state.sidebarWidth) {
+    state.sidebarWidth = nextWidth;
+  }
+  appEl.style.setProperty("--sidebar-width", `${nextWidth}px`);
 }
 
 function syncSidebarMountTarget() {
@@ -290,15 +292,22 @@ window.syncSidebarFlyoutPosition = syncSidebarFlyoutPosition;
 
 function render() {
   syncParentIds(state);
+  syncSidebarWidth();
   const sidebarOpen = !state.collapsedSidebar;
   chromeSidebarSlotEl.classList.toggle("collapsed", state.collapsedSidebar);
   sidebarShellEl.classList.toggle("collapsed", state.collapsedSidebar);
   toggleSidebarTopEl.classList.toggle("hidden", sidebarOpen);
   toggleSidebarSideEl.classList.toggle("hidden", !sidebarOpen);
   toggleSidebarSideEl.setAttribute("aria-expanded", String(sidebarOpen));
-  labPanelEl.classList.toggle("open", state.labPanelOpen);
-  labToggleEl.setAttribute("aria-expanded", String(state.labPanelOpen));
-  labToggleEl.classList.toggle("is-active", state.labPanelOpen);
+  labPanelEl?.classList.toggle("open", state.labPanelOpen);
+  const notesOpen = !!(state.sidebarNotes?.open || state.notesPanel.open);
+  const sidebarNotesExpanded = !!state.sidebarNotes?.open;
+  sidebarNotesToggleEl?.setAttribute(
+    "aria-expanded",
+    String(sidebarNotesExpanded),
+  );
+  sidebarNotesToggleEl?.classList.toggle("is-active", notesOpen);
+  sidebarNotesToggleEl?.classList.toggle("is-open", sidebarNotesExpanded);
   panelSettingsButtonEl.classList.toggle("active", state.panelMenuOpen);
   renderTree();
   renderTopbar();
@@ -306,11 +315,54 @@ function render() {
   if (typeof renderViewNotesPane === "function") {
     renderViewNotesPane();
   }
+  if (typeof renderSidebarNotesTray === "function") {
+    renderSidebarNotesTray();
+  }
   renderPanelMenu();
   syncSidebarFlyout();
 }
 
-function openMenu(anchorEl, items, saveMenu = false) {
+function positionAnchoredMenu(menuEl, anchorEl, options = {}) {
+  if (!menuEl || !anchorEl) return;
+  const gap = options.gap ?? 6;
+  const viewportPadding = options.viewportPadding ?? 10;
+  const horizontal = options.horizontal ?? "start";
+  const vertical = options.vertical ?? "auto";
+  const rect = anchorEl.getBoundingClientRect();
+  const menuWidth = menuEl.offsetWidth || 0;
+  const menuHeight = menuEl.offsetHeight || 0;
+  const minLeft = window.scrollX + viewportPadding;
+  const maxLeft =
+    window.scrollX + window.innerWidth - menuWidth - viewportPadding;
+  const minTop = window.scrollY + viewportPadding;
+  const maxTop =
+    window.scrollY + window.innerHeight - menuHeight - viewportPadding;
+  const spaceBelow = window.innerHeight - rect.bottom - viewportPadding;
+  const spaceAbove = rect.top - viewportPadding;
+  let placeBelow;
+  if (vertical === "top") {
+    placeBelow = menuHeight > spaceAbove && spaceBelow > spaceAbove;
+  } else if (vertical === "bottom") {
+    placeBelow = menuHeight <= spaceBelow || spaceBelow >= spaceAbove;
+  } else {
+    placeBelow = menuHeight <= spaceBelow || spaceBelow >= spaceAbove;
+  }
+  const preferredTop = placeBelow
+    ? rect.bottom + window.scrollY + gap
+    : rect.top + window.scrollY - menuHeight - gap;
+  const preferredLeft = horizontal === "end"
+    ? rect.right + window.scrollX - menuWidth
+    : rect.left + window.scrollX - 6;
+
+  menuEl.style.top = `${Math.max(minTop, Math.min(maxTop, preferredTop))}px`;
+  menuEl.style.left = `${Math.max(
+    minLeft,
+    Math.min(maxLeft, preferredLeft),
+  )}px`;
+  menuEl.dataset.placement = placeBelow ? "bottom" : "top";
+}
+
+function openMenu(anchorEl, items, saveMenu = false, options = {}) {
   const menu = saveMenu ? saveMenuEl : contextMenuEl;
   const isAlreadyOpen =
     !menu.classList.contains("hidden") &&
@@ -376,9 +428,7 @@ function openMenu(anchorEl, items, saveMenu = false) {
     });
     menu.appendChild(button);
   });
-  const rect = anchorEl.getBoundingClientRect();
-  menu.style.top = `${rect.bottom + window.scrollY + 6}px`;
-  menu.style.left = `${Math.max(10, rect.left + window.scrollX - 6)}px`;
+  positionAnchoredMenu(menu, anchorEl, options);
 }
 
 function panelOptionMeta() {
@@ -484,18 +534,9 @@ function renderPanelMenu() {
     panelMenuEl.appendChild(row);
   });
 
-  const rect = panelSettingsButtonEl.getBoundingClientRect();
-  panelMenuEl.style.top = `${rect.bottom + window.scrollY + 6}px`;
-  const menuWidth = panelMenuEl.offsetWidth || 0;
-  const viewportPadding = 10;
-  const minLeft = window.scrollX + viewportPadding;
-  const maxLeft =
-    window.scrollX + window.innerWidth - menuWidth - viewportPadding;
-  const preferredLeft = rect.right + window.scrollX - menuWidth;
-  panelMenuEl.style.left = `${Math.max(
-    minLeft,
-    Math.min(maxLeft, preferredLeft),
-  )}px`;
+  positionAnchoredMenu(panelMenuEl, panelSettingsButtonEl, {
+    horizontal: "end",
+  });
 }
 
 function closeMenus() {
@@ -529,8 +570,11 @@ function closeMenus() {
         button.setAttribute("aria-expanded", "false");
       }
     });
-  if (viewNotesButtonEl && state.notesPanel.open) {
-    viewNotesButtonEl.classList.add("active");
+  if (
+    sidebarNotesToggleEl &&
+    (state.sidebarNotes?.open || state.notesPanel.open)
+  ) {
+    sidebarNotesToggleEl.classList.add("is-active");
   }
   document
     .querySelectorAll(".row.context-open")

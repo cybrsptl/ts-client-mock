@@ -75,6 +75,7 @@
   --surface-card-dark: #09090b2e;
   --surface-chart-toolbar: #09090b2e;
   --surface-drawer: #fefefe0a;
+  --surface-drawer-dark: var(--material-ultra-thin-black);
   --surface-modal: #fefefe0a;
   --surface-navbar-launcher: #09090b2e;
   --surface-navbar-viewer: #fefefe0a;
@@ -103,12 +104,12 @@
 
   /* === Fill === */
   --fill-accordion-active: #4f6dff38;
-  --fill-accordion-hover: #fefefe2e;
+  --fill-accordion-hover: #e0e4f014;
   --fill-avatar-default: #2f53ff;
   --fill-drop-zone-active: #012cdf1a;
-  --fill-menu-item-active: #fefefe2e;
+  --fill-menu-item-active: #4f6dff38;
   --fill-menu-item-default: #fefefecc;
-  --fill-menu-item-hover: #4f6dff38;
+  --fill-menu-item-hover: #e0e4f014;
   --fill-menu-item-pressed: #fefefe3d;
   --fill-menu-list-default: #09090b0f;
   --fill-scroll-bar-default: #696b75;
@@ -340,7 +341,7 @@
   --divider-chart: #ffffff;
   --divider-header-column: #09090b52;
   --divider-header-section: #09090b52;
-  --divider-menu-list: #09090b1f;
+  --divider-menu-list: #e0e4f01f;
   --divider-table-active-hover: #4393ff;
   --divider-table-conflict-hover: #a677ff;
   --divider-table-default: #09090b0a;

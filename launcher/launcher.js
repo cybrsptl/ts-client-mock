@@ -33,6 +33,29 @@ const SIDEBAR_ITEMS = [
 
 const LAUNCHER_MENU_DROPDOWN_ICON_SRC = "../icons/icon_arrow_head_outline_down.svg";
 const LAUNCHER_MENU_SELECT_ICON_SRC = "../icons/icon_dual_arrow_expand.svg";
+const LAUNCHER_TABLE_VIEW_STORAGE_KEY = "teleseer.launcher.tableViewSettings.v1";
+
+function loadLauncherTableViewSettings() {
+  try {
+    const parsed = JSON.parse(
+      window.localStorage?.getItem(LAUNCHER_TABLE_VIEW_STORAGE_KEY) || "{}",
+    );
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch (error) {
+    return {};
+  }
+}
+
+function persistLauncherTableViewSettings(value) {
+  try {
+    window.localStorage?.setItem(
+      LAUNCHER_TABLE_VIEW_STORAGE_KEY,
+      JSON.stringify(value),
+    );
+  } catch (error) {
+    // Local file contexts can block storage; the in-memory table settings still apply.
+  }
+}
 
 function getSharedLauncherProjectData() {
   return window.TeleseerAppData?.projects || {};
@@ -200,14 +223,7 @@ const SECTION_CONTENT = {
       "No project matched this filter. Clear search or switch workspace context.",
     primaryActionLabel: "New Project",
     primaryActionDisabled: false,
-    utilityPrimary: {
-      icon: "../icons/icon_upload_sidebar.svg",
-      label: "Export project inventory",
-    },
-    utilitySecondary: {
-      icon: "../icons/icon_sort_arrows.svg",
-      label: "Sort project rows",
-    },
+    tableViewSettings: true,
     loadingMessage: "Refreshing project ingest and federation state...",
     stateChips: [
       { label: "Workspace: My Workspace (Hub)", tone: "syncing" },
@@ -221,43 +237,71 @@ const SECTION_CONTENT = {
       },
     ],
     columns: [
-      { key: "select", label: "", type: "select", width: "44px" },
-      { key: "name", label: "Name", type: "name", width: "330px" },
+      {
+        key: "select",
+        label: "",
+        type: "select",
+        width: "44px",
+        minWidth: 44,
+        hideable: false,
+        resizable: false,
+      },
+      {
+        key: "name",
+        label: "Name",
+        type: "name",
+        width: "330px",
+        minWidth: 220,
+        showSubtext: false,
+        hideable: false,
+      },
       {
         key: "files",
         label: "Files",
         type: "text",
         width: "90px",
+        minWidth: 72,
       },
       {
         key: "hosts",
         label: "Hosts",
         type: "text",
         width: "90px",
+        minWidth: 72,
       },
       {
         key: "subnets",
         label: "Subnets",
         type: "text",
         width: "96px",
+        minWidth: 80,
       },
       {
         key: "vlans",
         label: "VLANs",
         type: "text",
         width: "88px",
+        minWidth: 72,
       },
       {
         key: "size",
         label: "Size",
         type: "text",
         width: "100px",
+        minWidth: 84,
       },
-      { key: "duration", label: "Duration", type: "text", width: "130px" },
-      { key: "created", label: "Created", type: "text", width: "110px" },
-      { key: "status", label: "Status", type: "status", width: "220px" },
-      { key: "tags", label: "Tags", type: "tags", width: "250px" },
-      { key: "disclosure", label: "", type: "disclosure", width: "36px" },
+      { key: "duration", label: "Duration", type: "text", width: "130px", minWidth: 104 },
+      { key: "created", label: "Created", type: "text", width: "110px", minWidth: 92 },
+      { key: "status", label: "Status", type: "status", width: "220px", minWidth: 160 },
+      { key: "tags", label: "Tags", type: "tags", width: "250px", minWidth: 140 },
+      {
+        key: "disclosure",
+        label: "",
+        type: "disclosure",
+        width: "36px",
+        hideable: false,
+        resizable: false,
+      },
     ],
     rows: getSharedLauncherProjectRows(),
   },
@@ -1666,6 +1710,7 @@ const state = {
     files: "default",
     sensors: "default",
   },
+  tableViewSettingsBySectionId: loadLauncherTableViewSettings(),
   feedState: {
     rows: cloneValue(SECTION_CONTENT.feeds.rows),
     filterType: "all",
@@ -1749,6 +1794,8 @@ const feedTypeFilterMenuEl = document.getElementById("feedTypeFilterMenu");
 const feedStatusFilterTriggerEl = document.getElementById("feedStatusFilterTrigger");
 const feedStatusFilterValueEl = document.getElementById("feedStatusFilterValue");
 const feedStatusFilterMenuEl = document.getElementById("feedStatusFilterMenu");
+const tableViewSettingsButtonEl = document.getElementById("tableViewSettingsButton");
+const tableViewSettingsMenuEl = document.getElementById("tableViewSettingsMenu");
 const feedsBulkActionsEl = document.getElementById("feedsBulkActions");
 const feedsBulkCountEl = document.getElementById("feedsBulkCount");
 const feedsBulkPauseEl = document.getElementById("feedsBulkPause");
@@ -2148,6 +2195,95 @@ function renderFeedFilterControls(section) {
   );
 }
 
+function closeTableViewSettingsMenu() {
+  tableViewSettingsMenuEl.classList.add("hidden");
+  tableViewSettingsButtonEl.classList.remove("active", "is-active");
+  tableViewSettingsButtonEl.setAttribute("aria-expanded", "false");
+}
+
+function getSectionColumnVisibility(sectionId) {
+  const value = state.tableViewSettingsBySectionId[sectionId];
+  return value && typeof value === "object" ? value : {};
+}
+
+function isSectionColumnVisible(section, column) {
+  if (column.type === "disclosure") return false;
+  if (column.hideable === false) return true;
+  return getSectionColumnVisibility(section.id)[column.key] !== false;
+}
+
+function getSectionVisibleColumnConfig(section) {
+  return getSectionColumnVisibility(section.id);
+}
+
+function getConfigurableColumns(section) {
+  return (section.columns || []).filter(
+    (column) => column.type !== "disclosure" && column.hideable !== false,
+  );
+}
+
+function persistSectionColumnVisibility(sectionId, visibility) {
+  state.tableViewSettingsBySectionId = {
+    ...state.tableViewSettingsBySectionId,
+    [sectionId]: visibility,
+  };
+  persistLauncherTableViewSettings(state.tableViewSettingsBySectionId);
+}
+
+function toggleSectionColumnVisibility(sectionId, columnKey) {
+  const section = SECTION_CONTENT[sectionId];
+  if (!section) return;
+  const column = (section.columns || []).find((item) => item.key === columnKey);
+  if (!column || column.hideable === false || column.type === "disclosure") return;
+
+  const configurableColumns = getConfigurableColumns(section);
+  const visibleConfigurableCount = configurableColumns.filter((item) =>
+    isSectionColumnVisible(section, item),
+  ).length;
+  const isVisible = isSectionColumnVisible(section, column);
+  if (isVisible && visibleConfigurableCount <= 1) return;
+
+  const currentVisibility = getSectionColumnVisibility(sectionId);
+  const nextVisibility = {
+    ...currentVisibility,
+    [columnKey]: !isVisible,
+  };
+  persistSectionColumnVisibility(sectionId, nextVisibility);
+  renderContent();
+}
+
+function renderTableViewSettingsMenu(section) {
+  const configurableColumns = getConfigurableColumns(section);
+  if (!section.tableViewSettings || !configurableColumns.length) {
+    tableViewSettingsMenuEl.innerHTML = "";
+    closeTableViewSettingsMenu();
+    return;
+  }
+
+  tableViewSettingsMenuEl.innerHTML = `
+    <div class="menu-list launcher-view-settings-menu-body">
+      <div class="launcher-menu-section-label">Columns</div>
+      ${configurableColumns
+        .map((column) => {
+          const isVisible = isSectionColumnVisible(section, column);
+          return `
+            <button
+              class="menu-item-toggle launcher-view-settings-item"
+              type="button"
+              role="menuitemcheckbox"
+              aria-checked="${isVisible ? "true" : "false"}"
+              data-table-view-column="${escapeHtml(column.key)}"
+            >
+              <span class="menu-item-label">${escapeHtml(column.label || column.key)}</span>
+              <span class="toggle-switch${isVisible ? " on" : ""}" aria-hidden="true"></span>
+            </button>
+          `;
+        })
+        .join("")}
+    </div>
+  `;
+}
+
 function renderFeedBulkActions(section) {
   if (section.id !== "feeds") {
     feedsBulkActionsEl.classList.add("hidden");
@@ -2174,6 +2310,17 @@ function renderToolbar(section) {
   sectionTitleEl.textContent = section.title;
   contentSearchInputEl.placeholder = section.searchPlaceholder;
   contentSearchInputEl.value = state.sectionQueryById[section.id] || "";
+  renderTableViewSettingsMenu(section);
+
+  if (section.tableViewSettings && getConfigurableColumns(section).length) {
+    tableViewSettingsButtonEl.hidden = false;
+    tableViewSettingsButtonEl.disabled = false;
+    tableViewSettingsButtonEl.title = "View Settings";
+  } else {
+    tableViewSettingsButtonEl.hidden = true;
+    tableViewSettingsButtonEl.disabled = true;
+    tableViewSettingsButtonEl.removeAttribute("title");
+  }
 
   if (section.utilityPrimary) {
     utilityPrimaryButtonEl.hidden = false;
@@ -6480,8 +6627,10 @@ function renderContent() {
     tableSOT.renderFixedTable({
       headEl: gridHeadEl,
       bodyEl: gridBodyEl,
+      tableKey: section.id,
       columns: section.columns,
       rows: visibleRows,
+      columnVisibility: getSectionVisibleColumnConfig(section),
       sort: {
         key: state.feedState.sort.key,
         direction: state.feedState.sort.direction,
@@ -6522,8 +6671,10 @@ function renderContent() {
     tableSOT.renderFixedTable({
       headEl: gridHeadEl,
       bodyEl: gridBodyEl,
+      tableKey: section.id,
       columns: section.columns,
       rows: visibleRows,
+      columnVisibility: getSectionVisibleColumnConfig(section),
     });
   }
 
@@ -6591,11 +6742,28 @@ function placeMenuAtAnchor(menuEl, anchorEl) {
   if (!menuEl || !anchorEl) return;
   const rect = anchorEl.getBoundingClientRect();
   const menuWidth = menuEl.offsetWidth || 0;
-  const minLeft = window.scrollX + 10;
-  const maxLeft = window.scrollX + window.innerWidth - menuWidth - 10;
-  const preferredLeft = rect.right + window.scrollX - menuWidth;
-  menuEl.style.top = `${rect.bottom + window.scrollY + 6}px`;
-  menuEl.style.left = `${Math.max(minLeft, Math.min(maxLeft, preferredLeft))}px`;
+  const menuHeight = menuEl.offsetHeight || 0;
+  const viewportPadding = 10;
+  const menuGap = 6;
+  const minLeft = viewportPadding;
+  const maxLeft = window.innerWidth - menuWidth - viewportPadding;
+  const preferredLeft = rect.right - menuWidth;
+  const nextLeft = Math.max(minLeft, Math.min(maxLeft, preferredLeft));
+  const preferredTop = rect.bottom + menuGap;
+  const aboveTop = rect.top - menuHeight - menuGap;
+  const nextTop =
+    preferredTop + menuHeight <= window.innerHeight - viewportPadding
+      ? preferredTop
+      : Math.max(
+          viewportPadding,
+          aboveTop >= viewportPadding
+            ? aboveTop
+            : window.innerHeight - menuHeight - viewportPadding,
+        );
+
+  menuEl.style.position = "fixed";
+  menuEl.style.left = `${nextLeft}px`;
+  menuEl.style.top = `${nextTop}px`;
 }
 
 function placeFlyoutMenuAtAnchor(menuEl, anchorEl) {
@@ -6772,6 +6940,31 @@ function bindEvents() {
     const selectedFeedIds = Array.from(state.feedState.selectedIds);
     if (!selectedFeedIds.length) return;
     openFeedDeleteModal(selectedFeedIds);
+  });
+
+  tableViewSettingsButtonEl.addEventListener("click", (event) => {
+    event.stopPropagation();
+    const section = getActiveSection();
+    if (!section.tableViewSettings) return;
+    const willOpen = tableViewSettingsMenuEl.classList.contains("hidden");
+    closeTableViewSettingsMenu();
+    if (!willOpen) return;
+    renderTableViewSettingsMenu(section);
+    tableViewSettingsMenuEl.classList.remove("hidden");
+    tableViewSettingsButtonEl.classList.add("active", "is-active");
+    tableViewSettingsButtonEl.setAttribute("aria-expanded", "true");
+    placeMenuAtAnchor(tableViewSettingsMenuEl, tableViewSettingsButtonEl);
+  });
+
+  tableViewSettingsMenuEl.addEventListener("click", (event) => {
+    const columnButtonEl = event.target.closest("[data-table-view-column]");
+    if (!columnButtonEl) return;
+    event.stopPropagation();
+    toggleSectionColumnVisibility(
+      state.activeSectionId,
+      columnButtonEl.getAttribute("data-table-view-column") || "",
+    );
+    placeMenuAtAnchor(tableViewSettingsMenuEl, tableViewSettingsButtonEl);
   });
 
   utilityPrimaryButtonEl.addEventListener("click", beginRefresh);
@@ -6986,6 +7179,11 @@ function bindEvents() {
   });
 
   window.addEventListener("resize", () => {
+    if (tableViewSettingsMenuEl.classList.contains("hidden")) return;
+    placeMenuAtAnchor(tableViewSettingsMenuEl, tableViewSettingsButtonEl);
+  });
+
+  window.addEventListener("resize", () => {
     if (!activeLauncherTooltipTarget) return;
     positionLauncherTooltip();
   });
@@ -7007,6 +7205,13 @@ function bindEvents() {
 
     if (!event.target.closest("#feedsFilters")) {
       closeFeedFilterMenus();
+    }
+
+    const withinTableViewSettings =
+      event.target.closest("#tableViewSettingsButton") ||
+      event.target.closest("#tableViewSettingsMenu");
+    if (!withinTableViewSettings) {
+      closeTableViewSettingsMenu();
     }
 
     if (!event.target.closest("[data-tooltip]")) {
@@ -7039,6 +7244,10 @@ function bindEvents() {
       !feedStatusFilterMenuEl.classList.contains("hidden")
     ) {
       closeFeedFilterMenus();
+      return;
+    }
+    if (!tableViewSettingsMenuEl.classList.contains("hidden")) {
+      closeTableViewSettingsMenu();
       return;
     }
     if (!feedDeleteModalEl.classList.contains("hidden")) {

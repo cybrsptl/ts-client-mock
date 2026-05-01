@@ -14039,7 +14039,7 @@
             ],
             "com.figma.hiddenFromPublishing": false
           },
-          "value": "#4f6dff38",
+          "value": "{Material.Thin - White}",
           "type": "color"
         },
         "Pressed": {
@@ -14059,7 +14059,7 @@
             ],
             "com.figma.hiddenFromPublishing": false
           },
-          "value": "{Material.Thin - White}",
+          "value": "#4f6dff38",
           "type": "color"
         }
       },

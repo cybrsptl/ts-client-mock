@@ -7,7 +7,7 @@
 
     <link
       rel="stylesheet"
-      href="../shared/styles/base.css?v=20260425-card-semantics-1"
+      href="../shared/styles/base.css?v=20260501-sidebar-notes-open-states-7"
     />
     <link
       rel="stylesheet"
@@ -15,7 +15,7 @@
     />
     <link
       rel="stylesheet"
-      href="../shared/styles/components/sidebar.css?v=20260406-sidebar-unify-2"
+      href="../shared/styles/components/sidebar.css?v=20260501-sidebar-unify-3"
     />
     <link rel="stylesheet" href="./styles/hosts.css" />
     <link
@@ -119,19 +119,6 @@
                   aria-hidden="true"
                 ></span>
               </span>
-            </button>
-            <button
-              class="btn-reset btn-secondary-icon size-m style-ghost menu-anchor-button"
-              id="viewNotesButton"
-              type="button"
-              aria-haspopup="dialog"
-              aria-expanded="false"
-              aria-label="View notes"
-            >
-              <span
-                class="btn-icon-slot svg-icon svg-icon-notes"
-                aria-hidden="true"
-              ></span>
             </button>
             <button
               class="btn-reset btn-secondary-icon size-m style-ghost menu-anchor-button"
@@ -244,25 +231,125 @@
               </div>
             </div>
             <div class="tree" id="tree"></div>
-            <div class="sidebar-footer">
+            <div
+              class="sidebar-notes-tray"
+              id="sidebarNotesTray"
+              aria-hidden="false"
+            >
               <button
-                class="btn-reset btn-secondary size-m style-ghost sidebar-lab-button"
-                id="labToggle"
+                class="btn-reset sidebar-notes-resize-handle"
+                id="sidebarNotesResizeHandle"
                 type="button"
-                aria-controls="labPanel"
+                aria-label="Resize notes tray"
+              ></button>
+              <div
+                class="sidebar-notes-toggle"
+                id="sidebarNotesToggle"
+                role="button"
+                tabindex="0"
+                aria-label="Notes"
+                aria-controls="sidebarNotesBody"
                 aria-expanded="false"
               >
+                <div class="sidebar-notes-toggle-main">
+                  <span
+                    class="btn-icon-slot svg-icon"
+                    style="--icon-url: url(&quot;../icons/icon_notes.svg&quot;)"
+                    aria-hidden="true"
+                  ></span>
+                  <span class="btn-secondary-labelgroup">
+                    <span class="btn-label">Notes</span>
+                  </span>
+                </div>
+                <button
+                  class="btn-reset btn-secondary-icon size-m style-ghost sidebar-notes-float-button"
+                  id="sidebarNotesFloatButton"
+                  type="button"
+                  aria-label="Open notes in floating panel"
+                >
+                  <span
+                    class="btn-icon-slot svg-icon notes-pin-icon"
+                    style="--icon-url: url(&quot;../icons/ui_core/collection/icon_pin.svg&quot;)"
+                    aria-hidden="true"
+                  ></span>
+                </button>
                 <span
-                  class="btn-icon-slot svg-icon"
-                  style="--icon-url: url(&quot;../icons/icon_labs.svg&quot;)"
+                  class="btn-chevron-slot svg-icon notes-chevron-icon"
+                  style="--icon-url: url(&quot;../icons/icon_arrow_head_outline_down.svg&quot;)"
                   aria-hidden="true"
                 ></span>
-                <span class="btn-secondary-labelgroup">
-                  <span class="btn-label">Lab</span>
-                </span>
-              </button>
+              </div>
+              <div class="sidebar-notes-body" id="sidebarNotesBody">
+                <div class="sidebar-notes-editor-wrap" id="sidebarNotesEditorWrap">
+                  <textarea
+                    id="sidebarNotesEditor"
+                    spellcheck="true"
+                    placeholder="Write notes for this View..."
+                  ></textarea>
+                </div>
+                <div class="sidebar-notes-toolbar sidebar-notes-toolbar-footer">
+                  <div class="sidebar-notes-tools">
+                    <button
+                      class="btn-reset btn-secondary-icon size-m style-ghost"
+                      type="button"
+                      aria-label="Insert image"
+                      data-notes-tool="image"
+                    >
+                      <span
+                        class="btn-icon-slot svg-icon"
+                        style="--icon-url: url(&quot;../icons/ui_core/collection/icon_image.svg&quot;)"
+                        aria-hidden="true"
+                      ></span>
+                    </button>
+                    <button
+                      class="btn-reset btn-secondary-icon size-m style-ghost"
+                      type="button"
+                      aria-label="Attach file"
+                      data-notes-tool="attach"
+                    >
+                      <span
+                        class="btn-icon-slot svg-icon"
+                        style="--icon-url: url(&quot;../icons/ui_core/collection/icon_attach_file.svg&quot;)"
+                        aria-hidden="true"
+                      ></span>
+                    </button>
+                    <button
+                      class="btn-reset btn-secondary-icon size-m style-ghost"
+                      type="button"
+                      aria-label="Insert emoji"
+                      data-notes-tool="reaction"
+                    >
+                      <span
+                        class="btn-icon-slot svg-icon"
+                        style="--icon-url: url(&quot;../icons/ui_core/collection/icon_reaction.svg&quot;)"
+                        aria-hidden="true"
+                      ></span>
+                    </button>
+                  </div>
+                  <button
+                    class="btn-reset btn-secondary-icon size-m style-ghost sidebar-notes-export-button menu-anchor-button"
+                    id="sidebarNotesMenuButton"
+                    type="button"
+                    aria-label="Export notes"
+                    aria-haspopup="menu"
+                    aria-expanded="false"
+                  >
+                    <span
+                      class="btn-icon-slot svg-icon"
+                      style="--icon-url: url(&quot;../icons/ui_core/collection/icon_export_file.svg&quot;)"
+                      aria-hidden="true"
+                    ></span>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
+          <button
+            class="panel-resize-handle vertical sidebar-resize-handle"
+            id="sidebarResizeHandle"
+            type="button"
+            aria-label="Resize sidebar"
+          ></button>
         </aside>
         <div
           class="sidebar-flyout"
@@ -298,6 +385,12 @@
               </button>
             </div>
             <div class="sidebar-flyout-content" id="sidebarFlyoutContent"></div>
+            <button
+              class="panel-resize-handle vertical sidebar-resize-handle"
+              id="sidebarFlyoutResizeHandle"
+              type="button"
+              aria-label="Resize floating sidebar"
+            ></button>
           </div>
         </div>
 
@@ -2049,6 +2142,26 @@
     <div class="view-notes-float hidden" id="viewNotesFloat" aria-hidden="true">
       <div class="view-notes-panel" role="dialog" aria-label="View notes panel">
         <div class="view-notes-toolbar" id="viewNotesToolbar">
+          <div class="view-notes-title" id="viewNotesTitle">
+            <span
+              class="btn-icon-slot svg-icon view-notes-title-icon"
+              style="--icon-url: url(&quot;../icons/icon_notes.svg&quot;)"
+              aria-hidden="true"
+            ></span>
+            <span class="view-notes-title-label">Notes</span>
+          </div>
+          <button
+            class="btn-reset btn-secondary-icon size-s style-ghost view-notes-toolbar-button"
+            id="viewNotesDockButton"
+            type="button"
+            aria-label="Dock notes in sidebar"
+          >
+            <span
+              class="btn-icon-slot svg-icon notes-pin-icon"
+              style="--icon-url: url(&quot;../icons/ui_core/collection/icon_pin.svg&quot;)"
+              aria-hidden="true"
+            ></span>
+          </button>
           <button
             class="btn-reset btn-secondary-icon size-s style-ghost view-notes-toolbar-button"
             id="viewNotesCloseButton"
@@ -2056,20 +2169,7 @@
             aria-label="Close notes"
           >
             <span
-              class="btn-icon-slot svg-icon svg-icon-x"
-              aria-hidden="true"
-            ></span>
-          </button>
-          <button
-            class="btn-reset btn-secondary-icon size-s style-ghost view-notes-toolbar-button menu-anchor-button"
-            id="viewNotesMenuButton"
-            type="button"
-            aria-label="Export note options"
-            aria-haspopup="menu"
-            aria-expanded="false"
-          >
-            <span
-              class="btn-icon-slot svg-icon svg-icon-meatball"
+              class="btn-icon-slot svg-icon svg-icon-close"
               aria-hidden="true"
             ></span>
           </button>
@@ -2082,11 +2182,60 @@
             placeholder="Write per-view context, presenter notes, or training cues. These notes stay attached to this View."
           ></textarea>
         </div>
-        <div
-          class="view-notes-resize-handle"
-          id="viewNotesResizeHandle"
-          aria-hidden="true"
-        ></div>
+        <div class="view-notes-toolbar view-notes-toolbar-footer">
+          <div class="view-notes-tools">
+            <button
+              class="btn-reset btn-secondary-icon size-s style-ghost"
+              type="button"
+              aria-label="Insert image"
+              data-notes-tool="image"
+            >
+              <span
+                class="btn-icon-slot svg-icon"
+                style="--icon-url: url(&quot;../icons/ui_core/collection/icon_image.svg&quot;)"
+                aria-hidden="true"
+              ></span>
+            </button>
+            <button
+              class="btn-reset btn-secondary-icon size-s style-ghost"
+              type="button"
+              aria-label="Attach file"
+              data-notes-tool="attach"
+            >
+              <span
+                class="btn-icon-slot svg-icon"
+                style="--icon-url: url(&quot;../icons/ui_core/collection/icon_attach_file.svg&quot;)"
+                aria-hidden="true"
+              ></span>
+            </button>
+            <button
+              class="btn-reset btn-secondary-icon size-s style-ghost"
+              type="button"
+              aria-label="Insert emoji"
+              data-notes-tool="reaction"
+            >
+              <span
+                class="btn-icon-slot svg-icon"
+                style="--icon-url: url(&quot;../icons/ui_core/collection/icon_reaction.svg&quot;)"
+                aria-hidden="true"
+              ></span>
+            </button>
+          </div>
+          <button
+            class="btn-reset btn-secondary-icon size-s style-ghost view-notes-toolbar-button menu-anchor-button"
+            id="viewNotesMenuButton"
+            type="button"
+            aria-label="Export notes"
+            aria-haspopup="menu"
+            aria-expanded="false"
+          >
+            <span
+              class="btn-icon-slot svg-icon"
+              style="--icon-url: url(&quot;../icons/ui_core/collection/icon_export_file.svg&quot;)"
+              aria-hidden="true"
+            ></span>
+          </button>
+        </div>
       </div>
     </div>
     <div class="menu timeline-menu hidden" id="timelineContextMenu">
@@ -2675,16 +2824,17 @@
       })();
     </script>
 
-    <script src="./scripts/icon-registry.js?v=20260406-manage-rules-inline-fix-1"></script>
-    <script src="./scripts/state-core.js?v=20260406-manage-rules-inline-fix-1"></script>
+    <script src="./scripts/icon-registry.js?v=20260501-sidebar-notes-open-states-7"></script>
+    <script src="./scripts/state-core.js?v=20260501-sidebar-notes-open-states-7"></script>
     <script src="../timeline/timeline-feature.js?v=20260406-manage-rules-inline-fix-1"></script>
-    <script src="./scripts/ui-core.js?v=20260406-manage-rules-inline-fix-1"></script>
+    <script src="./scripts/ui-core.js?v=20260501-sidebar-notes-open-states-7"></script>
     <script src="../shared/features/sidebar/sidebar-accordion-icons.js?v=20260406-manage-rules-inline-fix-1"></script>
     <script src="../shared/features/sidebar/sidebar-sot.js?v=20260406-manage-rules-inline-fix-1"></script>
-    <script src="../shared/features/sidebar/sidebar-tree.js?v=20260406-manage-rules-inline-fix-1"></script>
+    <script src="../shared/features/sidebar/sidebar-tree.js?v=20260501-sidebar-notes-open-states-7"></script>
     <script src="../shared/features/sidebar/sidebar-actions.js?v=20260406-manage-rules-inline-fix-1"></script>
-    <script src="./scripts/viewer-hosts.js?v=20260406-manage-rules-inline-fix-1"></script>
-    <script src="./scripts/alerts-feature.js?v=20260413-inline-iframe-3"></script>
-    <script src="./scripts/app-init.js?v=20260406-manage-rules-inline-fix-1"></script>
+    <script src="../shared/alerting-data.js?v=20260428-canonical-alerting-1"></script>
+    <script src="./scripts/viewer-hosts.js?v=20260501-sidebar-notes-open-states-7"></script>
+    <script src="./scripts/alerts-feature.js?v=20260428-canonical-alerting-1"></script>
+    <script src="./scripts/app-init.js?v=20260501-sidebar-notes-open-states-7"></script>
   </body>
 </html>

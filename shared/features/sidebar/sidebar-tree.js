@@ -422,14 +422,6 @@ function renderNode(node, depth, siblings, index) {
     }
   } else {
     const view = getView(node.id);
-    if (hasViewNotes(view)) {
-      const noteIndicator = document.createElement("div");
-      noteIndicator.className = "row-note-indicator";
-      noteIndicator.innerHTML = svgMaskMarkup(
-        "../icons/ui_core/collection/icon_notes.svg",
-      );
-      content.appendChild(noteIndicator);
-    }
     if (hasViewAttention(view) && state.activeViewId !== node.id) {
       const dotSlot = document.createElement("div");
       dotSlot.className = "dot-slot";

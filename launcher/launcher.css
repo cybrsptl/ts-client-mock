@@ -397,7 +397,7 @@
   display: grid;
   gap: 6px;
   padding: 8px;
-  border-top: 1px solid var(--fill-menu-item-active);
+  border-top: 1px solid var(--divider-menu-list);
   margin-top: auto;
 }
 
@@ -597,7 +597,7 @@
   position: relative;
   border-radius: 10px;
   background: var(--material-xtra-thin-white);
-  box-shadow: 0 0 0.5px 0.5px var(--fill-tab-active) inset;
+  box-shadow: 0 0 0.5px 0.5px var(--material-medium-white) inset;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
 }
@@ -788,6 +788,7 @@
   border-spacing: 0;
   min-width: 100%;
   width: max-content;
+  table-layout: fixed;
 }
 
 .launcher-grid th,
@@ -808,11 +809,11 @@
   font-size: 12px;
   line-height: 14px;
   font-weight: 500;
-  border-bottom: 1px solid var(--fill-menu-item-active);
+  border-bottom: 1px solid var(--material-medium-white);
 }
 
 .launcher-grid thead th + th {
-  border-left: 1px solid var(--fill-menu-item-active);
+  border-left: 0;
 }
 
 .launcher-grid tbody td {
@@ -823,11 +824,48 @@
 }
 
 .launcher-grid tbody tr:hover {
-  background: var(--material-ultra-thin-white);
+  background: var(--fill-table-hover);
 }
 
 .launcher-grid tbody tr.selected {
-  background: var(--fill-menu-item-active);
+  background: var(--fill-table-active);
+}
+
+.launcher-grid th.is-resizable {
+  position: sticky;
+  padding-right: 20px;
+}
+
+.launcher-col-resize-handle {
+  position: absolute;
+  top: 0;
+  right: -4px;
+  z-index: 3;
+  width: 8px;
+  height: 100%;
+  cursor: col-resize;
+  border: 0;
+  background: transparent;
+}
+
+.launcher-col-resize-handle::after {
+  content: "";
+  position: absolute;
+  top: 8px;
+  bottom: 8px;
+  left: 3px;
+  width: 1px;
+  background: var(--material-medium-white);
+}
+
+.launcher-grid th.is-resizable:hover .launcher-col-resize-handle::after,
+.launcher-grid th.is-resizing .launcher-col-resize-handle::after {
+  background: var(--stroke-active);
+}
+
+.launcher-column-resize-active {
+  cursor: col-resize;
+  user-select: none;
 }
 
 .launcher-name-cell {
@@ -1268,6 +1306,37 @@
   min-height: 32px;
 }
 
+.launcher-view-settings-menu {
+  min-width: 228px;
+  padding: 0;
+  z-index: 3000;
+}
+
+.launcher-view-settings-menu-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: min(320px, calc(100vh - 120px));
+}
+
+.launcher-menu-section-label {
+  padding: 4px 8px 2px;
+  color: var(--text-tertiary);
+  font-size: 11px;
+  line-height: 14px;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.launcher-view-settings-item {
+  gap: 12px;
+  padding-right: 6px;
+}
+
+.launcher-view-settings-item .toggle-switch {
+  margin-right: 0;
+}
+
 .launcher-feeds-bulk {
   display: inline-flex;
   align-items: center;
@@ -1529,7 +1598,7 @@
   padding: 10px 12px;
   border-radius: 8px;
   background: var(--material-medium-black);
-  box-shadow: inset 0 0 0 1px var(--fill-menu-item-active);
+  box-shadow: inset 0 0 0 1px var(--material-medium-white);
 }
 
 .launcher-feed-port-selection-head span,
@@ -1756,7 +1825,7 @@
   padding: 10px 14px;
   border-radius: 8px;
   background: var(--material-xtra-thin-white);
-  box-shadow: inset 0 0 0 0.5px var(--fill-menu-item-active);
+  box-shadow: inset 0 0 0 0.5px var(--material-medium-white);
 }
 
 .launcher-feed-metric-detail-row {
@@ -2062,7 +2131,7 @@
 
 .launcher-feed-project-item,
 .launcher-feed-activity-item {
-  border: 1px solid var(--fill-menu-item-active);
+  border: 1px solid var(--material-medium-white);
   border-radius: 6px;
   padding: 6px 8px;
   background: var(--material-ultra-thin-white);
@@ -2451,7 +2520,7 @@
 }
 
 .launcher-device-selected-port {
-  border: 1px solid var(--fill-menu-item-active);
+  border: 1px solid var(--material-medium-white);
   border-radius: 8px;
   background: var(--material-ultra-thin-white);
   padding: 10px 12px;
@@ -2493,7 +2562,7 @@
 }
 
 .launcher-feed-stat {
-  border: 1px solid var(--fill-menu-item-active);
+  border: 1px solid var(--material-medium-white);
   border-radius: 6px;
   padding: 6px 8px;
   background: var(--material-ultra-thin-white);
@@ -2514,7 +2583,7 @@
 
 .launcher-feed-chart {
   height: 96px;
-  border: 1px solid var(--fill-menu-item-active);
+  border: 1px solid var(--material-medium-white);
   border-radius: 6px;
   background: var(--material-ultra-thin-white);
   display: flex;
@@ -2635,7 +2704,7 @@
 }
 
 .launcher-feed-files-shell {
-  border: 1px solid var(--fill-menu-item-active);
+  border: 1px solid var(--material-medium-white);
   border-radius: 8px;
   background:
     linear-gradient(
@@ -2653,7 +2722,7 @@
   justify-content: space-between;
   gap: 8px;
   padding: 8px;
-  border-bottom: 1px solid var(--fill-menu-item-active);
+  border-bottom: 1px solid var(--divider-menu-list);
 }
 
 .launcher-feed-files-filters {
@@ -2686,7 +2755,7 @@
   color: var(--text-tertiary);
   font-size: 11px;
   line-height: 13px;
-  border-bottom: 1px solid var(--fill-menu-item-active);
+  border-bottom: 1px solid var(--divider-table-default);
 }
 
 .launcher-feed-files-body {
@@ -2696,7 +2765,7 @@
 
 .launcher-feed-files-row {
   min-height: 44px;
-  border-bottom: 1px solid var(--fill-tab-active);
+  border-bottom: 1px solid var(--divider-table-default);
 }
 
 .launcher-feed-files-row:last-child {
@@ -2734,7 +2803,7 @@
   justify-content: space-between;
   gap: 8px;
   padding: 8px 12px;
-  border-top: 1px solid var(--fill-menu-item-active);
+  border-top: 1px solid var(--divider-menu-list);
 }
 
 .launcher-feed-files-pagination-range {
@@ -2811,7 +2880,7 @@
 .launcher-modal-head {
   min-height: 52px;
   padding: 10px 12px;
-  border-bottom: 1px solid var(--fill-menu-item-active);
+  border-bottom: 1px solid var(--divider-menu-list);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -2828,7 +2897,7 @@
 .launcher-modal-stepper {
   min-height: 34px;
   padding: 8px 12px;
-  border-bottom: 1px solid var(--fill-menu-item-active);
+  border-bottom: 1px solid var(--divider-menu-list);
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -2856,7 +2925,7 @@
 .launcher-modal-foot {
   min-height: 52px;
   padding: 10px 12px;
-  border-top: 1px solid var(--fill-menu-item-active);
+  border-top: 1px solid var(--divider-menu-list);
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -2913,7 +2982,7 @@
 .launcher-port-preview-thumb,
 .launcher-port-preview-card {
   border-radius: 8px;
-  border: 1px solid var(--fill-menu-item-active);
+  border: 1px solid var(--material-medium-white);
   background:
     linear-gradient(
       90deg,
@@ -2921,7 +2990,7 @@
       var(--material-xtra-thin-white)
     ),
     linear-gradient(90deg, var(--material-xtra-thick-black), var(--material-xtra-thick-black));
-  box-shadow: inset 0 0 0 1px var(--fill-tab-active);
+  box-shadow: inset 0 0 0 1px var(--material-medium-white);
 }
 
 .launcher-port-preview-thumb {
@@ -3105,7 +3174,7 @@
 }
 
 .launcher-device-stat {
-  border: 1px solid var(--fill-menu-item-active);
+  border: 1px solid var(--material-medium-white);
   border-radius: 8px;
   background: var(--material-ultra-thin-white);
   padding: 10px 12px;
@@ -3172,7 +3241,7 @@
 }
 
 .launcher-port-table {
-  border: 1px solid var(--fill-menu-item-active);
+  border: 1px solid var(--material-medium-white);
   border-radius: 8px;
   overflow: hidden;
 }
@@ -3183,7 +3252,7 @@
   gap: 12px;
   align-items: center;
   padding: 10px 12px;
-  border-top: 1px solid var(--fill-tab-active);
+  border-top: 1px solid var(--divider-table-default);
 }
 
 .launcher-port-table-row:first-child {
@@ -3382,7 +3451,7 @@
 }
 
 .launcher-summary-row {
-  border: 1px solid var(--fill-menu-item-active);
+  border: 1px solid var(--material-medium-white);
   border-radius: 6px;
   background: var(--material-ultra-thin-white);
   padding: 8px;
